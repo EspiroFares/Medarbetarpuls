@@ -91,6 +91,66 @@ DATABASES = {
 }
 
 
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {message}",
+            "style": "{",
+        },
+        "simple": {
+            "format": "{levelname} {message}",
+            "style": "{",
+        },
+        "json": {  # For structured logs (optional)
+            "()": "pythonjsonlogger.jsonlogger.JsonFormatter",
+            "format": '{"time": "%(asctime)s", "level": "%(levelname)s", "module": "%(module)s", "message": "%(message)s"}',
+            "style": "%",
+        },
+    },
+    "handlers": {
+        "file": {
+            "level": "WARNING",
+            "class": "logging.FileHandler",
+            "filename": "logs/calc_debug.log",
+            "formatter": "verbose",
+        },
+        "console": {
+            "level": "INFO",
+            "class": "logging.StreamHandler",
+            "formatter": "simple",
+        },
+        "json_file": {  # JSON logs (optional)
+            "level": "INFO",
+            "class": "logging.FileHandler",
+            "filename": "logs/calc_logs.json",
+            "formatter": "json",
+        },
+    },
+    "root": {
+        "handlers": [
+            "file",
+            "json_file",
+            "console",
+        ],
+        "level": "INFO",
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["file", "console", "json_file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "django.db.backends": {  # Logs SQL queries (useful for debugging slow queries)
+            "handlers": ["file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+    },
+}
+
+
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
