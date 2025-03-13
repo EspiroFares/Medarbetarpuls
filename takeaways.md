@@ -54,7 +54,7 @@ python -m pip install --upgrade pip
 4. **Install required packages:**
 
 ```sh
-python -m pip install django psycopg2
+python -m pip install django python-json-logger
 ```
 
 5. **Verify installation:**
