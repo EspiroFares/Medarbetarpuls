@@ -151,6 +151,9 @@ LOGGING = {
 }
 
 
+# Replaces Djangos built-in user with our custom one
+AUTH_USER_MODEL = "medarbetarapp.CustomUser"
+
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
