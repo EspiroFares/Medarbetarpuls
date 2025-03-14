@@ -6,6 +6,9 @@ from django.contrib.auth.models import (
 )
 from django.db.models.query import QuerySet
 from typing import TYPE_CHECKING
+import logging
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     # Import all classes and such here to be able to type class-fields
@@ -51,8 +54,10 @@ class UserRole(models.TextChoices):
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, name, password=None, **extra_fields):
         if not email:
+            logger.error("The emial field must be set")
             raise ValueError("The email field must be set")
         if not name:
+            logger.error("The name field must be set")
             raise ValueError("The name field must be set")
 
         email = self.normalize_email(email)
