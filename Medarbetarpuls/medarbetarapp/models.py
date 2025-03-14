@@ -67,6 +67,12 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         max_length=15, choices=UserRole.choices, default=UserRole.SURVEY_RESPONDER
     )
 
+    is_staff = models.BooleanField(default=False)  # Allows access to admin panel
+    is_superuser = models.BooleanField(
+        default=False
+    )  # Allows you to do something in the admin panel
+    is_active = models.BooleanField(default=True)  # Controls if the user can log in
+
     objects = CustomUserManager()
 
     USERNAME_FIELD = "email"  # Use email instead of username when searching through db
