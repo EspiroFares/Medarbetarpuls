@@ -52,7 +52,21 @@ class UserRole(models.TextChoices):
 # This Mananger is required for Django to be able to handle
 # the CustomUser class
 class CustomUserManager(BaseUserManager):
-    def create_user(self, email, name, password=None, **extra_fields):
+    def create_user(
+        self, email: str, name: str, password: str, **extra_fields
+    ) -> "CustomUser":
+        """
+        This function creates a new user and saves it in db
+
+        Args:
+            email (str): The email for the new user
+            name (str): The name for the new user
+            password (str): The password for the new user
+            extra_fields (**): Extra fields to add more attributes
+
+        Returns:
+            CustomUser:
+        """
         if not email:
             logger.error("The emial field must be set")
             raise ValueError("The email field must be set")
