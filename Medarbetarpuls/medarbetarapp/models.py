@@ -35,6 +35,15 @@ class EmployeeGroup(models.Model):
         return f"{self.name} {self.organization.name}"
 
 
+# Enum class for user roles
+# The left-most string is what is saved in db
+# The right-most string is what we humans will read
+class UserRole(models.TextChoices):
+    ADMIN = "admin", "Admin"
+    SURVEY_CREATOR = "surveycreator", "SurveyCreator"
+    SURVEY_RESPONDER = "surveyresponder", "SurveyResponder"
+
+
 # Custom User Manager
 # This Mananger is required for Django to be able to handle
 # the CustomUser class
@@ -48,15 +57,6 @@ class CustomUserManager(BaseUserManager):
         user.set_password(password)
         user.save(using=self._db)
         return user
-
-
-# Enum class for user roles
-# The left-most string is what is saved in db
-# The right-most string is what we humans will read
-class UserRole(models.TextChoices):
-    ADMIN = "admin", "Admin"
-    SURVEY_CREATOR = "surveycreator", "SurveyCreator"
-    SURVEY_RESPONDER = "surveyresponder", "SurveyResponder"
 
 
 # The actual custom user class
