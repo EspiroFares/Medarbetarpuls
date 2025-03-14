@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from django.db.models import IntegerField
     from django.db.models import EmailField
     from django.db.models import ForeignKey
+    from django.db.models import BooleanField
 
 
 class Organization(models.Model):
@@ -48,35 +49,40 @@ class UserRole(models.TextChoices):
 # This Mananger is required for Django to be able to handle
 # the CustomUser class
 class CustomUserManager(BaseUserManager):
-    def create_user(self, email, password=None, **extra_fields):
+    def create_user(self, email, name, password=None, **extra_fields):
         if not email:
-            raise ValueError("The Email field must be set")
+            raise ValueError("The email field must be set")
+        if not name:
+            raise ValueError("The name field must be set")
 
         email = self.normalize_email(email)
-        user = self.model(email=email, **extra_fields)
+        user = self.model(email=email, name=name, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
 
 
 # The actual custom user class
-class CustomUser(AbstractBaseUser, PermissionsMixin):
+class CustomUser(AbstractBaseUser, PermissionsMixin):  # pyright: ignore
     email: "EmailField" = models.EmailField(unique=True)
     name: "CharField" = models.CharField(max_length=255)
     role: "CharField" = models.CharField(
         max_length=15, choices=UserRole.choices, default=UserRole.SURVEY_RESPONDER
     )
 
-    is_staff = models.BooleanField(default=False)  # Allows access to admin panel
-    is_superuser = models.BooleanField(
-        default=False
+    is_staff: "BooleanField" = models.BooleanField(
+        default=False  # pyright: ignore
+    )  # Allows access to admin panel
+    is_superuser: "BooleanField" = models.BooleanField(
+        default=False  # pyright: ignore
     )  # Allows you to do something in the admin panel
-    is_active = models.BooleanField(default=True)  # Controls if the user can log in
+    is_active: "BooleanField" = models.BooleanField(
+        default=True  # pyright: ignore
+    )  # Controls if the user can log in
 
     objects = CustomUserManager()
 
     USERNAME_FIELD = "email"  # Use email instead of username when searching through db
-    REQUIRED_FIELDS = ["name"]  # Require a name when creating a superuser
 
     def __str__(self) -> str:
         return f"{self.name} ({self.email})"
