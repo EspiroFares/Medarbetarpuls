@@ -1,3 +1,7 @@
+# Navigera till rotmappen
+cd "$(git rev-parse --show-toplevel)"
+
+# Aktivera Venv
 if [ -d "venv" ]; then
     source venv/bin/activate
 elif [ -d "env" ]; then
@@ -12,3 +16,5 @@ elif [ -d ".venv/Scripts" ]; then
     source .venv/Scripts/activate  # Windows
 fi
 
+# Kör migrate
+python manage.py migrate
