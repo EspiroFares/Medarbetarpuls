@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 class Organization(models.Model):
     name = models.CharField(max_length=255)
     # Add an explicit type hint for employeeGroups (this is just for readability)
-    employeeGroups: BaseManager
+    employee_groups: BaseManager
     admins: BaseManager
 
     def __str__(self) -> str:
@@ -28,7 +28,7 @@ class EmployeeGroup(models.Model):
     # Add an explicit type hint for managers (this is just for readability)
     managers: BaseManager
     organization = models.ForeignKey(
-        Organization, on_delete=models.CASCADE, related_name="employeeGroups", null=True
+        Organization, on_delete=models.CASCADE, related_name="employee_groups", null=True
     )
     published_surveys: BaseManager
     survey_templates: BaseManager
@@ -83,13 +83,13 @@ class CustomUserManager(BaseUserManager):
 class CustomUser(AbstractBaseUser, PermissionsMixin):  # pyright: ignore
     email = models.EmailField(unique=True)
     name = models.CharField(max_length=255)
-    userRole = models.CharField(
+    user_role = models.CharField(
         max_length=15, choices=UserRole.choices, default=UserRole.SURVEY_RESPONDER
     )
     # We deafult to 0 as the lowest level of authority
-    authorizationLevel = models.IntegerField(default=0)  # pyright: ignore
-    employeeGroups = models.ManyToManyField(EmployeeGroup, related_name="employees")
-    managedGroups = models.ManyToManyField(EmployeeGroup, related_name="managers")
+    authorization_level = models.IntegerField(default=0)  # pyright: ignore
+    employee_groups = models.ManyToManyField(EmployeeGroup, related_name="employees")
+    managed_groups = models.ManyToManyField(EmployeeGroup, related_name="managers")
     admin = models.ForeignKey(
         Organization, on_delete=models.CASCADE, related_name="admins", null=True
     )
