@@ -30,6 +30,7 @@ class EmployeeGroup(models.Model):
     organization = models.ForeignKey(
         Organization, on_delete=models.CASCADE, related_name="employeeGroups", null=True
     )
+    publishedSurveys: BaseManager
 
     def __str__(self) -> str:
         return f"{self.name} {self.organization.name}"
@@ -110,3 +111,22 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):  # pyright: ignore
 
     def __str__(self) -> str:
         return f"{self.name} ({self.email})"
+
+
+
+# Below are models for surveys and their results
+
+
+# What this model does needs to be explained here
+class Survey(models.Model):
+    name = models.CharField(max_length=255)  # Do we want names for surveys???
+    creator = models.OneToOneField(CustomUser, on_delete=models.CASCADE) 
+    employeeGroups = models.ManyToManyField(EmployeeGroup, related_name="publishedSurveys")
+    deadline = models.DateTimeField()  # stores both date and time (e.g., YYYY-MM-DD HH:MM:SS)
+    sending_date = models.DateTimeField()  # stores both date and time (e.g., YYYY-MM-DD HH:MM:SS)
+    # What is this???
+    collectedAnswerCount = models.IntegerField(default=0)  # pyright: ignore 
+    isViewable = models.BooleanField(default=False)  # pyright: ignore
+    
+    def __str__(self) -> str:
+        return f"{self.name} ({self.creator})"
