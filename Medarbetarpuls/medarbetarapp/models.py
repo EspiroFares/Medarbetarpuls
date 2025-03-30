@@ -123,6 +123,7 @@ class Survey(models.Model):
     name = models.CharField(max_length=255)  # Do we want names for surveys???
     creator = models.OneToOneField(CustomUser, on_delete=models.CASCADE) 
     employeeGroups = models.ManyToManyField(EmployeeGroup, related_name="publishedSurveys")
+    surveyResults: BaseManager
     deadline = models.DateTimeField()  # stores both date and time (e.g., YYYY-MM-DD HH:MM:SS)
     sending_date = models.DateTimeField()  # stores both date and time (e.g., YYYY-MM-DD HH:MM:SS)
     # What is this???
@@ -142,3 +143,15 @@ class SurveyTemplate(models.Model):
 
     def __str__(self) -> str:
         return f"{self.name} ({self.creator})"
+
+
+# What this model does needs to be explained here
+class SurveyResult(models.Model):
+    publishedSurvey = models.ForeignKey(
+        Survey, on_delete=models.CASCADE, related_name="surveyResults", null=True
+    )
+    user_id = models.IntegerField()
+    is_answered = models.BooleanField(default=False)  # pyright: ignore
+
+    def __str__(self) -> str:
+        return f"{self.user_id} ({self.is_answered})"
