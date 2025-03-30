@@ -1,37 +1,29 @@
 from django.db import models
+from django.db.models.manager import BaseManager
 from django.contrib.auth.models import (
     AbstractBaseUser,
     BaseUserManager,
     PermissionsMixin,
 )
-from django.db.models.query import QuerySet
-from typing import TYPE_CHECKING
 import logging
+
 
 logger = logging.getLogger(__name__)
 
-if TYPE_CHECKING:
-    # Import all classes and such here to be able to type class-fields
-    from django.db.models import CharField
-    from django.db.models import IntegerField
-    from django.db.models import EmailField
-    from django.db.models import ForeignKey
-    from django.db.models import BooleanField
-
 
 class Organization(models.Model):
-    name: "CharField" = models.CharField(max_length=255)
+    name = models.CharField(max_length=255)
 
     # Add an explicit type hint for employeeGroups (this is just for readability)
-    employeeGroups: QuerySet["EmployeeGroup"]
+    employeeGroups: BaseManager
 
     def __str__(self) -> str:
         return f"{self.name}"
 
 
 class EmployeeGroup(models.Model):
-    name: "CharField" = models.CharField(max_length=255)
-    organization: "ForeignKey" = models.ForeignKey(
+    name = models.CharField(max_length=255)
+    organization = models.ForeignKey(
         Organization, on_delete=models.CASCADE, related_name="employeeGroups"
     )
 
@@ -83,19 +75,21 @@ class CustomUserManager(BaseUserManager):
 
 # The actual custom user class
 class CustomUser(AbstractBaseUser, PermissionsMixin):  # pyright: ignore
-    email: "EmailField" = models.EmailField(unique=True)
-    name: "CharField" = models.CharField(max_length=255)
-    role: "CharField" = models.CharField(
+    email = models.EmailField(unique=True)
+    name = models.CharField(max_length=255)
+    id = models.IntegerField(unique=True)
+    userRole = models.CharField(
         max_length=15, choices=UserRole.choices, default=UserRole.SURVEY_RESPONDER
     )
+    authorizationLevel = models.IntegerField(default=0)  # pyright: ignore
 
-    is_staff: "BooleanField" = models.BooleanField(
+    is_staff = models.BooleanField(
         default=False  # pyright: ignore
     )  # Allows access to admin panel
-    is_superuser: "BooleanField" = models.BooleanField(
+    is_superuser = models.BooleanField(
         default=False  # pyright: ignore
     )  # Allows you to do something in the admin panel
-    is_active: "BooleanField" = models.BooleanField(
+    is_active = models.BooleanField(
         default=True  # pyright: ignore
     )  # Controls if the user can log in
 
