@@ -23,13 +23,12 @@ class Organization(models.Model):
 
 class EmployeeGroup(models.Model):
     name = models.CharField(max_length=255)
-    id = models.IntegerField(unique=True)
     # Add an explicit type hint for employees (this is just for readability)
     employees: BaseManager
     # Add an explicit type hint for managers (this is just for readability)
     managers: BaseManager
     organization = models.ForeignKey(
-        Organization, on_delete=models.CASCADE, related_name="employeeGroups"
+        Organization, on_delete=models.CASCADE, related_name="employeeGroups", null=True
     )
 
     def __str__(self) -> str:
@@ -73,7 +72,7 @@ class CustomUserManager(BaseUserManager):
 
         email = self.normalize_email(email)
         user = self.model(email=email, name=name, **extra_fields)
-        user.set_password(password)
+        user.set_password(password)  # Hashes the password
         user.save(using=self._db)
         return user
 
@@ -82,7 +81,6 @@ class CustomUserManager(BaseUserManager):
 class CustomUser(AbstractBaseUser, PermissionsMixin):  # pyright: ignore
     email = models.EmailField(unique=True)
     name = models.CharField(max_length=255)
-    id = models.IntegerField(unique=True)
     userRole = models.CharField(
         max_length=15, choices=UserRole.choices, default=UserRole.SURVEY_RESPONDER
     )
@@ -91,7 +89,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):  # pyright: ignore
     employeeGroups = models.ManyToManyField(EmployeeGroup, related_name="employees")
     managedGroups = models.ManyToManyField(EmployeeGroup, related_name="managers")
     admin = models.ForeignKey(
-        Organization, on_delete=models.CASCADE, related_name="admins"
+        Organization, on_delete=models.CASCADE, related_name="admins", null=True
     )
 
 
