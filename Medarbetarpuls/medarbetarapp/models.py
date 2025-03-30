@@ -31,6 +31,7 @@ class EmployeeGroup(models.Model):
         Organization, on_delete=models.CASCADE, related_name="employeeGroups", null=True
     )
     publishedSurveys: BaseManager
+    surveyTemplates: BaseManager
 
     def __str__(self) -> str:
         return f"{self.name} {self.organization.name}"
@@ -130,3 +131,12 @@ class Survey(models.Model):
     
     def __str__(self) -> str:
         return f"{self.name} ({self.creator})"
+
+
+# What this model does needs to be explained here
+class SurveyTemplate(models.Model): 
+    name = models.CharField(max_length=255)  # Do we want names for surveyTemplates???
+    creator = models.OneToOneField(CustomUser, on_delete=models.CASCADE) 
+    employeeGroups = models.ManyToManyField(EmployeeGroup, related_name="surveyTemplates")
+    lastEdited = models.DateTimeField()  # stores both date and time (e.g., YYYY-MM-DD HH:MM:SS)
+
