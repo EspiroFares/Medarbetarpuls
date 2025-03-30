@@ -30,8 +30,8 @@ class EmployeeGroup(models.Model):
     organization = models.ForeignKey(
         Organization, on_delete=models.CASCADE, related_name="employeeGroups", null=True
     )
-    publishedSurveys: BaseManager
-    surveyTemplates: BaseManager
+    published_surveys: BaseManager
+    survey_templates: BaseManager
 
     def __str__(self) -> str:
         return f"{self.name} {self.organization.name}"
@@ -122,13 +122,13 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):  # pyright: ignore
 class Survey(models.Model):
     name = models.CharField(max_length=255)  # Do we want names for surveys???
     creator = models.OneToOneField(CustomUser, on_delete=models.CASCADE) 
-    employeeGroups = models.ManyToManyField(EmployeeGroup, related_name="publishedSurveys")
-    surveyResults: BaseManager
+    employee_groups = models.ManyToManyField(EmployeeGroup, related_name="published_surveys")
+    survey_results: BaseManager
     deadline = models.DateTimeField()  # stores both date and time (e.g., YYYY-MM-DD HH:MM:SS)
     sending_date = models.DateTimeField()  # stores both date and time (e.g., YYYY-MM-DD HH:MM:SS)
     # What is this???
-    collectedAnswerCount = models.IntegerField(default=0)  # pyright: ignore 
-    isViewable = models.BooleanField(default=False)  # pyright: ignore
+    collected_answer_count = models.IntegerField(default=0)  # pyright: ignore 
+    is_viewable = models.BooleanField(default=False)  # pyright: ignore
     
     def __str__(self) -> str:
         return f"{self.name} ({self.creator})"
@@ -138,8 +138,8 @@ class Survey(models.Model):
 class SurveyTemplate(models.Model): 
     name = models.CharField(max_length=255)  # Do we want names for surveyTemplates???
     creator = models.OneToOneField(CustomUser, on_delete=models.CASCADE) 
-    employeeGroups = models.ManyToManyField(EmployeeGroup, related_name="surveyTemplates")
-    lastEdited = models.DateTimeField()  # stores both date and time (e.g., YYYY-MM-DD HH:MM:SS)
+    employee_groups = models.ManyToManyField(EmployeeGroup, related_name="survey_templates")
+    last_edited = models.DateTimeField()  # stores both date and time (e.g., YYYY-MM-DD HH:MM:SS)
 
     def __str__(self) -> str:
         return f"{self.name} ({self.creator})"
@@ -147,8 +147,8 @@ class SurveyTemplate(models.Model):
 
 # What this model does needs to be explained here
 class SurveyResult(models.Model):
-    publishedSurvey = models.ForeignKey(
-        Survey, on_delete=models.CASCADE, related_name="surveyResults", null=True
+    published_survey = models.ForeignKey(
+        Survey, on_delete=models.CASCADE, related_name="survey_results", null=True
     )
     user_id = models.IntegerField()
     is_answered = models.BooleanField(default=False)  # pyright: ignore
