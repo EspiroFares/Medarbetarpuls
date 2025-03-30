@@ -140,3 +140,5 @@ class SurveyTemplate(models.Model):
     employeeGroups = models.ManyToManyField(EmployeeGroup, related_name="surveyTemplates")
     lastEdited = models.DateTimeField()  # stores both date and time (e.g., YYYY-MM-DD HH:MM:SS)
 
+    def __str__(self) -> str:
+        return f"{self.name} ({self.creator})"
