@@ -13,9 +13,9 @@ logger = logging.getLogger(__name__)
 
 class Organization(models.Model):
     name = models.CharField(max_length=255)
-
     # Add an explicit type hint for employeeGroups (this is just for readability)
     employeeGroups: BaseManager
+    admins: BaseManager
 
     def __str__(self) -> str:
         return f"{self.name}"
@@ -23,6 +23,11 @@ class Organization(models.Model):
 
 class EmployeeGroup(models.Model):
     name = models.CharField(max_length=255)
+    id = models.IntegerField(unique=True)
+    # Add an explicit type hint for employees (this is just for readability)
+    employees: BaseManager
+    # Add an explicit type hint for managers (this is just for readability)
+    managers: BaseManager
     organization = models.ForeignKey(
         Organization, on_delete=models.CASCADE, related_name="employeeGroups"
     )
@@ -81,8 +86,16 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):  # pyright: ignore
     userRole = models.CharField(
         max_length=15, choices=UserRole.choices, default=UserRole.SURVEY_RESPONDER
     )
+    # We deafult to 0 as the lowest level of authority
     authorizationLevel = models.IntegerField(default=0)  # pyright: ignore
+    employeeGroups = models.ManyToManyField(EmployeeGroup, related_name="employees")
+    managedGroups = models.ManyToManyField(EmployeeGroup, related_name="managers")
+    admin = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, related_name="admins"
+    )
 
+
+    # These are for the built-in django permissions!!!
     is_staff = models.BooleanField(
         default=False  # pyright: ignore
     )  # Allows access to admin panel
