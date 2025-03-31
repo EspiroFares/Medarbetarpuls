@@ -151,7 +151,24 @@ class SurveyResult(models.Model):
         Survey, on_delete=models.CASCADE, related_name="survey_results", null=True
     )
     user_id = models.IntegerField()
+    answers: BaseManager
     is_answered = models.BooleanField(default=False)  # pyright: ignore
 
     def __str__(self) -> str:
         return f"{self.user_id} ({self.is_answered})"
+
+
+# What this model does needs to be explained here
+class Answer(models.Model):
+    is_answered = models.BooleanField(default=False)  # pyright: ignore
+    survey = models.ForeignKey(
+        SurveyResult, on_delete=models.CASCADE, related_name="answers", null=True
+    )
+    comment = models.CharField(max_length=255)
+    free_text_answer = models.CharField(max_length=255) 
+    multiple_choice_answer = models.JSONField(default=list)  # Stores a list of booleans
+    yes_no_answer = models.BooleanField(default=False)  # pyright: ignore
+    slider_answer = models.FloatField()
+    
+    def __str__(self) -> str:
+        return f"{self.survey} ({self.is_answered})"
