@@ -118,9 +118,30 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):  # pyright: ignore
 # Below are models for surveys and their results
 
 
+# Enum class for questions types
+# The left-most string is what is saved in db
+# The right-most string is what we humans will read
+class QuestionType(models.TextChoices):
+    ONETIME = "onetime", "Onetime"
+    REOCCURRING = "reoccurring", "Reoccurring"
+    BUILTIN = "builtin", "Builtin"
+    ENPS = "enps", "ENPS"
+
+
+# Enum class for questions formats 
+# The left-most string is what is saved in db
+# The right-most string is what we humans will read
+class QuestionFormat(models.TextChoices):
+    MULTIPLE_CHOICE = "multiplechoice", "MultipleChoice"
+    YES_NO = "yesno", "YesNo"
+    TEXT = "text", "Text"
+    SLIDER = "slider", "Slider"
+
+
 # What this model does needs to be explained here
 class Survey(models.Model):
     name = models.CharField(max_length=255)  # Do we want names for surveys???
+    questions = BaseManager
     creator = models.OneToOneField(CustomUser, on_delete=models.CASCADE) 
     employee_groups = models.ManyToManyField(EmployeeGroup, related_name="published_surveys")
     survey_results: BaseManager
@@ -159,16 +180,32 @@ class SurveyResult(models.Model):
 
 
 # What this model does needs to be explained here
+class Question(models.Model):
+    question = models.CharField(max_length=255)
+    question_format = models.CharField(
+        max_length=15, choices=QuestionFormat.choices, default=QuestionFormat.TEXT
+    ) 
+    connected_surveys = models.ManyToManyField(Survey, related_name="questions")
+    question_type = models.CharField(
+        max_length=15, choices=QuestionType.choices, default=QuestionType.ONETIME
+    )
+    
+    def __str__(self) -> str:
+        return f"{self.question_format} ({self.question_type})"
+
+
+# What this model does needs to be explained here
 class Answer(models.Model):
     is_answered = models.BooleanField(default=False)  # pyright: ignore
     survey = models.ForeignKey(
         SurveyResult, on_delete=models.CASCADE, related_name="answers", null=True
     )
+    question = models.OneToOneField(Question, on_delete=models.CASCADE) 
     comment = models.CharField(max_length=255)
     free_text_answer = models.CharField(max_length=255) 
     multiple_choice_answer = models.JSONField(default=list)  # Stores a list of booleans
     yes_no_answer = models.BooleanField(default=False)  # pyright: ignore
     slider_answer = models.FloatField()
-    
+
     def __str__(self) -> str:
         return f"{self.survey} ({self.is_answered})"
