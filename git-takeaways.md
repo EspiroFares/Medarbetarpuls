@@ -90,8 +90,13 @@ git merge feature/namn-på-funktionen
 
 ### 8. **Rensa Upp Efter Merge**
 När din branch är mergad, kan du ta bort den både lokalt och på remote (så vi slipper onödiga branches):
+```sh
 git branch -d feature/namn-på-funktionen   # Lokalt
+```
+
+```sh
 git push origin --delete feature/namn-på-funktionen   # Remote
+```
 
 ### 9. **Hantera Merge-konflikter**
 Om du får merge-konflikter när du försöker merga, öppna de berörda filerna och lös konflikten(alternativt säg till mig:) ). Efter att du löst konflikten, använd:
