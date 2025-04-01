@@ -6,6 +6,7 @@ from django.contrib.auth.models import (
     PermissionsMixin,
 )
 import logging
+from typing import cast
 
 
 logger = logging.getLogger(__name__)
@@ -206,6 +207,29 @@ class Answer(models.Model):
     multiple_choice_answer = models.JSONField(default=list)  # Stores a list of booleans
     yes_no_answer = models.BooleanField(default=False)  # pyright: ignore
     slider_answer = models.FloatField()
+    
+    @property
+    def answer_format(self) -> QuestionFormat | None:
+        """
+        This method is a getter function for the answer format.
+        The @property decorator makes it possible to call this 
+        method without (). 
+
+        Args:
+            self.question (Question): The question this answer relates to 
+
+        Returns:
+            QuestionFormat or None: Returns a QuestionFormat if question exists, otherwise None
+        """
+        if self.question is not None: 
+            # This looks kinda shady but it is necessary for the typing 
+            # The Django model fields ensures that question and question.question_format
+            # will be of correct type, but to handle the edgecase where 
+            # question is None and lsp type errors we need to cast 
+            return cast(QuestionFormat, cast(Question, self.question).question_format)
+
+        logger.warning("Answer format returned None. This suggests that no related question exists!")
+        return None
 
     def __str__(self) -> str:
         return f"{self.survey} ({self.is_answered})"
