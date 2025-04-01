@@ -7,7 +7,7 @@ from django.contrib.auth.models import (
 )
 import logging
 from typing import cast
-
+from typing import List
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,10 @@ class EmployeeGroup(models.Model):
     # Add an explicit type hint for managers (this is just for readability)
     managers: BaseManager
     organization = models.ForeignKey(
-        Organization, on_delete=models.CASCADE, related_name="employee_groups", null=True
+        Organization,
+        on_delete=models.CASCADE,
+        related_name="employee_groups",
+        null=True,
     )
     published_surveys: BaseManager
     survey_templates: BaseManager
@@ -95,7 +98,6 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):  # pyright: ignore
         Organization, on_delete=models.CASCADE, related_name="admins", null=True
     )
 
-
     # These are for the built-in django permissions!!!
     is_staff = models.BooleanField(
         default=False  # pyright: ignore
@@ -115,7 +117,6 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):  # pyright: ignore
         return f"{self.name} ({self.email})"
 
 
-
 # Below are models for surveys and their results
 
 
@@ -129,7 +130,7 @@ class QuestionType(models.TextChoices):
     ENPS = "enps", "ENPS"
 
 
-# Enum class for questions formats 
+# Enum class for questions formats
 # The left-most string is what is saved in db
 # The right-most string is what we humans will read
 class QuestionFormat(models.TextChoices):
@@ -143,25 +144,35 @@ class QuestionFormat(models.TextChoices):
 class Survey(models.Model):
     name = models.CharField(max_length=255)  # Do we want names for surveys???
     questions = BaseManager
-    creator = models.OneToOneField(CustomUser, on_delete=models.CASCADE) 
-    employee_groups = models.ManyToManyField(EmployeeGroup, related_name="published_surveys")
+    creator = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
+    employee_groups = models.ManyToManyField(
+        EmployeeGroup, related_name="published_surveys"
+    )
     survey_results: BaseManager
-    deadline = models.DateTimeField()  # stores both date and time (e.g., YYYY-MM-DD HH:MM:SS)
-    sending_date = models.DateTimeField()  # stores both date and time (e.g., YYYY-MM-DD HH:MM:SS)
+    deadline = (
+        models.DateTimeField()
+    )  # stores both date and time (e.g., YYYY-MM-DD HH:MM:SS)
+    sending_date = (
+        models.DateTimeField()
+    )  # stores both date and time (e.g., YYYY-MM-DD HH:MM:SS)
     # What is this???
-    collected_answer_count = models.IntegerField(default=0)  # pyright: ignore 
+    collected_answer_count = models.IntegerField(default=0)  # pyright: ignore
     is_viewable = models.BooleanField(default=False)  # pyright: ignore
-    
+
     def __str__(self) -> str:
         return f"{self.name} ({self.creator})"
 
 
 # What this model does needs to be explained here
-class SurveyTemplate(models.Model): 
+class SurveyTemplate(models.Model):
     name = models.CharField(max_length=255)  # Do we want names for surveyTemplates???
-    creator = models.OneToOneField(CustomUser, on_delete=models.CASCADE) 
-    employee_groups = models.ManyToManyField(EmployeeGroup, related_name="survey_templates")
-    last_edited = models.DateTimeField()  # stores both date and time (e.g., YYYY-MM-DD HH:MM:SS)
+    creator = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
+    employee_groups = models.ManyToManyField(
+        EmployeeGroup, related_name="survey_templates"
+    )
+    last_edited = (
+        models.DateTimeField()
+    )  # stores both date and time (e.g., YYYY-MM-DD HH:MM:SS)
 
     def __str__(self) -> str:
         return f"{self.name} ({self.creator})"
@@ -185,12 +196,12 @@ class Question(models.Model):
     question = models.CharField(max_length=255)
     question_format = models.CharField(
         max_length=15, choices=QuestionFormat.choices, default=QuestionFormat.TEXT
-    ) 
+    )
     connected_surveys = models.ManyToManyField(Survey, related_name="questions")
     question_type = models.CharField(
         max_length=15, choices=QuestionType.choices, default=QuestionType.ONETIME
     )
-    
+
     def __str__(self) -> str:
         return f"{self.question_format} ({self.question_type})"
 
@@ -201,35 +212,81 @@ class Answer(models.Model):
     survey = models.ForeignKey(
         SurveyResult, on_delete=models.CASCADE, related_name="answers", null=True
     )
-    question = models.OneToOneField(Question, on_delete=models.CASCADE) 
+    question = models.OneToOneField(Question, on_delete=models.CASCADE)
     comment = models.CharField(max_length=255)
-    free_text_answer = models.CharField(max_length=255) 
+    free_text_answer = models.CharField(max_length=255)
     multiple_choice_answer = models.JSONField(default=list)  # Stores a list of booleans
     yes_no_answer = models.BooleanField(default=False)  # pyright: ignore
     slider_answer = models.FloatField()
-    
+
     @property
     def answer_format(self) -> QuestionFormat | None:
         """
         This method is a getter function for the answer format.
-        The @property decorator makes it possible to call this 
-        method without (). 
+        The @property decorator makes it possible to call this
+        method without ().
 
         Args:
-            self.question (Question): The question this answer relates to 
+            self.question (Question): The question this answer relates to
 
         Returns:
             QuestionFormat or None: Returns a QuestionFormat if question exists, otherwise None
         """
-        if self.question is not None: 
-            # This looks kinda shady but it is necessary for the typing 
+        if self.question is not None:
+            # This looks kinda shady but it is necessary for the typing
             # The Django model fields ensures that question and question.question_format
-            # will be of correct type, but to handle the edgecase where 
-            # question is None and lsp type errors we need to cast 
+            # will be of correct type, but to handle the edgecase where
+            # question is None and lsp type errors we need to cast
             return cast(QuestionFormat, cast(Question, self.question).question_format)
 
-        logger.warning("Answer format returned None. This suggests that no related question exists!")
+        logger.warning(
+            "Answer format returned None. This suggests that no related question exists!"
+        )
         return None
 
     def __str__(self) -> str:
         return f"{self.survey} ({self.is_answered})"
+
+
+class DiagramType(models.TextChoices):
+    BAR = "bar", "Bar"
+    PIE = "pie", "Pie"
+    LINE = "line", "Line"
+    STACK = "stack", "Stack"
+
+
+class AnalysisHandler:
+    def viewResult(self, question: Question, survey: Survey, diagramType: DiagramType):
+        answers = Answer.objects.filter(
+            question=question, survey__published_survey=survey
+        )
+        return self._processAnswers(answers, diagramType)
+
+    def viewAnalysis(self, question: Question, diagramType: DiagramType):
+        answers = Answer.objects.filter(question=question)
+        return self._processAnswers(answers, diagramType)
+
+    def groupFilter(self, employeeGroups: List[EmployeeGroup], customUser: CustomUser):
+        users = CustomUser.objects.filter(employee_groups__in=employeeGroups).distinct()
+        return users
+
+    def chooseSurvey(self, surveyID: int):
+        return Survey.objects.get(id=surveyID)
+
+    def getAnswers(self, customUser: CustomUser, surveyID: int):
+        return Answer.objects.filter(
+            survey__published_survey__id=surveyID, survey__user_id=customUser.id
+        )
+
+    def showDiagram(self, diagramType: DiagramType):
+        return
+
+    def calcTrends(self):
+        return
+
+    def calcResult(self):
+        return
+
+    def _processAnswers(self, answers: List[Answer], diagramType: DiagramType):
+        data = [a.free_text_answer for a in answers if a.is_answered]
+        return {"type": diagramType.value, "data": data}
