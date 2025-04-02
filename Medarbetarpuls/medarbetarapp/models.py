@@ -212,7 +212,7 @@ class Answer(models.Model):
     survey = models.ForeignKey(
         SurveyResult, on_delete=models.CASCADE, related_name="answers", null=True
     )
-    question = models.OneToOneField(Question, on_delete=models.CASCADE)
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
     comment = models.CharField(max_length=255)
     free_text_answer = models.CharField(max_length=255)
     multiple_choice_answer = models.JSONField(default=list)  # Stores a list of booleans

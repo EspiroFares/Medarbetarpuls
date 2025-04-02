@@ -1,33 +1,23 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Django App</title>
-    <script src="https://unpkg.com/htmx.org@1.9.2"></script>
-  </head>
-  <body>
-    <h1>Hello world!</h1>
-    <p>This paragraph contains valuable information!</p>
-    <button>This is a button</button>
-  </body>
-  <head>
-    <title>Django Chart</title>
+    <title>Survey Answers Chart</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
   <body>
-    <h2>Survey Data Chart</h2>
+    <h2>Free Text Answer Frequency</h2>
     <canvas id="surveyChart" width="600" height="400"></canvas>
+
     <script>
       const ctx = document.getElementById('surveyChart').getContext('2d');
 
       const data = {
           labels: {{ labels|safe }},
           datasets: [{
-              label: 'Free Text Frequency',
+              label: 'Answer Count',
               data: {{ data|safe }},
-              backgroundColor: 'rgba(75, 192, 192, 0.5)',
-              borderColor: 'rgba(75, 192, 192, 1)',
+              backgroundColor: 'rgba(54, 162, 235, 0.5)',
+              borderColor: 'rgba(54, 162, 235, 1)',
               borderWidth: 1
           }]
       };
@@ -36,7 +26,6 @@
           type: 'bar',
           data: data,
           options: {
-              responsive: true,
               scales: {
                   y: {
                       beginAtZero: true
