@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="sv">
+  <head>
+    {% load static %}
+    <script src="https://unpkg.com/htmx.org@1.8.4"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Medarbetarpuls - Logga in</title>
+    <link rel="stylesheet" href="{% static 'styles.css' %}" />
+  </head>
+  <body>
+    <!-- To test this, switch to login.html in views.py -->
+    <div class="login-container">
+      <img src="{% static 'logo.png' %}" alt="Medarbetarpuls" class="logo" />
+
+      <form class="input-form">
+        <!-- Add code here for POST request to server after the url and view is implemented in the backend. -->
+        <label for="email">Mejladress:</label>
+        <input type="email" id="email" placeholder="Mejladress" required />
+
+        <label for="password">Lösenord:</label>
+        <input type="password" id="password" placeholder="Lösenord" required />
+
+        <button type="submit">Logga in</button>
+      </form>
+
+      <div class="account-help-links">
+        <!-- Replace # later with actual path to create_org and create_acc. -->
+        <a href="#">Registrera ny organisation</a>
+        <a href="#">Skapa nytt konto</a>
+      </div>
+    </div>
+  </body>
+</html>
