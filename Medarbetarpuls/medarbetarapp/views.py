@@ -10,3 +10,15 @@ def index(request):
     logger.error("Testing error!!!")
 
     return render(request, "index.html")
+
+
+def chart_view(request):
+    # Dummy test data
+    labels = ["Happy", "Neutral", "Unhappy"]
+    data = [10, 5, 2]
+
+    context = {
+        "labels": labels,
+        "data": data,
+    }
+    return render(request, "index.html", context)

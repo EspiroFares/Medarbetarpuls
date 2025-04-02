@@ -11,28 +11,41 @@
     <p>This paragraph contains valuable information!</p>
     <button>This is a button</button>
   </body>
+  <head>
+    <title>Django Chart</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
+    <h2>Survey Data Chart</h2>
+    <canvas id="surveyChart" width="600" height="400"></canvas>
+    <script>
+      const ctx = document.getElementById('surveyChart').getContext('2d');
 
-  <canvas id="myChart"></canvas>
+      const data = {
+          labels: {{ labels|safe }},
+          datasets: [{
+              label: 'Free Text Frequency',
+              data: {{ data|safe }},
+              backgroundColor: 'rgba(75, 192, 192, 0.5)',
+              borderColor: 'rgba(75, 192, 192, 1)',
+              borderWidth: 1
+          }]
+      };
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script>
-    fetch("/chart-data/1/") // Use the correct question ID
-      .then((response) => response.json())
-      .then((data) => {
-        const ctx = document.getElementById("myChart").getContext("2d");
-        new Chart(ctx, {
-          type: "bar",
-          data: {
-            labels: data.labels,
-            datasets: [
-              {
-                label: "Responses",
-                data: data.data,
-                backgroundColor: "rgba(54, 162, 235, 0.5)",
-              },
-            ],
-          },
-        });
-      });
-  </script>
+      const config = {
+          type: 'bar',
+          data: data,
+          options: {
+              responsive: true,
+              scales: {
+                  y: {
+                      beginAtZero: true
+                  }
+              }
+          }
+      };
+
+      new Chart(ctx, config);
+    </script>
+  </body>
 </html>
