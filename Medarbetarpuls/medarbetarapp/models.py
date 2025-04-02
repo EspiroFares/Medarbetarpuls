@@ -1,4 +1,3 @@
-from __future__ import annotations
 from django.db import models
 from django.db.models.manager import BaseManager
 from django.contrib.auth.models import (
@@ -109,10 +108,10 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):  # pyright: ignore
 
     # These are for the built-in django permissions!!!
     is_staff = models.BooleanField(
-        default=False  # pyright: ignore
+        default=True  # pyright: ignore
     )  # Allows access to admin panel
     is_superuser = models.BooleanField(
-        default=False  # pyright: ignore
+        default=True  # pyright: ignore
     )  # Allows you to do something in the admin panel
     is_active = models.BooleanField(
         default=True  # pyright: ignore
@@ -335,3 +334,9 @@ class Answer(models.Model):
 
     def __str__(self) -> str:
         return f"{self.survey} ({self.is_answered})"
+
+
+class EmailList(models.Model):
+    email = models.EmailField(unique=True)
+    objects: models.Manager 
+    
