@@ -1,0 +1,46 @@
+<!-- Create organization -->
+<!DOCTYPE html>
+<html lang="sv">
+  <head>
+    {% load static %}
+    <script src="https://unpkg.com/htmx.org@1.8.4"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Skapa din nya organisation</title>
+    <link rel="stylesheet" href="{% static 'styles.css' %}" />
+  </head>
+  <body>
+    <!-- To test this, switch to create_org.html in views.py -->
+    <div class="create-container">
+      <h1>Skapa din nya organisation</h1>
+      <!-- This form sends the input data to the server using a POST request -->
+      <form class="create-form" action="..." method="POST">
+        <label for="name">Organisationsnamn:</label>
+        <input type="text" id="name" name="name" placeholder="Namn" required />
+
+        <label for="name">Ditt namn:</label>
+        <input type="text" id="name" name="name" placeholder="Namn" required />
+
+        <label for="email">Din mejladress:</label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          placeholder="Mejladress"
+          required
+        />
+
+        <label for="password">Lösenord:</label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          placeholder="Lösenord"
+          required
+        />
+
+        <button type="submit">Skapa ny organisation</button>
+      </form>
+    </div>
+  </body>
+</html>
