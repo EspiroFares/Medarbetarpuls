@@ -1,5 +1,9 @@
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 import logging
+
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
+from django.http import HttpResponse
+from . import models 
 
 logger = logging.getLogger(__name__)
 
@@ -11,8 +15,66 @@ def index_view(request):
 
     return render(request, "index.html")
 
+def create_acc_redirect(request):
+    if request.headers.get("HX-Request"):
+        return HttpResponse(headers={"HX-Redirect": "/create_acc_view/"})  # Redirects in HTMX
+
+    return redirect("/create_acc_view/")  # Normal Django redirect for non-HTMX requests
+
+def create_acc_view(request):
+    return render(request, "create_acc.html")  # Normal Django redirect for non-HTMX requests
+
+@csrf_protect
+def create_acc(request) -> HttpResponse:
+    """
+    Creates an account with the fetched input 
+    if the email is in the organization email list
+
+    Args:
+        request: The input text from the name, email and password fields 
+
+    Returns:
+        HttpResponse: Returns status 204 if all is good, otherwise 400  
+    """
+    if request.method == 'POST':
+        if request.headers.get('HX-Request'):
+            name = request.POST.get('name')
+            email = request.POST.get('email')
+            password = request.POST.get('password')
+            
+            # Check that email is registrated to org
+            if not models.EmailList.objects.filter(email=email).exists():
+                logger.error("This email is not authorized for registration.")
+                return HttpResponse(status=400) 
+            
+            models.CustomUser.objects.create_user(email,name,password)
+            return HttpResponse(status=204)
+    
+    return HttpResponse(status=400)  # Bad request if no expression
+
 def add_employee_view(request):
     return render(request, 'add_employee.html')
+
+@csrf_exempt
+def add_employee_email(request) -> HttpResponse:
+    """
+    Adds the given email to the organization
+    email list of allowed emails. An email in 
+    this list is required to create an account. 
+
+    Args:
+        request: The input text from the email field 
+
+    Returns:
+        HttpResponse: Returns status 204 if all is good, otherwise 400  
+    """
+    if request.method == 'POST':
+        if request.headers.get('HX-Request'):
+            email = request.POST.get('email')
+            models.EmailList(email=email)
+            return HttpResponse(status=204)
+    
+    return HttpResponse(status=400)  # Bad request if no expression
 
 def analysis_view(request):
     return render(request, 'analysis.html')
@@ -25,9 +87,6 @@ def authentication_acc_view(request):
 
 def authentication_org_view(request):
     return render(request, 'authentication_org.html')
-
-def create_acc_view(request):
-    return render(request, 'create_acc.html')
 
 def create_org_view(request):
     return render(request, 'create_org.html')

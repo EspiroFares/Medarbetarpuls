@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="sv">
   <head>
     {% load static %}
@@ -27,7 +27,9 @@
       <div class="account-help-links">
         <!-- Replace # later with actual path to create_org and create_acc. -->
         <a href="#">Registrera ny organisation</a>
-        <a href="#">Skapa nytt konto</a>
+        <a href="#" hx-get="{% url 'create_acc_redirect' %}" hx-trigger="click">
+          Skapa nytt konto
+        </a>
       </div>
     </div>
   </body>
