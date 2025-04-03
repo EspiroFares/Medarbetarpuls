@@ -339,4 +339,7 @@ class Answer(models.Model):
 class EmailList(models.Model):
     email = models.EmailField(unique=True)
     objects: models.Manager 
+
+    def __str__(self) -> str:
+        return f"{self.email}"
     

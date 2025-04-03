@@ -14,7 +14,14 @@
     <div class="create-container">
       <h1>Skapa ditt nya konto</h1>
       <!-- This form sends the input data to the server using a POST request -->
-      <form class="create-form">
+      <form
+        class="create-form"
+        hx-post="/create_acc/"
+        hx-target=".create-form"
+        hx-trigger="submit"
+        hx-swap="outerHTML"
+      >
+        {% csrf_token %}
         <label for="name">Namn:</label>
         <input type="text" id="name" name="name" placeholder="Namn" required />
 
@@ -36,14 +43,7 @@
           required
         />
 
-        <form
-          hx-post="/create_acc/"
-          hx-target=".create-form"
-          hx-trigger="click"
-        >
-          {% csrf_token %}
-          <button type="submit">Skapa nytt konto</button>
-        </form>
+        <button type="submit">Skapa nytt konto</button>
       </form>
     </div>
   </body>
