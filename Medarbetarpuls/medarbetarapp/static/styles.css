@@ -333,7 +333,35 @@ button:hover {
   color: #ff4b4b;
 }
 
-/* Popup Content */
+.go-back-button {
+  position: absolute;
+  top: 30px;
+  left: 30px;
+  margin: 10px;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  outline: none;
+}
+.go-back-button:hover {
+  background-color: transparent; /* Prevent blue background */
+  outline: none; /* Remove focus outline */
+}
+
+.go-back-button:focus {
+  outline: none; /* Prevent focus outline */
+}
+
+.go-back-button:hover img {
+  filter: brightness(1.1); /* Lighten on hover */
+}
+
+.back-icon {
+  width: 50px;
+  height: 50px;
+}
+
+/* Use for popups */
 .popup-content {
   background-color: #e6f0fa;
   padding: 20px;
@@ -356,6 +384,19 @@ button:hover {
   border: none;
   cursor: pointer;
   padding: 5px;
+}
+
+.trashcan-button:hover {
+  background-color: transparent; /* Prevent blue background */
+  outline: none; /* Remove focus outline */
+}
+
+.trashcan-button:hover img {
+  filter: sepia(100%) saturate(500%) hue-rotate(-30deg); /* Red hue */
+}
+
+.trashcan-button:focus {
+  outline: none; /* Prevent focus outline */
 }
 
 .search-container {
@@ -404,19 +445,6 @@ td {
 
 th {
   background-color: #e0e0e0;
-}
-
-.trashcan-button:hover {
-  background-color: transparent; /* Prevent blue background */
-  outline: none; /* Remove focus outline */
-}
-
-.trashcan-button:hover img {
-  filter: sepia(100%) saturate(500%) hue-rotate(-30deg); /* Red hue */
-}
-
-.trashcan-button:focus {
-  outline: none; /* Prevent focus outline */
 }
 
 .icon {

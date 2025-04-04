@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="sv">
+  <head>
+    {% load static %}
+    <script src="https://unpkg.com/htmx.org@1.8.4"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lägg till medarbetare</title>
+    <link rel="stylesheet" href="{% static 'styles.css' %}" />
+  </head>
+  <body>
+    <div class="create-container">
+      <button
+        class="go-back-button"
+        onclick="window.location.href='{% url 'my_org' %}'"
+      >
+        <img
+          src="{% static 'go-back-btn.png' %}"
+          alt="Go Back"
+          class="back-icon"
+        />
+      </button>
+      <h1>Lägg till medarbetare i<br />{{organization.name}}</h1>
+      <!-- This form sends the input data to the server using a POST request -->
+      <form class="create-form">
+        <label for="email">Medarbetarens mejladress:</label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          placeholder="Mejladress"
+          required
+        />
+
+        <label for="team">Medarbetarens team:</label>
+        <!-- Fix so team options show up? -->
+        <input type="text" id="team" name="team" placeholder="Team" required />
+
+        <button type="submit" onclick="openPopup()">Lägg till</button>
+        <div id="added-popup" class="popup-overlay" style="display: none">
+          <div class="popup-content">
+            <h2>Din medarbetare är nu tillagd i systemet.</h2>
+            <p>
+              Observera att medarbetaren dyker upp i din organisation först när
+              medarbetaren har skapat sitt konto.
+            </p>
+            <button onclick="closePopup()">Fortsätt</button>
+          </div>
+        </div>
+      </form>
+    </div>
+    <script>
+      function openPopup() {
+        document.getElementById("added-popup").style.display = "flex";
+      }
+
+      function closePopup() {
+        document.getElementById("added-popup").style.display = "none";
+      }
+    </script>
+  </body>
+</html>
