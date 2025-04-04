@@ -84,7 +84,7 @@ def find_organization_by_email(email: str) -> models.Organization | None:
 
 
 def add_employee_view(request):
-    return render(request, "add_employee.html")
+    return render(request, "add_employee.html", {"organization": request.user.admin})
 
 
 @csrf_exempt
@@ -273,8 +273,7 @@ def settings_user_view(request):
 
 def start_admin_view(request):
     return render(
-        request,
-        "start_admin.html"
+        request, "start_admin.html"
     )  # Fix so only works if the user is actually an admin
 
 
