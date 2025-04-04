@@ -8,12 +8,12 @@
     <link rel="stylesheet" href="{% static 'styles.css' %}" />
   </head>
   <body>
-    <div class="unanswered-survey-container">
+    <div class="start-container">
         <h1>Obesvarade enkäter</h1>
         <h2>Du har {{ unanswered_count }} obesvarade enkäter</h2>
-        <div class="survey-cards">
+        <div class="grid-container">
             {% for survey in unanswered_surveys %}
-            <div class="survey-card">
+            <div class="grid-item lightblue">
                 <p>Publicerades: {{ survey.published_survey.sending_date }}</p>
                 <p><strong>*{{ survey.published_survey.name }}*</strong></p>
                 <p>Deadline: {{ survey.published_survey.deadline }}</p>
@@ -21,24 +21,25 @@
             {% endfor %}
 
             <!-- Example survey cards for testing -->
-            <div class="survey-card">
+            <div class="grid-item lightblue">
                 <p>Publicerades: 2025-02-20</p>
                 <p><strong>*Namn på enkät*</strong></p>
                 <p>Deadline: 2026-02-20</p>
             </div>
-            <div class="survey-card">
+            <div class="grid-item lightblue">
                 <p>Publicerades: 2025-02-20</p>
                 <p><strong>*Namn på enkät*</strong></p>
                 <p>Deadline: 2026-02-20</p>
             </div>
-            <div class="survey-card">
+            <div class="grid-item lightblue">
                 <p>Publicerades: 2025-02-20</p>
                 <p><strong>*Namn på enkät*</strong></p>
                 <p>Deadline: 2026-02-20</p>
             </div>
             <!-- Add more survey cards as needed -->
         </div>
-        <button class="view-survey_result" onclick="window.location.href='{% url 'survey_result' %}'"> Visa resultat på tidigare enkäter</button>
+        <button class="view-survey_result" onclick="window.location.href='{% url 'my_results' %}'"> 
+          Visa resultat på tidigare enkäter</button>
     </div>
   </body>
 </html>

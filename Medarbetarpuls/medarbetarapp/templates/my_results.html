@@ -1,0 +1,60 @@
+<html lang="sv">
+  <head>
+    {% load static %}
+    <script src="https://unpkg.com/htmx.org@1.8.4"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Medarbetarpuls - Surveys</title>
+    <link rel="stylesheet" href="{% static 'styles.css' %}" />
+  </head>
+  <body>
+    <div class="start-container">
+        <h1>Resultat på besvarade enkäter</h1>
+        <h2>Du har besvarat {{ answered_count }} enkäter</h2>
+        <div class="grid-container">
+            {% for survey in answered_surveys %}
+
+            {% if survey.published_survey.deadline > current_time %} <!-- Check if sending_date exists -->
+                <div class="grid-item yellow">
+                    <p> Pågående enkät</p>
+                    <p><strong>*{{ survey.published_survey.name }}*</strong></p>
+                    <p> {{survey.published_survey.collected_answer_count}} har svarat hittils</p>
+                </div>
+            {% else %}
+                <div class="grid-item green">
+                    <p>Genomfördes: {{ survey.published_survey.sending_date }} 
+                        - {{ survey.published_survey.deadline }}</p>
+                    <p><strong>*{{ survey.published_survey.name }}*</strong></p>
+                    <p> {{survey.published_survey.collected_answer_count}} svarade på enkäten</p>
+                    <button class="view-survey_result" onclick="window.location.href='{% url 'survey_result' 
+                    survey.id %}'"> 
+                        Se resultat</button>
+                </div>
+            {% endif %}
+            {% endfor %}
+
+            <!-- Example survey cards for testing -->
+            <div class="grid-item yellow">
+                <p> Pågående enkät</p>
+                <p><strong>*Namn på enkät*</strong></p>
+                <p> 34 har svarat hittils</p>
+            </div>
+            <div class="grid-item green">
+                <p>Genomfördes: 2025-02-20 - 2025-03-20</p>
+                <p><strong>*Namn på enkät*</strong></p>
+                <p> 32 svarade på enkäten</p>
+                <button class="view-survey_result" onclick="window.location.href='{% url 'survey_result' 1%}'"> 
+                    Se resultat</button>
+            </div>
+            <div class="grid-item green">
+                <p>Genomfördes: 2025-02-20 - 2025-03-20</p>
+                <p><strong>*Namn på enkät*</strong></p>
+                <p> 32 svarade på enkäten</p>
+                <button class="view-survey_result" onclick="window.location.href='{% url 'survey_result' 1%}'"> 
+                    Se resultat</button>
+            </div>
+            <!-- Add more survey cards as needed -->
+        </div>
+    </div>
+  </body>
+</html>

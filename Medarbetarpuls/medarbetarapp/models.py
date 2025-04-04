@@ -128,10 +128,18 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):  # pyright: ignore
     # To see how many surveys this user has unanswered
     def count_unanswered_surveys(self):
         return self.survey_results.filter(is_answered=False).count()
+    
+    # To see how many surveys this user has answered
+    def count_answered_surveys(self):
+        return self.survey_results.filter(is_answered=True).count()
 
     # To get all unanswered surveys for this user
     def get_unanswered_surveys(self):
         return self.survey_results.filter(is_answered=False)
+    
+    # To get all answered surveys for this user
+    def get_answered_surveys(self):
+        return self.survey_results.filter(is_answered=True)
 
 
 
