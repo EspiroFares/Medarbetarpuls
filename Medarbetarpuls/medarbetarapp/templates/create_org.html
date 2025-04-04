@@ -1,5 +1,5 @@
 <!-- Create organization -->
-<!DOCTYPE html>
+<!doctype html>
 <html lang="sv">
   <head>
     {% load static %}
@@ -14,9 +14,21 @@
     <div class="create-container">
       <h1>Skapa din nya organisation</h1>
       <!-- This form sends the input data to the server using a POST request -->
-      <form class="create-form" action="..." method="POST">
+      <form
+        class="create-form"
+        hx-post="/create_org/"
+        hx-target=".create-form"
+        hx-trigger="submit"
+      >
+        {% csrf_token %}
         <label for="name">Organisationsnamn:</label>
-        <input type="text" id="name" name="name" placeholder="Namn" required />
+        <input
+          type="text"
+          id="org_name"
+          name="org_name"
+          placeholder="Namn"
+          required
+        />
 
         <label for="name">Ditt namn:</label>
         <input type="text" id="name" name="name" placeholder="Namn" required />
