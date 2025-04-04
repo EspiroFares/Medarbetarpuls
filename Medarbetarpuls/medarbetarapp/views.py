@@ -1,9 +1,11 @@
-import logging
 from . import models
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
+from django.shortcuts import get_object_or_404
 from django.contrib.auth import authenticate, login
+
+import logging
 
 logger = logging.getLogger(__name__)
 
@@ -27,14 +29,15 @@ def create_acc_view(request):
 @csrf_protect
 def create_acc(request) -> HttpResponse:
     """
-    Creates an account with the fetched input 
-    if the email is in the organization email list
+    Creates an account with the fetched input, if the 
+    email exists in any organization email list, to said
+    organization. 
 
     Args:
         request: The input text from the name, email and password fields 
 
     Returns:
-        HttpResponse: Returns status 204 if all is good, otherwise 400  
+        HttpResponse: Redirects to login page if all is good, otherwise error message 400  
     """
     if request.method == 'POST':
         if request.headers.get('HX-Request'):
@@ -42,15 +45,32 @@ def create_acc(request) -> HttpResponse:
             email = request.POST.get('email')
             password = request.POST.get('password')
             
-            # Check that email is registrated to org
-            if not models.EmailList.objects.filter(email=email).exists():
+            # Check that email is registrated to an org
+            org = find_organization_by_email(email)
+            if org is None:  
                 logger.error("This email is not authorized for registration.")
                 return HttpResponse(status=400) 
             
-            models.CustomUser.objects.create_user(email,name,password)
-            return render(request, "partials/create_form.html")
+            # Create user 
+            new_user = models.CustomUser.objects.create_user(email,name,password)
+
+            # Add new user to base (everyone) employee group of org
+            base_group = org.employee_groups.filter(name="Alla").first()  # pyright: ignore  
+
+            if base_group:
+                new_user.employee_groups.add(base_group) 
+                new_user.save()
+            else:
+                logger.error(f"No group found with the name '{base_group}' in the organization '{org.name}'")
+                return HttpResponse(status=400) 
+
+            return HttpResponse(headers={"HX-Redirect": "/"})  # Redirect to login page 
     
     return HttpResponse(status=400)  # Bad request if no expression
+
+def find_organization_by_email(email: str) -> models.Organization | None:
+    email_entry = get_object_or_404(models.EmailList, email=email)
+    return email_entry.org  # Follow the ForeignKey to Organization
 
 def add_employee_view(request):
     return render(request, 'add_employee.html')
@@ -71,9 +91,13 @@ def add_employee_email(request) -> HttpResponse:
     if request.method == 'POST':
         if request.headers.get('HX-Request'):
             email = request.POST.get('email')
-            email_instance = models.EmailList(email=email)
-            email_instance.save()
-            return HttpResponse(status=204)
+            user = request.user
+
+            if user.user_role == models.UserRole.ADMIN and hasattr(user, "admin"): 
+                org = user.admin
+                email_instance = models.EmailList(email=email, org=org)
+                email_instance.save()
+                return HttpResponse(status=204)
     
     return HttpResponse(status=400)  # Bad request if no expression
 
