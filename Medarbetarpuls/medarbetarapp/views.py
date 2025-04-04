@@ -4,6 +4,8 @@ from django.shortcuts import redirect, render
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import authenticate, login
+from django.utils import timezone
+from .models import SurveyResult
 
 import logging
 
@@ -299,7 +301,18 @@ def my_org_view(request):
 
 
 def my_results_view(request):
-    return render(request, "my_results.html")
+    user = request.user  # Assuming the user is authenticated
+    answered_count = user.count_answered_surveys()
+    answered_surveys = user.get_answered_surveys()
+
+    # Assuming survey deadline is converted to UTC-timezone
+    current_time = timezone.now()
+
+    return render(request, "my_results.html" , {
+        'answered_count': answered_count,
+        'answered_surveys': answered_surveys,
+        'current_time': current_time,
+    })
 
 
 def my_surveys_view(request):
@@ -332,9 +345,16 @@ def start_user_view(request):
     return render(request, "start_user.html")
 
 
-def survey_result_view(request):
-    return render(request, "survey_result.html")
+def survey_result_view(request, survey_id):
 
+    survey_result = get_object_or_404(SurveyResult, id=survey_id)
+
+    # Check if the survey is accessible to the user
+    if not survey_result.survey.accessible_users.filter(id=request.user.id).exists():
+        return render(request, '403.html', status=403)  # Custom 403 page
+
+    # Proceed to render the survey results
+    return render(request, 'survey_result.html', {'survey_result': survey_result})
 
 def survey_status_view(request):
     return render(request, "survey_status.html")
