@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="sv">
   <head>
     {% load static %}
@@ -13,13 +13,25 @@
     <div class="login-container">
       <img src="{% static 'logo.png' %}" alt="Medarbetarpuls" class="logo" />
 
-      <form class="input-form">
-        <!-- Add code here for POST request to server after the url and view is implemented in the backend. -->
+      <form class="input-form" method="POST" action="{% url 'login' %}">
+        {% csrf_token %}
         <label for="email">Mejladress:</label>
-        <input type="email" id="email" placeholder="Mejladress" required />
+        <input
+          type="email"
+          id="email"
+          name="email"
+          placeholder="Mejladress"
+          required
+        />
 
         <label for="password">Lösenord:</label>
-        <input type="password" id="password" placeholder="Lösenord" required />
+        <input
+          type="password"
+          id="password"
+          name="password"
+          placeholder="Lösenord"
+          required
+        />
 
         <button type="submit">Logga in</button>
       </form>

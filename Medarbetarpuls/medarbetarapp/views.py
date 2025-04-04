@@ -1,9 +1,9 @@
-from django.shortcuts import redirect, render
 import logging
-
-from django.views.decorators.csrf import csrf_exempt, csrf_protect
+from . import models
 from django.http import HttpResponse
-from . import models 
+from django.shortcuts import redirect, render
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
+from django.contrib.auth import authenticate, login
 
 logger = logging.getLogger(__name__)
 
@@ -96,6 +96,35 @@ def create_survey_view(request):
     return render(request, 'create_survey.html')
 
 def login_view(request):
+
+    #maybe implement sesion timer so you dont get logged out??
+    if request.user.is_authenticated:
+        logger.debug("User %e is already logged in.", request.user)
+        #return redirect('start_user')
+     
+    if request.method == "POST":
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+
+        user = authenticate(request, username=email, password=password)
+
+        if user is not None:
+            logger.debug("User %e has role: %e", email, user.user_role)
+            if user.is_active:
+                login(request, user)
+                if user.user_role == models.UserRole.ADMIN:
+                    logger.debug("Admin %e successfully logged in.", email)
+                    return redirect('start_admin')
+                else:  #implement check if user is creator or responder?
+                    logger.debug("User %e successfully logged in.", email)
+                    return redirect('start_user')
+            else:
+                logger.warning("Login attempt for inactive user %e", email)
+                return render(request, 'login.html')
+        else:
+            logger.warning("Failed login attempt for %e", email)
+            return render(request, 'login.html')
+
     return render(request, 'login.html')
 
 def my_org_view(request):
