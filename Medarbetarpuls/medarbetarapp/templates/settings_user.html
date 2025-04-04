@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="sv">
+  <head>
+    {% load static %}
+    <script src="https://unpkg.com/htmx.org@1.8.4"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Inställningar</title>
+    <link rel="stylesheet" href="{% static 'styles.css' %}" />
+    <script>
+        function openPopup() {
+            document.getElementById("delete-popup").style.display = "flex";
+        }
+
+        function closePopup() {
+            document.getElementById("delete-popup").style.display = "none";
+        }
+    </script>
+  </head>
+  <body>
+    <div class="settings-container">
+      <!-- Change later, if time, so user.profile_pic shows here (or default) -->
+      <h1>Inställningar</h1>
+      <div class="info-table">
+        <div class="table-header">Inloggningsuppgifter</div>
+        <div class="table-row">
+            <div class="label">Namn</div>
+            <div class="value"> <!-- Test if username shows up -->
+              {{ user.name }} <a href="#"><span class="edit-icon">✏️</span></a>
+            </div>
+          </div>
+        <div class="table-row">
+          <div class="label">Lösenord</div>
+          <div class="value">
+            **************** <a href="#"><span class="edit-icon">✏️</span></a>
+          </div>
+        </div>
+        <div class="table-row">
+            <div class="label">Mailadress</div>
+            <div class="value">
+              {{ user.email }} <!-- Test if user email shows up -->
+            </div>
+          </div>
+        </div>
+      <button class="delete-button"onclick="openPopup()">Radera konto</button>
+      <!-- Delete Confirmation Popup -->
+    <div id="delete-popup" class="popup-overlay" style="display: none;">
+        <div class="popup-content">
+            <span class="close-button" onclick="closePopup()">&times;</span> <!-- &times multiplication symbol -->
+            <h2>OBS!</h2>
+            <p>Är du säker på att du vill ta bort ditt konto?</p>
+            <p>Detta kommer genast logga ut dig och du kommer inte kunna logga in igen.</p>
+            <label for="password">Lösenord:</label>
+            <input type="password" id="password" placeholder="*************"> <!--fix-->
+            <button class="delete-button">Radera konto</button>
+        </div>
+    </div>
+  </body>
+</html>

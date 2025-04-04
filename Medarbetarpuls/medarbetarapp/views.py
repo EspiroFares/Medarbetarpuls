@@ -17,14 +17,21 @@ def index_view(request):
 
     return render(request, "index.html")
 
+
 def create_acc_redirect(request):
     if request.headers.get("HX-Request"):
-        return HttpResponse(headers={"HX-Redirect": "/create_acc_view/"})  # Redirects in HTMX
+        return HttpResponse(
+            headers={"HX-Redirect": "/create_acc_view/"}
+        )  # Redirects in HTMX
 
     return redirect("/create_acc_view/")  # Normal Django redirect for non-HTMX requests
 
+
 def create_acc_view(request):
-    return render(request, "create_acc.html")  # Normal Django redirect for non-HTMX requests
+    return render(
+        request, "create_acc.html"
+    )  # Normal Django redirect for non-HTMX requests
+
 
 @csrf_protect
 def create_acc(request) -> HttpResponse:
@@ -34,7 +41,7 @@ def create_acc(request) -> HttpResponse:
     organization. 
 
     Args:
-        request: The input text from the name, email and password fields 
+        request: The input text from the name, email and password fields
 
     Returns:
         HttpResponse: Redirects to login page if all is good, otherwise error message 400  
@@ -73,20 +80,21 @@ def find_organization_by_email(email: str) -> models.Organization | None:
     return email_entry.org  # Follow the ForeignKey to Organization
 
 def add_employee_view(request):
-    return render(request, 'add_employee.html')
+    return render(request, "add_employee.html")
+
 
 @csrf_exempt
 def add_employee_email(request) -> HttpResponse:
     """
     Adds the given email to the organization
-    email list of allowed emails. An email in 
-    this list is required to create an account. 
+    email list of allowed emails. An email in
+    this list is required to create an account.
 
     Args:
-        request: The input text from the email field 
+        request: The input text from the email field
 
     Returns:
-        HttpResponse: Returns status 204 if all is good, otherwise 400  
+        HttpResponse: Returns status 204 if all is good, otherwise 400
     """
     if request.method == 'POST':
         if request.headers.get('HX-Request'):
@@ -101,17 +109,22 @@ def add_employee_email(request) -> HttpResponse:
     
     return HttpResponse(status=400)  # Bad request if no expression
 
+
 def analysis_view(request):
-    return render(request, 'analysis.html')
+    return render(request, "analysis.html")
+
 
 def answer_survey_view(request):
-    return render(request, 'answer_survey.html')
+    return render(request, "answer_survey.html")
+
 
 def authentication_acc_view(request):
-    return render(request, 'authentication_acc.html')
+    return render(request, "authentication_acc.html")
+
 
 def authentication_org_view(request):
-    return render(request, 'authentication_org.html')
+    return render(request, "authentication_org.html")
+
 
 def create_org_view(request):
     return render(request, 'create_org.html')
@@ -168,7 +181,8 @@ def create_org(request) -> HttpResponse:
     return HttpResponse(status=400)  # Bad request if no expression
 
 def create_survey_view(request):
-    return render(request, 'create_survey.html')
+    return render(request, "create_survey.html")
+
 
 def login_view(request):
 
@@ -203,35 +217,66 @@ def login_view(request):
     return render(request, 'login.html')
 
 def my_org_view(request):
-    return render(request, 'my_org.html')
+    organization = request.user.admin
+
+    # Retrieve all employee groups associated with this organization
+    employee_groups = models.EmployeeGroup.objects.filter(organization=organization)
+
+    # Collect all employees from these groups
+    employees = models.CustomUser.objects.filter(
+        employee_groups__in=employee_groups
+    ).distinct()
+    return render(
+        request,
+        "my_org.html",
+        {
+            "user": request.user,
+            "organization": organization,
+            "employees": employees,
+        },
+    )
+    # TODO: test if this works, must be logged in
+
 
 def my_results_view(request):
-    return render(request, 'my_results.html')
+    return render(request, "my_results.html")
+
 
 def my_surveys_view(request):
-    return render(request, 'my_surveys.html')
+    return render(request, "my_surveys.html")
+
 
 def publish_survey_view(request):
-    return render(request, 'publish_survey.html')
+    return render(request, "publish_survey.html")
+
 
 def settings_admin_view(request):
-    return render(request, 'settings_admin.html')
+    return render(request, "settings_admin.html")
+
 
 def settings_user_view(request):
-    return render(request, 'settings_user.html')
+    return render(request, "settings_user.html", {"user": request.user})
+
 
 def start_admin_view(request):
-    return render(request, 'start_admin.html')
+    return render(
+        request,
+        "start_admin.html",  # TODO: test this properly, must be logged in for this view to work.
+        {"user": request.user, "organization": request.user.admin},
+    )  # Fix so only works if the user is actually an admin
+
 
 def start_user_view(request):
-    return render(request, 'start_user.html')
+    return render(request, "start_user.html")
+
 
 def survey_result_view(request):
-    return render(request, 'survey_result.html')
+    return render(request, "survey_result.html")
+
 
 def survey_status_view(request):
-    return render(request, 'survey_status.html')
+    return render(request, "survey_status.html")
+
 
 def unanswered_surveys_view(request):
-    return render(request, 'unanswered_surveys.html')
-
+    return render(request, "unanswered_surveys.html")
