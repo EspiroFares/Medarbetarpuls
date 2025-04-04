@@ -36,48 +36,52 @@ def create_acc_view(request):
 @csrf_protect
 def create_acc(request) -> HttpResponse:
     """
-    Creates an account with the fetched input, if the 
+    Creates an account with the fetched input, if the
     email exists in any organization email list, to said
-    organization. 
+    organization.
 
     Args:
         request: The input text from the name, email and password fields
 
     Returns:
-        HttpResponse: Redirects to login page if all is good, otherwise error message 400  
+        HttpResponse: Redirects to login page if all is good, otherwise error message 400
     """
-    if request.method == 'POST':
-        if request.headers.get('HX-Request'):
-            name = request.POST.get('name')
-            email = request.POST.get('email')
-            password = request.POST.get('password')
-            
+    if request.method == "POST":
+        if request.headers.get("HX-Request"):
+            name = request.POST.get("name")
+            email = request.POST.get("email")
+            password = request.POST.get("password")
+
             # Check that email is registrated to an org
             org = find_organization_by_email(email)
-            if org is None:  
+            if org is None:
                 logger.error("This email is not authorized for registration.")
-                return HttpResponse(status=400) 
-            
-            # Create user 
-            new_user = models.CustomUser.objects.create_user(email,name,password)
+                return HttpResponse(status=400)
+
+            # Create user
+            new_user = models.CustomUser.objects.create_user(email, name, password)
 
             # Add new user to base (everyone) employee group of org
-            base_group = org.employee_groups.filter(name="Alla").first()  # pyright: ignore  
+            base_group = org.employee_groups.filter(name="Alla").first()  # pyright: ignore
 
             if base_group:
-                new_user.employee_groups.add(base_group) 
+                new_user.employee_groups.add(base_group)
                 new_user.save()
             else:
-                logger.error(f"No group found with the name '{base_group}' in the organization '{org.name}'")
-                return HttpResponse(status=400) 
+                logger.error(
+                    f"No group found with the name '{base_group}' in the organization '{org.name}'"
+                )
+                return HttpResponse(status=400)
 
-            return HttpResponse(headers={"HX-Redirect": "/"})  # Redirect to login page 
-    
+            return HttpResponse(headers={"HX-Redirect": "/"})  # Redirect to login page
+
     return HttpResponse(status=400)  # Bad request if no expression
+
 
 def find_organization_by_email(email: str) -> models.Organization | None:
     email_entry = get_object_or_404(models.EmailList, email=email)
     return email_entry.org  # Follow the ForeignKey to Organization
+
 
 def add_employee_view(request):
     return render(request, "add_employee.html")
@@ -96,17 +100,17 @@ def add_employee_email(request) -> HttpResponse:
     Returns:
         HttpResponse: Returns status 204 if all is good, otherwise 400
     """
-    if request.method == 'POST':
-        if request.headers.get('HX-Request'):
-            email = request.POST.get('email')
+    if request.method == "POST":
+        if request.headers.get("HX-Request"):
+            email = request.POST.get("email")
             user = request.user
 
-            if user.user_role == models.UserRole.ADMIN and hasattr(user, "admin"): 
+            if user.user_role == models.UserRole.ADMIN and hasattr(user, "admin"):
                 org = user.admin
                 email_instance = models.EmailList(email=email, org=org)
                 email_instance.save()
                 return HttpResponse(status=204)
-    
+
     return HttpResponse(status=400)  # Bad request if no expression
 
 
@@ -127,39 +131,43 @@ def authentication_org_view(request):
 
 
 def create_org_view(request):
-    return render(request, 'create_org.html')
+    return render(request, "create_org.html")
+
 
 def create_org_redirect(request):
     if request.headers.get("HX-Request"):
-        return HttpResponse(headers={"HX-Redirect": "/create_org_view/"})  # Redirects in HTMX
+        return HttpResponse(
+            headers={"HX-Redirect": "/create_org_view/"}
+        )  # Redirects in HTMX
 
     return redirect("/create_org_view/")  # Normal Django redirect for non-HTMX requests
+
 
 @csrf_protect
 def create_org(request) -> HttpResponse:
     """
-    Creates an organization and admin account  
-    with the fetched input  
+    Creates an organization and admin account
+    with the fetched input
 
     Args:
-        request: The input text from the org_name, name, email and password fields 
+        request: The input text from the org_name, name, email and password fields
 
     Returns:
-        HttpResponse: Returns status 204 if all is good, otherwise 400  
+        HttpResponse: Returns status 204 if all is good, otherwise 400
     """
-    if request.method == 'POST':
-        if request.headers.get('HX-Request'):
-            org_name = request.POST.get('org_name')
-            name = request.POST.get('name')
-            email = request.POST.get('email')
-            password = request.POST.get('password')
-            
+    if request.method == "POST":
+        if request.headers.get("HX-Request"):
+            org_name = request.POST.get("org_name")
+            name = request.POST.get("name")
+            email = request.POST.get("email")
+            password = request.POST.get("password")
+
             # Create organization
             org = models.Organization(name=org_name)
             org.save()
 
             # Create admin account
-            admin_account = models.CustomUser.objects.create_user(email,name,password)
+            admin_account = models.CustomUser.objects.create_user(email, name, password)
             admin_account.user_role = models.UserRole.ADMIN
             admin_account.is_staff = True
             admin_account.is_superuser = True
@@ -175,25 +183,25 @@ def create_org(request) -> HttpResponse:
             # Adding a org approved email for easy testing
             test_email = models.EmailList(email="user22@example.com", org=org)
             test_email.save()
-            
-            return HttpResponse(headers={"HX-Redirect": "/"})  # Redirect to login page 
-    
+
+            return HttpResponse(headers={"HX-Redirect": "/"})  # Redirect to login page
+
     return HttpResponse(status=400)  # Bad request if no expression
+
 
 def create_survey_view(request):
     return render(request, "create_survey.html")
 
 
 def login_view(request):
-
-    #maybe implement sesion timer so you dont get logged out??
+    # maybe implement sesion timer so you dont get logged out??
     if request.user.is_authenticated:
         logger.debug("User %e is already logged in.", request.user)
-        #return redirect('start_user')
-     
+        # return redirect('start_user')
+
     if request.method == "POST":
-        email = request.POST.get('email')
-        password = request.POST.get('password')
+        email = request.POST.get("email")
+        password = request.POST.get("password")
 
         user = authenticate(request, username=email, password=password)
 
@@ -203,18 +211,19 @@ def login_view(request):
                 login(request, user)
                 if user.user_role == models.UserRole.ADMIN:
                     logger.debug("Admin %e successfully logged in.", email)
-                    return redirect('start_admin')
-                else:  #implement check if user is creator or responder?
+                    return redirect("start_admin")
+                else:  # implement check if user is creator or responder?
                     logger.debug("User %e successfully logged in.", email)
-                    return redirect('start_user')
+                    return redirect("start_user")
             else:
                 logger.warning("Login attempt for inactive user %e", email)
-                return render(request, 'login.html')
+                return render(request, "login.html")
         else:
             logger.warning("Failed login attempt for %e", email)
-            return render(request, 'login.html')
+            return render(request, "login.html")
 
-    return render(request, 'login.html')
+    return render(request, "login.html")
+
 
 def my_org_view(request):
     organization = request.user.admin
@@ -251,7 +260,11 @@ def publish_survey_view(request):
 
 
 def settings_admin_view(request):
-    return render(request, "settings_admin.html")
+    return render(
+        request,
+        "settings_admin.html",
+        {"user": request.user, "organization": request.user.admin},
+    )
 
 
 def settings_user_view(request):
@@ -261,8 +274,7 @@ def settings_user_view(request):
 def start_admin_view(request):
     return render(
         request,
-        "start_admin.html",  # TODO: test this properly, must be logged in for this view to work.
-        {"user": request.user, "organization": request.user.admin},
+        "start_admin.html"
     )  # Fix so only works if the user is actually an admin
 
 
