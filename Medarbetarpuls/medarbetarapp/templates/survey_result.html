@@ -1,0 +1,100 @@
+<html lang="sv">
+  <head>
+    {% load static %}
+    <script src="https://unpkg.com/htmx.org@1.8.4"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Medarbetarpuls - Surveys</title>
+    <link rel="stylesheet" href="{% static 'styles.css' %}" />
+  </head>
+  <body>
+    {% if request.path == '/survey-result/420/' %}
+    <div class="start-container">
+
+        <h1><center><i>This is a testing page</i></center></h1>
+        <p></p>
+
+        <h1>*Titel på enkät*</h1>
+        <div class="title-background">
+            <button class="title-back-button" onclick="window.location.href='{% url 'my_results'%}'"> 
+                Tillbaka </button>
+            <h2>Resultat</h2>
+        </div>
+        <div class="grid-container">
+            <div class="grid-item result green">
+                <div class="question-title">
+                    <h1> Fråga 1</h1>
+                </div>
+                <div class="question-background">
+                    <p> Här skriver vi en väldigt lång fråga som går över flera flera rader</p>
+                </div>
+                <div class="question-result">
+                    RESULTAT
+                </div>
+            </div>
+            <div class="grid-item result green">
+                <div class="question-title">
+                    <h1> Fråga 2</h1>
+                </div>
+                <div class="question-background">
+                    <p> Kort fråga</p>
+                </div>
+                <div class="question-result">
+                    RESULTAT
+                </div>
+            </div>
+            <div class="grid-item result green">
+                <div class="question-title">
+                    <h1> Fråga 3</h1>
+                </div>
+                <div class="question-background">
+                    <p> Här skriver vi en väldigt lång fråga som går över flera flera rader</p>
+                </div>
+                <div class="question-result">
+                    RESULTAT
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+
+        {% if survey_result %}
+            <div class="start-container">
+
+                <h1><center><i>This is a testing page</i></center></h1>
+                <p></p>
+        
+                <h1>{{ survey_result.published_survey.name }}</h1>
+                <div class="title-background">
+                    <button class="title-back-button" onclick="window.location.href='{% url 'my_results'%}'"> 
+                        Tillbaka </button>
+                    <h2>Resultat</h2>
+                </div>
+                <div class="grid-container">
+
+                    <!-- How do we get the final answers for questins? -->
+    
+                    <div class="grid-item result green">
+                        <div class="question-title">
+                            <h1> QUESTION NUMBER</h1>
+                        </div>
+                        <div class="question-background">
+                            <p> QUESTION</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        {% else %}
+            <div class="start-container">
+            <h1>No results available for this survey.</h1>
+            <h1>You may not have access to this survey result.</h1>
+            <button onclick="window.location.href='{% url 'my_results'%}'"> 
+                Tillbaka </button>
+            </div>
+        {% endif %}
+    {% endif %}
+  </body>
+</html>

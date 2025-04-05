@@ -249,7 +249,7 @@ button:hover {
 .grid-item {
   position: relative;
   width: calc((100% / 3) - 40px);
-  min-width: 200px;
+  min-width: 250px;
   max-width: 250px;
   aspect-ratio: 1 / 1;
   background-color: white;
@@ -267,6 +267,17 @@ button:hover {
   overflow: hidden;
 }
 
+.grid-item .grid-item-button {
+  margin-top: 0;
+}
+
+.grid-item.result {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+
 /* Line at the bottom of the grid item */
 .grid-item::after {
   content: "";
@@ -283,19 +294,15 @@ button:hover {
 .grid-item.pink::after {
   background-color: #ff77a1;
 }
-
 .grid-item.lightblue::after {
   background-color: #8bbdf8;
 }
-
 .grid-item.blue::after {
   background-color: #3e82d8;
 }
-
 .grid-item.green::after {
   background-color: #7ed23e;
 }
-
 .grid-item.yellow::after {
   background-color: #ffc757;
 }
@@ -304,8 +311,38 @@ button:hover {
 }
 
 .grid-item:hover {
-  transform: scale(1.05);
+  transform: scale(1.02);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+.question-title {
+  position: relative;
+  width: 100%; /* Make it full width */
+  text-align: center; /* Center the text */
+}
+
+.question-title h1 {
+  margin: 5px; /* Remove default margin */
+  padding: 0; /* Remove any padding if needed */
+  font-size: 1.5em; /* Adjust font size as needed */
+  text-align: center; /* Center the text if desired */
+}
+
+.question-background {
+  position: flex;
+  min-height: 70px;
+  background-color: #EEF5FE; /* Change this to your desired blue color */ 
+  width: 100%; /* Make it full width */
+  text-align: center; /* Center the text */
+  padding: 10px;
+}
+
+.question-result {
+  flex-grow: 1; 
+  display: flex;
+  justify-content: center; 
+  align-items: center; 
+  margin-top: 10px; 
+  font-weight: bold; 
 }
 
 .delete-button {

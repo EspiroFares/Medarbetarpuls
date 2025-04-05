@@ -26,7 +26,7 @@
                         - {{ survey.published_survey.deadline }}</p>
                     <p><strong>*{{ survey.published_survey.name }}*</strong></p>
                     <p> {{survey.published_survey.collected_answer_count}} svarade på enkäten</p>
-                    <button class="view-survey_result" onclick="window.location.href='{% url 'survey_result' 
+                    <button class="view-survey-button" onclick="window.location.href='{% url 'survey_result' 
                     survey.id %}'"> 
                         Se resultat</button>
                 </div>
@@ -43,15 +43,15 @@
                 <p>Genomfördes: 2025-02-20 - 2025-03-20</p>
                 <p><strong>*Namn på enkät*</strong></p>
                 <p> 32 svarade på enkäten</p>
-                <button class="view-survey_result" onclick="window.location.href='{% url 'survey_result' 1%}'"> 
-                    Se resultat</button>
+                <button class="grid-item-button" onclick="window.location.href='{% url 'survey_result' 420%}'"> 
+                    Se resultat (Fungerande)</button>
             </div>
             <div class="grid-item green">
                 <p>Genomfördes: 2025-02-20 - 2025-03-20</p>
                 <p><strong>*Namn på enkät*</strong></p>
                 <p> 32 svarade på enkäten</p>
-                <button class="view-survey_result" onclick="window.location.href='{% url 'survey_result' 1%}'"> 
-                    Se resultat</button>
+                <button class="grid-item-button" onclick="window.location.href='{% url 'survey_result' 1%}'"> 
+                    Se resultat (Ej tillåtelse)</button>
             </div>
             <!-- Add more survey cards as needed -->
         </div>
