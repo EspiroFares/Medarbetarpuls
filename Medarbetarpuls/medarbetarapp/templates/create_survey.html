@@ -5,7 +5,7 @@
     <script src="https://unpkg.com/htmx.org@1.8.4"></script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Skapa enkät</title>
+    <title>Inställningar</title>
     <link rel="stylesheet" href="{% static 'styles.css' %}" />
   </head>
   <body>
@@ -19,6 +19,7 @@
         />
       </div>
       <div class="grid-container">
+        <!-- Make all of this dynamic -->
         <a href="{% url 'edit_question' %}" class="grid-item blue">
           <h2>Fråga 1</h2>
           <!-- Fix so edits this question, not creating a new one -->
@@ -38,9 +39,93 @@
           </div>
         </a>
       </div>
-      <a href="{% url 'publish_survey' %}">
-        <button class="button">Publicera enkät</button>
-      </a>
+      <button class="button" onclick="openPopup()">Publicera enkät</button>
     </div>
+    <div id="publish-popup" class="popup-overlay" style="display: none">
+      <div class="popup-content">
+        <h2>Publicera enkät</h2>
+
+        <!-- Checkbox Options -->
+        <div class="checkbox-group">
+          <label>
+            <input type="checkbox" name="privacy" value="anonymous" />
+            Anonyma svar
+          </label>
+          <label>
+            <input type="checkbox" name="privacy" value="public" />
+            Publicera resultat för svarande
+          </label>
+        </div>
+        <!-- Retrieve the title from create_survey -->
+        <label for="survey-name">Enkätens namn:</label>
+        <input
+          type="text"
+          id="survey-name"
+          placeholder="Namn"
+          class="text-input"
+        />
+        <label for="send-to">Skicka till:</label>
+
+        <!-- Recipient List -->
+        <input
+          type="text"
+          id="send-to"
+          placeholder="Lägg till grupp"
+          class="text-input"
+        />
+
+        <!-- Date Inputs -->
+        <div class="date-group">
+          <div>
+            <label>Publiceringsdatum:</label>
+            <input type="date" class="date-input" />
+          </div>
+          <div>
+            <label>Sista svarsdatum:</label>
+            <input type="date" class="date-input" />
+          </div>
+        </div>
+
+        <!-- Reminder Options -->
+        <div class="reminder-group">
+          <label>Påminn efter:</label>
+          <div class="reminder-tags">
+            <div class="reminder-tag">
+              1 v <span class="close">&times;</span>
+            </div>
+            <div class="reminder-tag">
+              2 v <span class="close">&times;</span>
+            </div>
+            <div class="reminder-tag">
+              3 v <span class="close">&times;</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="popup-buttons">
+          <button
+            class="go-back-button"
+            onclick="window.location.href='{% url 'create_survey' %}'"
+          >
+            <img
+              src="{% static 'go-back-btn.png' %}"
+              alt="Go Back"
+              class="back-icon"
+            />
+          </button>
+          <button type="button">Publicera</button>
+        </div>
+      </div>
+    </div>
+    <script>
+      function openPopup() {
+        document.getElementById("publish-popup").style.display = "flex";
+      }
+
+      function closePopup() {
+        document.getElementById("publish-popup").style.display = "none";
+      }
+    </script>
   </body>
 </html>
