@@ -14,6 +14,7 @@ urlpatterns = [
     path('create_org_redirect/', views.create_org_redirect, name='create_org_redirect'),
     path('create_org/', views.create_org, name='create_org'),
     path('create-survey/', views.create_survey_view, name='create_survey'),
+    path('edit-question/', views.edit_question_view, name='edit_question'),
     path('index/', views.index_view, name='index'),
     path('', views.login_view, name='login'),
     path('my-org/', views.my_org_view, name='my_org'),

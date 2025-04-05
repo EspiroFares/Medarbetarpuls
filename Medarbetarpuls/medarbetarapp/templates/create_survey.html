@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="sv">
+  <head>
+    {% load static %}
+    <script src="https://unpkg.com/htmx.org@1.8.4"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Skapa enkät</title>
+    <link rel="stylesheet" href="{% static 'styles.css' %}" />
+  </head>
+  <body>
+    <div class="start-container">
+      <div class="editable-title-container">
+        <input
+          type="text"
+          class="editable-title"
+          placeholder="Skriv din titel här..."
+          value=""
+        />
+      </div>
+      <div class="grid-container">
+        <a href="{% url 'edit_question' %}" class="grid-item blue">
+          <h2>Fråga 1</h2>
+          <!-- Fix so edits this question, not creating a new one -->
+          <div class="editable-question-container">
+            <input
+              type="text"
+              class="editable-question"
+              placeholder="Fråga..."
+              value=""
+            />
+            <button class="delete-button">Ta bort</button>
+          </div>
+        </a>
+        <a href="{% url 'edit_question' %}" class="add-button-link">
+          <div class="add-button">
+            <span>+</span>
+          </div>
+        </a>
+      </div>
+      <a href="{% url 'publish_survey' %}">
+        <button class="button">Publicera enkät</button>
+      </a>
+    </div>
+  </body>
+</html>

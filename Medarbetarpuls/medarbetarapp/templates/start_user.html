@@ -10,26 +10,26 @@
   </head>
   <body>
     <div class="start-container">
-        <!-- Change name to variable -->
-        <!-- Dose not check if user logged in and have access-->
-        <h1><center>Välkommen *namn*</center></h1>
-        <div class="grid-container">
-          <a href="{% url 'unanswered_surveys' %}" class="grid-item yellow">
-            <div class="icon">📄</div>
-            <h2>Obesvarade enkäter</h2>
-            <p>Se dina obesvarade enkäter</p>
-          </a>
-          <a href="{% url 'my_results' %}" class="grid-item orange">
-            <div class="icon">🔍</div>
-            <h2>Se resultat</h2>
-            <p>Se resultaten av dina tidigare svarade enkäter</p>
-          </a>
-          <a href="{% url 'settings_user' %}" class="grid-item blue">
-            <div class="icon">⚙️</div>
-            <h2>Inställningar</h2>
-            <p>Dina personliga inställningar</p>
-          </a>
-        </div>
+      <!-- Change name to variable -->
+      <!-- Dose not check if user logged in and have access-->
+      <h1><center>Välkommen {{user.name}}</center></h1>
+      <div class="grid-container">
+        <a href="{% url 'unanswered_surveys' %}" class="grid-item yellow">
+          <div class="icon">📄</div>
+          <h2>Obesvarade enkäter</h2>
+          <p>Se dina obesvarade enkäter</p>
+        </a>
+        <a href="{% url 'my_results' %}" class="grid-item orange">
+          <div class="icon">🔍</div>
+          <h2>Se resultat</h2>
+          <p>Se resultaten av dina tidigare svarade enkäter</p>
+        </a>
+        <a href="{% url 'settings_user' %}" class="grid-item blue">
+          <div class="icon">⚙️</div>
+          <h2>Inställningar</h2>
+          <p>Dina personliga inställningar</p>
+        </a>
+      </div>
     </div>
   </body>
 </html>

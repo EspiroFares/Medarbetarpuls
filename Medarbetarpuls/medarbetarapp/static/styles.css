@@ -150,18 +150,18 @@ button:hover {
   background-color: #a3cbff;
 }
 
-.unanswered-survey-container{
+.unanswered-survey-container {
   max-width: 1200px;
   justify-content: center;
   padding: 20px;
-  display: flex;             
-  flex-direction: column;      
-  align-items: center; 
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 /*Should be able to use for all survey-cards*/
 .survey-cards {
-  display: flex; 
+  display: flex;
   align-items: center;
   max-width: 900px;
   flex-wrap: wrap;
@@ -189,15 +189,52 @@ button:hover {
   cursor: pointer;
 }
 
-
 .start-container {
   max-width: 1200px;
   justify-content: center;
   padding: 20px;
-  display: flex;             
-  flex-direction: column;      
-  align-items: center; 
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   padding: 20px;
+}
+
+.start-container button {
+  margin-top: 40%;
+}
+
+.editable-title {
+  font-size: 32px;
+  font-weight: bold;
+  color: #102b46;
+  border: none;
+  background-color: transparent; /* Remove input background */
+  outline: none; /* Remove focus outline */
+  text-align: center;
+  width: 100%; /* Full width to look like a title */
+  margin-bottom: 20%;
+  padding: 5px 0;
+}
+
+.editable-title:hover {
+  cursor: text;
+}
+
+.editable-question {
+  font-size: 16px;
+  font-weight: normal;
+  color: #102b46;
+  border: none;
+  background-color: transparent;
+  outline: none;
+  text-align: center;
+  width: 100%;
+  margin-top: 0%;
+  padding: 5px 0;
+}
+
+.editable-question:hover {
+  cursor: text;
 }
 
 .grid-container {
@@ -273,6 +310,7 @@ button:hover {
 
 .delete-button {
   margin-top: 5%;
+  margin-bottom: 10%;
   background-color: #f95e5e;
 }
 
@@ -494,4 +532,33 @@ th {
 .icon {
   width: 20px;
   height: 20px;
+}
+
+.add-button {
+  width: 60px;
+  height: 120px;
+  background-color: #f0f0f0;
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 15%;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+.add-button-link {
+  margin-top: 10%;
+  text-decoration: none; /* Remove underline */
+  display: inline-block; /* Make it behave like a block element */
+}
+
+.add-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.add-button span {
+  font-size: 32px;
+  color: #7a7a7a; /* Grey color for the plus symbol */
 }
