@@ -358,11 +358,13 @@ def start_user_view(request):
 
 
 def survey_result_view(request, survey_id):
-    survey_result = get_object_or_404(SurveyResult, id=survey_id)
 
-    # Check if the survey is accessible to the user
-    if not survey_result.survey.accessible_users.filter(id=request.user.id).exists():
-        return render(request, "403.html", status=403)  # Custom 403 page
+    survey_result = SurveyResult.objects.filter(id=survey_id).first()
+
+    if survey_result is not None:
+        # Check if the survey is accessible to the user
+        if survey_result.user != request.user:
+            survey_result = None
 
     # Proceed to render the survey results
     return render(request, "survey_result.html", {"survey_result": survey_result})
