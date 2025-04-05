@@ -199,8 +199,52 @@ button:hover {
   padding: 20px;
 }
 
-.start-container button {
-  margin-top: 40%;
+.title-background {
+  display: flex; /* Enable flexbox */
+  justify-content: center; /* Center the items in the flex container */
+  align-items: center; /* Center items vertically */
+  position: relative; /* Allow absolute positioning if needed */
+  width: 100%; /* Make it full width */
+  background-color: #E8EBF1; /* Optional: background color */
+  min-height: auto;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.title-background h2 {
+  flex: 1; /* Allow the heading to take up available space */
+  text-align: center; /* Center the text */
+  margin: 0; /* Remove default margin */
+}
+
+.title-background .title-back-button {
+  position: absolute; /* Position button absolutely */
+  left: 10px; /* Adjust as needed for spacing from the left */
+  transform: translateY(-60%); /* Adjust for vertical centering */
+}
+
+.title-background {
+  display: flex; /* Enable flexbox */
+  justify-content: center; /* Center the items in the flex container */
+  align-items: center; /* Center items vertically */
+  position: relative; /* Allow absolute positioning if needed */
+  width: 100%; /* Make it full width */
+  background-color: #E8EBF1; /* Optional: background color */
+  min-height: auto;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.title-background h2 {
+  flex: 1; /* Allow the heading to take up available space */
+  text-align: center; /* Center the text */
+  margin: 0; /* Remove default margin */
+}
+
+.title-background .title-back-button {
+  position: absolute; /* Position button absolutely */
+  left: 10px; /* Adjust as needed for spacing from the left */
+  transform: translateY(-60%); /* Adjust for vertical centering */
 }
 
 .editable-title {
