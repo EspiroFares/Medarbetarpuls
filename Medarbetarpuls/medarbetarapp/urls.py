@@ -12,6 +12,7 @@ urlpatterns = [
         "authentication-org/", views.authentication_org_view, name="authentication_org"
     ),
     path("create_acc_view/", views.create_acc_view, name="create_acc_view"),
+    path("create-question/", views.create_question, name="create_question"),
     path("create_acc_redirect/", views.create_acc_redirect, name="create_acc_redirect"),
     path("create_acc/", views.create_acc, name="create_acc"),
     path("create_org_view/", views.create_org_view, name="create_org_view"),

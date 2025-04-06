@@ -33,7 +33,7 @@
             <button class="delete-button">Ta bort</button>
           </div>
         </a>
-        <a href="{% url 'edit_question' %}" class="add-button-link">
+        <a href="{% url 'create_question' %}" class="add-button-link">
           <div class="add-button">
             <span>+</span>
           </div>
@@ -109,7 +109,7 @@
             onclick="window.location.href='{% url 'create_survey' %}'"
           >
             <img
-              src="{% static 'go-back-btn.png' %}"
+              src="{% static 'images/go-back-btn.png' %}"
               alt="Go Back"
               class="back-icon"
             />

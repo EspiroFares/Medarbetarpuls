@@ -136,6 +136,10 @@ def create_org_view(request):
     return render(request, "create_org.html")
 
 
+def create_question(request):
+    return render(request, "create_question.html")
+
+
 def create_org_redirect(request):
     if request.headers.get("HX-Request"):
         return HttpResponse(
@@ -258,7 +262,6 @@ def create_org(request) -> HttpResponse:
             test_email.save()
 
             return HttpResponse(headers={"HX-Redirect": "/"})  # Redirect to login page
-
 
             return HttpResponse(headers={"HX-Redirect": "/"})  # Redirect to login page
 
@@ -387,7 +390,6 @@ def start_user_view(request):
 
 
 def survey_result_view(request, survey_id):
-
     survey_result = SurveyResult.objects.filter(id=survey_id).first()
 
     if survey_result is not None:
