@@ -8,6 +8,7 @@ from django.contrib.auth.models import (
 import logging
 from typing import cast
 from typing import List
+import math
 
 logger = logging.getLogger(__name__)
 
@@ -144,7 +145,7 @@ class QuestionFormat(models.TextChoices):
 class Survey(models.Model):
     name = models.CharField(max_length=255)  # Do we want names for surveys???
     questions = BaseManager
-    creator = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
+    creator = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     employee_groups = models.ManyToManyField(
         EmployeeGroup, related_name="published_surveys"
     )
@@ -213,11 +214,13 @@ class Answer(models.Model):
         SurveyResult, on_delete=models.CASCADE, related_name="answers", null=True
     )
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
-    comment = models.CharField(max_length=255)
-    free_text_answer = models.CharField(max_length=255)
-    multiple_choice_answer = models.JSONField(default=list)  # Stores a list of booleans
-    yes_no_answer = models.BooleanField(default=False)  # pyright: ignore
-    slider_answer = models.FloatField()
+    comment = models.CharField(max_length=255, null=True)
+    free_text_answer = models.CharField(max_length=255, null=True)
+    multiple_choice_answer = models.JSONField(
+        default=list, null=True
+    )  # Stores a list of booleans
+    yes_no_answer = models.BooleanField(default=False, null=True)  # pyright: ignore
+    slider_answer = models.FloatField(null=True)
 
     @property
     def answer_format(self) -> QuestionFormat | None:
@@ -256,16 +259,6 @@ class DiagramType(models.TextChoices):
 
 
 class AnalysisHandler:
-    def viewResult(self, question: Question, survey: Survey, diagramType: DiagramType):
-        answers = Answer.objects.filter(
-            question=question, survey__published_survey=survey
-        )
-        return self._processAnswers(answers, diagramType)
-
-    def viewAnalysis(self, question: Question, diagramType: DiagramType):
-        answers = Answer.objects.filter(question=question)
-        return self._processAnswers(answers, diagramType)
-
     def groupFilter(self, employeeGroups: List[EmployeeGroup], customUser: CustomUser):
         users = CustomUser.objects.filter(employee_groups__in=employeeGroups).distinct()
         return users
@@ -278,8 +271,13 @@ class AnalysisHandler:
             survey__published_survey__id=surveyID, survey__user_id=customUser.id
         )
 
-    def showDiagram(self, diagramType: DiagramType):
-        return
+    def calcENPS(self, promoters, passives, detractors):
+        respondents = promoters + passives + detractors
+        eNPS = ((promoters - detractors) / respondents) * 100
+        return math.floor(eNPS)
+
+    def calcENPSChange(self, past, present):
+        return present - past
 
     def calcTrends(self):
         return
