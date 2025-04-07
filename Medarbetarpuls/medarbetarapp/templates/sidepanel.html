@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<!--
+{%comment%} 
+This template is designed to be used by including it and was specifically designed to be used in the template for the topnav.
+
+{%endcomment%} -->
+
+{% comment %} Sidepanel code {% endcomment %}
+<div class="sidepanel" id="panel">
+  <a href={% url 'start_user' %}>Startsida</a>
+  <a href={% url 'unanswered_surveys' %}>Obesvarade enkäter</a>
+  <a href={% url 'my_surveys' %}>Mina enkäter</a>
+  <a href={% url 'create_survey' %}>Skapa enkät</a>
+  <a href={% url 'my_results' %}>Se resultat</a>
+  <a href={% url 'my_org' %}>Min organisation</a>
+  <a href={% url 'settings_user' %}>Inställningar</a>
+</div>
+
+<script>
+  function openPanel() {
+    var x = document.getElementById("panel");
+
+    if (x.style.transform === "" || x.style.transform === "translateX(100%)") {
+      // Open the sidepanel
+      x.style.transform = "translateX(0)"; // Slide the panel in
+      x.style.visibility = "visible"; // Make it visible
+    } else {
+      // Close the sidepanel
+      x.style.transform = "translateX(100%)"; // Slide the panel out
+      x.style.visibility = "hidden"; // Make it invisible
+    }
+  }
+</script>
