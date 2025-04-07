@@ -15,17 +15,17 @@
       // Chart 1: Free text frequency
       labels = ["Happy", "Neutral", "Sad"]
       data = [3, 2, 1]
-      const textLabels = {{ labels|default:"[]"|safe }};
-      const textData = {{ data|default:"[]"|safe }};
+      const textLabels = {{ enps_slider_answer|default:"[]"|safe }};
+      const textData = {{ enps_respondents|default:"[]"|safe }};
 
       const ctx1 = document.getElementById("surveyChart").getContext("2d");
       new Chart(ctx1, {
         type: "bar",
         data: {
-          labels: labels,
+          labels: textLabels,
           datasets: [{
             label: "Answer Count",
-            data: data,
+            data: textData,
             backgroundColor: "rgba(54, 162, 235, 0.5)",
             borderColor: "rgba(54, 162, 235, 1)",
             borderWidth: 1

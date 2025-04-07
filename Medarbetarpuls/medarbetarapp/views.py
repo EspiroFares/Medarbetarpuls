@@ -39,9 +39,9 @@ def chart_view1(request):
 
 def chart_view(request):
     SURVEY_ID = 1  # Choose what survey you want to show here
-
+    RESULT_ID = 2
     survey = Survey.objects.get(id=SURVEY_ID)
-    results = SurveyResult.objects.filter(published_survey=survey, id=SURVEY_ID)
+    results = SurveyResult.objects.filter(published_survey=survey, id=RESULT_ID)
     # ---- ENPS SCORES ----
     enps_question = Question.objects.filter(question_type="enps").first()
 
@@ -64,11 +64,20 @@ def chart_view(request):
 
     enps_labels = ["Promoters", "Passives", "Detractors"]
     enps_data = [promoters, passives, detractors]
+    enps_respondents = []
+    for i in range(1, 11):
+        print(i)
+        enps_respondents.append(enps_answers.filter(slider_answer=i).count())
+    enps_slider_answer = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    print(enps_respondents)
+
     # analysisHandler = AnalysisHandler()
     # print(analysisHandler.calcENPS(promoters, passives, detractors))
     context = {
         "enps_labels": enps_labels,
         "enps_data": enps_data,
+        "enps_slider_answer": enps_slider_answer,
+        "enps_respondents": enps_respondents,
     }
 
     return render(request, "index.html", context)
