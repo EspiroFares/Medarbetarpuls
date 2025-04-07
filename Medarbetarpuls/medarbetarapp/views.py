@@ -84,11 +84,11 @@ def find_organization_by_email(email: str) -> models.Organization | None:
     email_entry = get_object_or_404(models.EmailList, email=email)
     return email_entry.org  # Follow the ForeignKey to Organization
 
-
+@login_required
 def add_employee_view(request):
     return render(request, "add_employee.html", {"organization": request.user.admin})
 
-
+@login_required
 @csrf_exempt
 def add_employee_email(request) -> HttpResponse:
     """
@@ -115,11 +115,11 @@ def add_employee_email(request) -> HttpResponse:
 
     return HttpResponse(status=400)  # Bad request if no expression
 
-
+@login_required
 def analysis_view(request):
     return render(request, "analysis.html")
 
-
+@login_required
 def answer_survey_view(request):
     return render(request, "answer_survey.html")
 
@@ -310,7 +310,7 @@ def login_view(request):
 
     return render(request, "login.html")
 
-
+@login_required
 def my_org_view(request):
     organization = request.user.admin
 
@@ -332,7 +332,7 @@ def my_org_view(request):
     )
     # TODO: test if this works, must be logged in
 
-
+@login_required
 def my_results_view(request):
     user = request.user  # Assuming the user is authenticated
     answered_count = user.count_answered_surveys()
@@ -360,29 +360,70 @@ def my_results_view(request):
         },
     )
 
-
+@login_required
 def my_surveys_view(request):
     return render(request, "my_surveys.html")
 
 
 def settings_admin_view(request):
-    return render(
-        request,
-        "settings_admin.html",
-        {"user": request.user, "organization": request.user.admin},
-    )
+#if pressed leave over account
+    if request.method == "POST":
+        if request.headers.get("HX-Request"):
+            newAdminEmail = request.POST.get("email")
+            user = request.user
+            org = user.admin
+            
+            if models.EmailList.objects.filter(email=newAdminEmail).exists():
+                user.is_active = False
+                user.is_superuser = False
+                user.admin = None
+                user.user_role = models.UserRole.SURVEY_RESPONDER
+                user.save()
+                newAdmin = models.CustomUser.objects.get(email=newAdminEmail)
+                newAdmin.is_superuser = True
+                newAdmin.user_role = models.UserRole.ADMIN
+                newAdmin.admin = org
+                newAdmin.save()
+                logout(request)
+                return HttpResponse(headers={"HX-Redirect": "/"})
+            else: 
+                #maybe return message so user knows it was wrong password
+                pass
 
+    return render(request, "settings_admin.html", {"user": request.user, "organization": request.user.admin})
 
+@login_required
+@csrf_protect
 def settings_user_view(request):
+    #FIX - needs to fix so when wrong password is written the popup doesnt dissappear and a message is sent
+
+    
+    #if pressed delete user
+    if request.method == "POST":
+        if request.headers.get("HX-Request"):
+            password = request.POST.get("password")
+            email = request.user.email
+            
+            user = authenticate(request, username=email, password=password)
+            if user is not None:
+                user.is_active = False
+                user.save()
+
+                #user.delete() maybe not right because we want the users answers to be saved still
+                logout(request)
+                return HttpResponse(headers={"HX-Redirect": "/"})
+            else: 
+                #maybe return message so user knows it was wrong password
+                pass
     return render(request, "settings_user.html", {"user": request.user})
 
-
+@login_required
 def start_admin_view(request):
     return render(
         request, "start_admin.html"
     )  # Fix so only works if the user is actually an admin
 
-
+@login_required
 def start_user_view(request):
     return render(request, "start_user.html")
 
@@ -400,11 +441,11 @@ def survey_result_view(request, survey_id):
 
     return render(request, "survey_result.html", {"survey_result": survey_result})
 
-
+@login_required
 def survey_status_view(request):
     return render(request, "survey_status.html")
 
-
+@login_required
 def unanswered_surveys_view(request):
     user = request.user  # Assuming the user is authenticated
     unanswered_count = user.count_unanswered_surveys()
