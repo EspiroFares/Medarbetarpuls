@@ -323,6 +323,10 @@ button:hover {
   z-index: 1;
 }
 
+.grid-item.result{
+  min-width: 250px;
+}
+
 /* Add specific classes for different colors */
 .grid-item.pink::after {
   background-color: #ff77a1;
@@ -350,6 +354,37 @@ button:hover {
 .grid-item:hover {
   transform: scale(1.05);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.question-title {
+  position: relative;
+  width: 100%; /* Make it full width */
+  text-align: center; /* Center the text */
+}
+
+.question-title h1 {
+  margin: 5px; /* Remove default margin */
+  padding: 0; /* Remove any padding if needed */
+  font-size: 1.5em; /* Adjust font size as needed */
+  text-align: center; /* Center the text if desired */
+}
+
+.question-background {
+  position: flex;
+  min-height: 70px;
+  background-color: #EEF5FE; /* Change this to your desired blue color */ 
+  width: 100%; /* Make it full width */
+  text-align: center; /* Center the text */
+  padding: 10px;
+}
+
+.question-result {
+  flex-grow: 1; 
+  display: flex;
+  justify-content: center; 
+  align-items: center; 
+  margin-top: 10px; 
+  font-weight: bold; 
 }
 
 .delete-button {
