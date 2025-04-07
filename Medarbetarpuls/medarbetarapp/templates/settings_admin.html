@@ -44,17 +44,30 @@
           </div>
         </div>
       <button class="delete-button"onclick="openPopup()">Överlämna organisation</button>
+
+
       <!-- Delete Confirmation Popup -->
     <div id="transfer-popup" class="popup-overlay" style="display: none;">
-        <div class="popup-content">
+        <div id="content" class="popup-content">
+          <form 
+            class="transfer-form"
+            hx-post="/settings-admin/"
+            hx-target="#content"
+            hx-trigger="submit"
+            hx-swap="outerHTML">
+
             <span class="close-button" onclick="closePopup()">&times;</span> <!-- &times multiplication symbol -->
             <h2>OBS!</h2>
             <p>Är du säker på att du vill överlämna din organisation?</p>
             <p>Genom att ange en mejladress nedan kommer du att överföra hela din organisation och administratörsrollen till det konto som är kopplat till mejladressen. Ditt konto kommer därefter att tas bort.</p>
+            {% csrf_token %}
             <label for="email">Överför till konto:</label>
-            <input type="email" id="email" placeholder="Mejladress"> 
-            <button class="delete-button">Överlämna organisation</button> <!-- TODO: Fix functionality when clicking on the button. Should check if the given mail address exists in the DB, if not tell user to try again, if exists transfer org to other account, give it admin rights and lastly remove this acc (logout). -->
+            <input type="email" id="email" name="email" placeholder="Mejladress"> 
+            <button type="submit" class="delete-button">Överlämna organisation</button> <!-- TODO: Fix functionality when clicking on the button. Should check if the given mail address exists in the DB, if not tell user to try again, if exists transfer org to other account, give it admin rights and lastly remove this acc (logout). -->
+          </form>
         </div>
     </div>
+
+
   </body>
 </html>
