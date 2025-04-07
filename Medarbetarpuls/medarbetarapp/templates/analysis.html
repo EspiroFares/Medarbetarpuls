@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    {% load static %}
+    <script src="https://unpkg.com/htmx.org@1.8.4"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Analys</title>
+    <link rel="stylesheet" href="{% static 'styles.css' %}" />
+  </head>
+  <body>
+    <div class="analysis-container">
+      <h1>Analys</h1>
+      <h2>Fritext svarsfrekvens</h2>
+      <div class="graph-container">
+        <canvas id="surveyChart"></canvas>
+      </div>
+
+      <h2>eNPS-värde</h2>
+      <div class="graph-container">
+        <canvas id="enpsChart"></canvas>
+      </div>
+    </div>
+
+    <script>
+      // Chart 1: Free text frequency
+      const textLabels = {{ labels|default:"[]"|safe }};
+      const textData = {{ data|default:"[]"|safe }};
+
+      const ctx1 = document.getElementById("surveyChart").getContext("2d");
+      new Chart(ctx1, {
+        type: "bar",
+        data: {
+          labels: textLabels,
+          datasets: [{
+            label: "Answer Count",
+            data: textData,
+            backgroundColor: "rgba(54, 162, 235, 0.5)",
+            borderColor: "rgba(54, 162, 235, 1)",
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                precision: 0
+              }
+            }
+          }
+        }
+      });
+
+      // Chart 2: eNPS breakdown
+      const enpsLabels = {{ enps_labels|default:"[\"Happy\", \"Neutral\", \"Sad\"]"|safe }};
+      const enpsData = {{ enps_data|default:"[3, 2, 1]"|safe }};
+
+      const ctx2 = document.getElementById("enpsChart").getContext("2d");
+      new Chart(ctx2, {
+        type: "pie",  // Change to "pie" or "doughnut" if you prefer
+        data: {
+          labels: enpsLabels,
+          datasets: [{
+            label: "eNPS Responses",
+            data: enpsData,
+            backgroundColor: [
+              "rgba(75, 192, 192, 0.5)",
+              "rgba(255, 206, 86, 0.5)",
+              "rgba(255, 99, 132, 0.5)"
+            ],
+            borderColor: [
+              "rgba(75, 192, 192, 1)",
+              "rgba(255, 206, 86, 1)",
+              "rgba(255, 99, 132, 1)"
+            ],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                precision: 0
+              }
+            }
+          }
+        }
+      });
+    </script>
+  </body>
+</html>
