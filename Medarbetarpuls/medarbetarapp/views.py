@@ -195,85 +195,8 @@ def create_org(request) -> HttpResponse:
 
     return HttpResponse(status=400)  # Bad request if no expression
 
-
-def create_org_redirect(request):
-    if request.headers.get("HX-Request"):
-        return HttpResponse(
-            headers={"HX-Redirect": "/create_org_view/"}
-        )  # Redirects in HTMX
-        return HttpResponse(
-            headers={"HX-Redirect": "/create_org_view/"}
-        )  # Redirects in HTMX
-
-    return redirect("/create_org_view/")  # Normal Django redirect for non-HTMX requests
-
-
-@csrf_protect
-def create_org(request) -> HttpResponse:
-    """
-    Creates an organization and admin account
-    with the fetched input
-    Creates an organization and admin account
-    with the fetched input
-
-    Args:
-        request: The input text from the org_name, name, email and password fields
-        request: The input text from the org_name, name, email and password fields
-
-    Returns:
-        HttpResponse: Returns status 204 if all is good, otherwise 400
-        HttpResponse: Returns status 204 if all is good, otherwise 400
-    """
-    if request.method == "POST":
-        if request.headers.get("HX-Request"):
-            org_name = request.POST.get("org_name")
-            name = request.POST.get("name")
-            email = request.POST.get("email")
-            password = request.POST.get("password")
-
-    if request.method == "POST":
-        if request.headers.get("HX-Request"):
-            org_name = request.POST.get("org_name")
-            name = request.POST.get("name")
-            email = request.POST.get("email")
-            password = request.POST.get("password")
-
-            # Create organization
-            org = models.Organization(name=org_name)
-            org.save()
-
-            # Create admin account
-            admin_account = models.CustomUser.objects.create_user(email, name, password)
-            admin_account = models.CustomUser.objects.create_user(email, name, password)
-            admin_account.user_role = models.UserRole.ADMIN
-            admin_account.is_staff = True
-            admin_account.is_superuser = True
-
-            # Link admin account to org
-            admin_account.admin = org
-            admin_account.save()
-
-            # Create base (everyone) employee group
-            base_group = models.EmployeeGroup(name="Alla", organization=org)
-            base_group.save()
-
-            # Adding a org approved email for easy testing
-            test_email = models.EmailList(email="user22@example.com", org=org)
-            test_email.save()
-
-            return HttpResponse(headers={"HX-Redirect": "/"})  # Redirect to login page
-
-            return HttpResponse(headers={"HX-Redirect": "/"})  # Redirect to login page
-
-    return HttpResponse(status=400)  # Bad request if no expression
-
-
 def create_survey_view(request):
     return render(request, "create_survey.html")
-
-
-def edit_question_view(request):
-    return render(request, "edit_question.html")
 
 
 def edit_question_view(request):
@@ -351,15 +274,6 @@ def my_results_view(request):
             "current_time": current_time,
         },
     )
-    return render(
-        request,
-        "my_results.html",
-        {
-            "answered_count": answered_count,
-            "answered_surveys": answered_surveys,
-            "current_time": current_time,
-        },
-    )
 
 @login_required
 def my_surveys_view(request):
@@ -375,6 +289,9 @@ def settings_admin_view(request):
             org = user.admin
             
             if models.EmailList.objects.filter(email=newAdminEmail).exists():
+                print("HAALLÅÅ")
+                logger.error("Testing error!!!")
+
                 user.is_active = False
                 user.is_superuser = False
                 user.admin = None
@@ -438,8 +355,6 @@ def survey_result_view(request, survey_id):
             survey_result = None
 
     # Proceed to render the survey results
-    return render(request, "survey_result.html", {"survey_result": survey_result})
-
     return render(request, "survey_result.html", {"survey_result": survey_result})
 
 @login_required
