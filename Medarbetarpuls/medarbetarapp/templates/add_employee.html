@@ -22,21 +22,28 @@
       </button>
       <h1>Lägg till medarbetare i<br />{{organization.name}}</h1>
       <!-- This form sends the input data to the server using a POST request -->
-      <form class="create-form">
+      <form
+        class="create-form"
+        hx-post="{% url 'add_employee' %}"
+        hx-trigger="submit"
+        hx-swap="none"
+        method="POST"
+      >
+        {% csrf_token %}
         <label for="email">Medarbetarens mejladress:</label>
-        <input
-          type="email"
-          id="email"
-          name="email"
-          placeholder="Mejladress"
-          required
-        />
+          <input
+            type="email"
+            id="email"
+            name="email"
+            placeholder="Mejladress"
+            required
+          />
 
-        <label for="team">Medarbetarens team:</label>
-        <!-- Fix so team options show up? -->
-        <input type="text" id="team" name="team" placeholder="Team" required />
+          <label for="team">Medarbetarens team:</label>
+          <input type="text" id="team" name="team" placeholder="Team" required />
+          <button type="submit" onclick="openPopup()">Lägg till</button>
 
-        <button type="submit" onclick="openPopup()">Lägg till</button>
+        </form>
         <div id="added-popup" class="popup-overlay" style="display: none">
           <div class="popup-content">
             <h2>Din medarbetare är nu tillagd i systemet.</h2>

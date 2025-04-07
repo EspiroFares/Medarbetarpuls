@@ -86,12 +86,8 @@ def find_organization_by_email(email: str) -> models.Organization | None:
     return email_entry.org  # Follow the ForeignKey to Organization
 
 @login_required
-def add_employee_view(request):
-    return render(request, "add_employee.html", {"organization": request.user.admin})
-
-@login_required
 @csrf_exempt
-def add_employee_email(request) -> HttpResponse:
+def add_employee_view(request):
     """
     Adds the given email to the organization
     email list of allowed emails. An email in
@@ -103,18 +99,18 @@ def add_employee_email(request) -> HttpResponse:
     Returns:
         HttpResponse: Returns status 204 if all is good, otherwise 400
     """
+
     if request.method == "POST":
-        if request.headers.get("HX-Request"):
-            email = request.POST.get("email")
-            user = request.user
+        email = request.POST.get("email")
+        user = request.user
 
-            if user.user_role == models.UserRole.ADMIN and hasattr(user, "admin"):
-                org = user.admin
-                email_instance = models.EmailList(email=email, org=org)
-                email_instance.save()
-                return HttpResponse(status=204)
+        if user.user_role == models.UserRole.ADMIN and hasattr(user, "admin"):
+            org = user.admin
+            email_instance = models.EmailList(email=email, org=org)
+            email_instance.save()
+            return HttpResponse(status=204)   #maybe should render back to my_org?
 
-    return HttpResponse(status=400)  # Bad request if no expression
+    return render(request, "add_employee.html", {"organization": request.user.admin})
 
 @login_required
 def analysis_view(request):
