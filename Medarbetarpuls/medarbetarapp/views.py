@@ -38,16 +38,24 @@ def chart_view1(request):
 
 
 def chart_view(request):
-    SURVEY_ID = 2  # Choose what survey you want to show here
+    SURVEY_ID = 1  # Choose what survey you want to show here
 
+    survey = Survey.objects.get(id=SURVEY_ID)
+    results = SurveyResult.objects.filter(published_survey=survey, id=SURVEY_ID)
     # ---- ENPS SCORES ----
     enps_question = Question.objects.filter(question_type="enps").first()
 
-    enps_answers = Answer.objects.filter(
+    # this line gets ALL answers from this survey (over time)
+    enps_all_answers = Answer.objects.filter(
         is_answered=True,
         question=enps_question,
         slider_answer__isnull=False,
         survey__published_survey__id=SURVEY_ID,
+    )
+
+    # this line gets answers from one specific survey
+    enps_answers = Answer.objects.filter(
+        survey__in=results, question=enps_question, is_answered=True
     )
 
     promoters = enps_answers.filter(slider_answer__gte=9).count()

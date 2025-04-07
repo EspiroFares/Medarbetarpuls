@@ -13,6 +13,8 @@
 
     <script>
       // Chart 1: Free text frequency
+      labels = ["Happy", "Neutral", "Sad"]
+      data = [3, 2, 1]
       const textLabels = {{ labels|default:"[]"|safe }};
       const textData = {{ data|default:"[]"|safe }};
 
@@ -20,10 +22,10 @@
       new Chart(ctx1, {
         type: "bar",
         data: {
-          labels: textLabels,
+          labels: labels,
           datasets: [{
             label: "Answer Count",
-            data: textData,
+            data: data,
             backgroundColor: "rgba(54, 162, 235, 0.5)",
             borderColor: "rgba(54, 162, 235, 1)",
             borderWidth: 1

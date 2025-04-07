@@ -16,6 +16,7 @@ import random
 Answer.objects.all().delete()
 Question.objects.all().delete()
 SurveyResult.objects.all().delete()
+Survey.objects.all().delete()
 
 # -------- USER --------
 # user = CustomUser.objects.first()
