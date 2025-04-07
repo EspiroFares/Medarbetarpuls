@@ -728,3 +728,30 @@ th {
   background-color: #eef5fe;
   margin-bottom: 20px; /* Larger space between inputs */
 }
+
+.analysis-container {
+  background-color: #eeeeee;
+  width: 100%;
+  max-width: 800px;
+  padding: 30px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.analysis-container h1 {
+  margin-bottom: 12%;
+  font-size: 28px;
+  color: #4e8ce1;
+}
+
+.analysis-container h2 {
+  margin-bottom: 12%;
+  font-weight: normal; /* Heading automatically bold, wants normal */
+  font-size: 20px;
+  color: #102b46;
+}
+
+.graph-container {
+  width: 25%;
+  height: 25%;
+}

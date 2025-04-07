@@ -207,7 +207,6 @@ def create_org_redirect(request):
     return redirect("/create_org_view/")  # Normal Django redirect for non-HTMX requests
 
 
-
 @csrf_protect
 def create_org(request) -> HttpResponse:
     """
@@ -266,7 +265,6 @@ def create_org(request) -> HttpResponse:
             return HttpResponse(headers={"HX-Redirect": "/"})  # Redirect to login page
 
     return HttpResponse(status=400)  # Bad request if no expression
-
 
 
 def create_survey_view(request):
@@ -419,3 +417,45 @@ def unanswered_surveys_view(request):
             "unanswered_surveys": unanswered_surveys,
         },
     )
+
+
+def chart_view1(request):
+    SURVEY_ID = 2  # Choose what survey you want to show here
+
+    # ---- ENPS SCORES ----
+    enps_question = Question.objects.filter(question_type="enps").first()
+
+    enps_answers = Answer.objects.filter(
+        is_answered=True,
+        question=enps_question,
+        slider_answer__isnull=False,
+        survey__published_survey__id=SURVEY_ID,
+    )
+
+    promoters = enps_answers.filter(slider_answer__gte=9).count()
+    passives = enps_answers.filter(slider_answer__gte=7, slider_answer__lt=9).count()
+    detractors = enps_answers.filter(slider_answer__lt=7).count()
+
+    enps_labels = ["Promoters", "Passives", "Detractors"]
+    enps_data = [promoters, passives, detractors]
+    # analysisHandler = AnalysisHandler()
+    # print(analysisHandler.calcENPS(promoters, passives, detractors))
+    context = {
+        "enps_labels": enps_labels,
+        "enps_data": enps_data,
+    }
+
+    return render(request, "index.html", context)
+
+
+def chart_view(request):
+    # If no real data exists, show sample data
+    labels = ["Happy", "Neutral", "Sad"]
+    data = [3, 2, 1]
+
+    context = {
+        "labels": labels,
+        "data": data,
+    }
+
+    return render(request, "analysis.html", context)
