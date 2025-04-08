@@ -239,10 +239,19 @@ def login_view(request):
     return render(request, "login.html")
 
 
+@csrf_protect
 @login_required
 def my_org_view(request):
     organization = request.user.admin
 
+    if request.method == "POST":
+        user_id = request.POST.get("user_id")
+        if request.user.user_role == models.UserRole.ADMIN:
+            employee_to_remove = models.CustomUser.objects.get(pk=user_id)
+            print("removing ", employee_to_remove)
+            employee_to_remove.is_active = False
+            employee_to_remove.save()
+        return redirect("my_org")
     # Retrieve all employee groups associated with this organization
     employee_groups = models.EmployeeGroup.objects.filter(organization=organization)
 
@@ -259,7 +268,7 @@ def my_org_view(request):
             "pagetitle": f"Din organisation<br>{organization.name}",
         },
     )
-    # TODO: test if this works, must be logged in
+
 
 
 @login_required
