@@ -7,11 +7,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Lägg till medarbetare</title>
     <link rel="stylesheet" href="{% static 'styles.css' %}" />
+    
   </head>
   <body>
+    {% include "topbar.html" with pagetitle=pagetitle %}
     <div class="create-container">
       <button
-        class="go-back-button"
+        class="image-button"
         onclick="window.location.href='{% url 'my_org' %}'"
       >
         <img
@@ -20,7 +22,6 @@
           class="back-icon"
         />
       </button>
-      <h1>Lägg till medarbetare i<br />{{organization.name}}</h1>
       <!-- This form sends the input data to the server using a POST request -->
       <form
         class="create-form"

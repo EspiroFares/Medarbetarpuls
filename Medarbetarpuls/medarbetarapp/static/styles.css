@@ -291,7 +291,8 @@ button:hover {
 
 .grid-container {
   display: flex;
-  max-width: 900px;
+  max-width: 800px;
+  margin-top: 9%;
   flex-wrap: wrap;
   justify-content: center;
   gap: 20px;
@@ -331,7 +332,7 @@ button:hover {
   z-index: 1;
 }
 
-.grid-item.result{
+.grid-item.result {
   min-width: 250px;
 }
 
@@ -380,19 +381,19 @@ button:hover {
 .question-background {
   position: flex;
   min-height: 70px;
-  background-color: #EEF5FE; /* Change this to your desired blue color */ 
+  background-color: #eef5fe; /* Change this to your desired blue color */
   width: 100%; /* Make it full width */
   text-align: center; /* Center the text */
   padding: 10px;
 }
 
 .question-result {
-  flex-grow: 1; 
+  flex-grow: 1;
   display: flex;
-  justify-content: center; 
-  align-items: center; 
-  margin-top: 10px; 
-  font-weight: bold; 
+  justify-content: center;
+  align-items: center;
+  margin-top: 10px;
+  font-weight: bold;
 }
 
 .delete-button {
@@ -545,27 +546,34 @@ button:hover {
   color: #ff4b4b;
 }
 
-.go-back-button {
+.image-button {
   position: absolute;
-  top: 2%;
-  left: 1%;
+  top: 82%;
+  left: 2%;
   margin: 10px;
   background-color: transparent;
   border: none;
   cursor: pointer;
   outline: none;
 }
-.go-back-button:hover {
+.image-button:hover {
   background-color: transparent; /* Prevent blue background */
   outline: none; /* Remove focus outline */
 }
 
-.go-back-button:focus {
+.image-button:focus {
   outline: none; /* Prevent focus outline */
 }
 
-.go-back-button:hover img {
+.image-button:hover img {
   filter: brightness(1.1); /* Lighten on hover */
+}
+
+.image-button.logout {
+  top: 80%;
+  left: 60%;
+  position: absolute;
+  width: 35%;
 }
 
 .back-icon {
@@ -781,12 +789,6 @@ th {
   text-align: center;
 }
 
-.analysis-container h1 {
-  margin-bottom: 12%;
-  font-size: 28px;
-  color: #4e8ce1;
-}
-
 .analysis-container h2 {
   margin-bottom: 12%;
   font-weight: normal; /* Heading automatically bold, wants normal */
@@ -806,6 +808,7 @@ th {
   position: fixed;
   top: 0;
   display: flex;
+  z-index: 2;
   justify-content: space-between;
 }
 
@@ -823,24 +826,33 @@ th {
 }
 
 .topbar-logo {
-  top: 0;
-  left: 0;
+  top: 1%;
+  left: 1%;
   position: fixed;
-  width: 10%;
+  width: 5%;
 }
 
 .pagetitle {
-  color: var(--black);
-  /*text-align: center;*/
+  color: var(--dark_blue);
+  text-align: center;
+  background-color: transparent;
+  padding: 0;
+  margin-top: 0%;
+}
+
+.pagetitle h2 {
+  font-size: 20px;
+  margin-top: 0;
 }
 
 .sidepanel {
   width: 30%;
   position: fixed;
-  z-index: 1;
-  height: 100%;
+  z-index: 2;
+  height: 55%;
   top: 0;
   right: 0;
+  border-radius: 30px;
   background-color: var(--soft_blue);
   padding-top: 5%;
   padding-bottom: 5%;
@@ -872,7 +884,7 @@ th {
   right: 1%;
   top: 1%;
   border-radius: 50%;
-  z-index: 2;
+  z-index: 3;
 }
 
 .menu a {
@@ -885,4 +897,11 @@ th {
 
 .wrapper {
   position: relative;
+}
+
+.logout-button {
+  top: 85%;
+  right: 2%;
+  position: fixed;
+  width: 5%;
 }

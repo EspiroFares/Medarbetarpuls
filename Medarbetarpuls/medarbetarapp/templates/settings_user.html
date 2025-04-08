@@ -7,25 +7,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Inställningar</title>
     <link rel="stylesheet" href="{% static 'styles.css' %}" />
-    <script>
-        function openPopup() {
-            document.getElementById("delete-popup").style.display = "flex";
-        }
-
-        function closePopup() {
-            document.getElementById("delete-popup").style.display = "none";
-        }
-    </script>
   </head>
   <body>
+    {% include "topbar.html" with pagetitle=pagetitle %}
     <div class="settings-container">
       <!-- Change later, if time, so user.profile_pic shows here (or default) -->
-      <h1>Inställningar</h1>
       <div class="info-table">
         <div class="table-header">Inloggningsuppgifter</div>
         <div class="table-row">
             <div class="label">Namn</div>
-            <div class="value"> <!-- Test if username shows up -->
+            <div class="value"> 
               {{ user.name }} <a href="#"><span class="edit-icon">✏️</span></a>
             </div>
           </div>
@@ -38,7 +29,7 @@
         <div class="table-row">
             <div class="label">Mailadress</div>
             <div class="value">
-              {{ user.email }} <!-- Test if user email shows up -->
+              {{ user.email }} 
             </div>
           </div>
         </div>
@@ -67,5 +58,14 @@
           </form>
         </div>
     </div>
+    <script>
+      function openPopup() {
+          document.getElementById("delete-popup").style.display = "flex";
+      }
+
+      function closePopup() {
+          document.getElementById("delete-popup").style.display = "none";
+      }
+  </script>
   </body>
 </html>

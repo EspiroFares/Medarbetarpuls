@@ -18,10 +18,12 @@
     </script>
   </head>
   <body>
+    {% include "topbar.html" with pagetitle=pagetitle %}
     <div class="settings-container">
       <!-- Change later, if time, so user.profile_pic shows here (or default)  -->
-      <h1>Inställningar</h1>
-      <h2>Administratör för<br>{{organization.name}}</h2>
+      <div class=pagetitle>
+        <h2>Administratör för<br>{{organization.name}}</h2>
+      </div>
       <div class="info-table">
         <div class="table-header">Inloggningsuppgifter</div>
         <div class="table-row">

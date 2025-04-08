@@ -10,9 +10,9 @@
   </head>
   <body>
     <!-- To test this, switch to start.html in views.py -->
-    <!-- Dose not check if user logged in and have access-->
+    <!-- Does not check if user logged in and have access-->
+    {% include "topbar.html" with pagetitle=pagetitle %}
     <div class="start-container">
-      <h1><center>Välkommen {{user.name}}</center></h1>
       <div class="grid-container">
         <a href="{% url 'unanswered_surveys' %}" class="grid-item yellow">
           <div class="icon">📄</div>
