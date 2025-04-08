@@ -37,18 +37,32 @@
             </tr>
           </thead>
           <tbody id="employeeTable">
-            {% for employee in employees %}
+            {% for employee in employees %} {% if employee.is_active %}
             <tr>
               <td>{{ employee.name }}</td>
               <td>{{ employee.email }}</td>
               <td>
-                <button class="trashcan-button">
-                  <img
-                    src="{% static 'images/trashcan.png' %}"
-                    alt="Delete"
-                    class="icon"
+                <form
+                  action="{% url 'my_org' %}"
+                  method="POST"
+                  style="display: inline"
+                >
+                  {% csrf_token %}
+                  <input
+                    type="hidden"
+                    name="user_id"
+                    value="{{ employee.id }}"
                   />
-                </button>
+                  <button type="submit" class="trashcan-button">
+                    <!-- Maybe confirm popup???-->
+                    <img
+                      src="{% static 'images/trashcan.png' %}"
+                      alt="Delete"
+                      class="icon"
+                    />
+                  </button>
+                </form>
+                {% endif %}
               </td>
             </tr>
             {% endfor %}
