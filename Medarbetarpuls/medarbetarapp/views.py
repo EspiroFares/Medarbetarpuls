@@ -40,39 +40,21 @@ def chart_view1(request):
 def chart_view(request):
     SURVEY_ID = 1  # Choose what survey you want to show here
     RESULT_ID = 2
-    survey = Survey.objects.get(id=SURVEY_ID)
-    results = SurveyResult.objects.filter(published_survey=survey, id=RESULT_ID)
-    # ---- ENPS SCORES ----
-    enps_question = Question.objects.filter(question_type="enps").first()
+    analysisHandler = AnalysisHandler()
 
-    # this line gets ALL answers from this survey (over time)
-    enps_all_answers = Answer.objects.filter(
-        is_answered=True,
-        question=enps_question,
-        slider_answer__isnull=False,
-        survey__published_survey__id=SURVEY_ID,
-    )
+    enps_answers = analysisHandler.getENPSAnswersSurvey(SURVEY_ID, RESULT_ID)
 
-    # this line gets answers from one specific survey
-    enps_answers = Answer.objects.filter(
-        survey__in=results, question=enps_question, is_answered=True
-    )
-
+    # move these 3 rows somewhere else?
     promoters = enps_answers.filter(slider_answer__gte=9).count()
     passives = enps_answers.filter(slider_answer__gte=7, slider_answer__lt=9).count()
     detractors = enps_answers.filter(slider_answer__lt=7).count()
 
     enps_labels = ["Promoters", "Passives", "Detractors"]
     enps_data = [promoters, passives, detractors]
-    enps_respondents = []
-    for i in range(1, 11):
-        print(i)
-        enps_respondents.append(enps_answers.filter(slider_answer=i).count())
+    enps_respondents = analysisHandler.getRespondentsDistribution(enps_answers)
     enps_slider_answer = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-    print(enps_respondents)
 
-    # analysisHandler = AnalysisHandler()
-    # print(analysisHandler.calcENPS(promoters, passives, detractors))
+    print(analysisHandler.getENPS(promoters, passives, detractors))
     context = {
         "enps_labels": enps_labels,
         "enps_data": enps_data,

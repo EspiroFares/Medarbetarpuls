@@ -1,3 +1,4 @@
+from getpass import getuser
 from django.db import models
 from django.db.models.manager import BaseManager
 from django.contrib.auth.models import (
@@ -259,22 +260,44 @@ class DiagramType(models.TextChoices):
 
 
 class AnalysisHandler:
-    def groupFilter(self, employeeGroups: List[EmployeeGroup], customUser: CustomUser):
-        users = CustomUser.objects.filter(employee_groups__in=employeeGroups).distinct()
-        return users
+    """
+    This class handles all functionality that is needed for the analysis webpage.
+    """
 
-    def chooseSurvey(self, surveyID: int):
+    def groupFilter(self):
+        # to be implemented
+        return
+
+    def getSurvey(self, surveyID: int):
         return Survey.objects.get(id=surveyID)
 
-    def getAnswers(self, customUser: CustomUser, surveyID: int):
+    def getResultsSurvey(self, survey: Survey, resultID: int):
+        return SurveyResult.objects.filter(published_survey=survey, id=resultID)
+
+    def getENPSAnswersAll(self):
+        enps_q = Question.objects.filter(question_type="enps").first()
+        return Answer.objects.filter(question=enps_q, is_answered=True)
+
+    def getENPSAnswersSurvey(self, surveyID: int, resultID: int):
+        results = SurveyResult.objects.filter(
+            published_survey=self.getSurvey(surveyID), id=resultID
+        )
+        enps_q = Question.objects.filter(question_type="enps").first()
         return Answer.objects.filter(
-            survey__published_survey__id=surveyID, survey__user_id=customUser.id
+            survey__in=results, question=enps_q, is_answered=True
         )
 
-    def calcENPS(self, promoters, passives, detractors):
+    def getENPS(self, promoters, passives, detractors):
         respondents = promoters + passives + detractors
         eNPS = ((promoters - detractors) / respondents) * 100
         return math.floor(eNPS)
+
+    def getRespondentsDistribution(self, answers):
+        respondents = []
+        for i in range(1, 11):
+            print(i)
+            respondents.append(answers.filter(slider_answer=i).count())
+        return respondents
 
     def calcENPSChange(self, past, present):
         return present - past

@@ -10,7 +10,9 @@ import random
 
 # kör raden nedan i shell för att lägga till objekt
 # exec(open('medarbetarapp/analysis_test_data.py').read())
-# Get the first SurveyResult instance
+# om ni kör raden ovan flera gånger kommer django skapa nya objekt med nya id'n. Vill ni komma åt ett specifikt objekt med samma id hela tiden behöver ni då flusha databasen emellan körningar. Detta kan göras med kommandot:
+# python manage.py flush
+
 
 # removing old objects to avoid problems
 Answer.objects.all().delete()
@@ -18,37 +20,117 @@ Question.objects.all().delete()
 SurveyResult.objects.all().delete()
 Survey.objects.all().delete()
 
-# -------- USER --------
-# user = CustomUser.objects.first()
+yesno_questions = ["Did you have a productive day?"]
 
-user, created = CustomUser.objects.get_or_create(
-    email="admin@example.com",
-    defaults={
-        "name": "Admin User",
-        "password": "admin123",  # gets hashed below
-        "user_role": UserRole.ADMIN,
-        "authorization_level": 10,
-        "is_staff": True,
-        "is_superuser": True,
-    },
-)
 
-if created:
-    user.set_password("admin123")  # must hash manually after creation
-    user.save()
-# -------- SURVEYS -------
+# HELPER FUNCTIONS
+# Creates answer object connected to a specific SurveyResult
+def createENPSAnswers(amount: int, result: SurveyResult):
+    enps_scores = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    for i in range(amount):
+        Answer.objects.create(
+            is_answered=True,
+            survey=result,
+            question=q_enps,
+            slider_answer=random.choice(enps_scores),
+        )
+    return
 
-survey = Survey.objects.create(
-    name="Weekly Pulse Check",
-    creator=user,
-    deadline="2025-05-01 12:00:00",
-    sending_date="2025-04-01 12:00:00",
-)
 
-r1 = SurveyResult.objects.create(published_survey=survey, user_id=1)
-r2 = SurveyResult.objects.create(published_survey=survey, user_id=2)
-r3 = SurveyResult.objects.create(published_survey=survey, user_id=3)
-r4 = SurveyResult.objects.create(published_survey=survey, user_id=4)
+def createUsers(
+    userRole: UserRole,
+    amount: int,
+):
+    first_names = [
+        "Hannah",
+        "Liam",
+        "Ava",
+        "Noah",
+        "Sophia",
+        "Mason",
+        "Isabella",
+        "Ethan",
+        "Mia",
+        "Logan",
+        "Charlotte",
+        "Lucas",
+        "Amelia",
+        "Jackson",
+        "Harper",
+    ]
+    last_names = [
+        "Smith",
+        "Johnson",
+        "Williams",
+        "Brown",
+        "Jones",
+        "Garcia",
+        "Miller",
+        "Davis",
+        "Rodriguez",
+        "Martinez",
+        "Hernandez",
+        "Lopez",
+        "Gonzalez",
+        "Wilson",
+        "Anderson",
+    ]
+    result = []
+    if userRole == UserRole.ADMIN:
+        isStaff = True
+        isSuperUser = True
+    elif userRole == UserRole.SURVEY_CREATOR:
+        isStaff = True
+        isSuperUser = False
+    elif userRole == UserRole.SURVEY_RESPONDER:
+        isStaff = False
+        isSuperUser = False
+    for i in range(amount):
+        # maybe add something here so we dont get the same combination multiple times?
+        first_name = random.choice(first_names)
+        last_name = random.choice(last_names)
+        user, created = CustomUser.objects.get_or_create(
+            email=f"{first_name}{last_name}@example.com",
+            defaults={
+                "name": f"{first_name} {last_name}",
+                "password": f"{first_name}123",
+                "user_role": userRole,
+                "authorization_level": 10,  # vet inte vad jag ska sätta här?
+                "is_staff": isStaff,
+                "is_superuser": isSuperUser,
+            },
+        )
+        if created:
+            user.set_password("123")  #
+            user.save()
+        result.append(user)
+    return result
+
+
+def createSurveys(amount: int, surveyCreator: CustomUser):
+    if surveyCreator.user_role != UserRole.SURVEY_CREATOR:
+        print(
+            f"UserRole in createSurveys is a {surveyCreator.user_role} but needs to be a {UserRole.SURVEY_CREATOR}. "
+        )
+        return
+    surveys = []
+    for i in range(amount):
+        survey = Survey.objects.create(
+            name=f"Weekly Pulse Check {i}",
+            creator=surveyCreator,
+            deadline="2025-07-01 12:00:00",
+            sending_date="2025-06-01 12:00:00",
+        )
+        surveys.append(survey)
+    return surveys
+
+
+def createSurveyResult(amount: int, survey: Survey):
+    results = []
+    for i in range(amount):
+        result = SurveyResult.objects.create(published_survey=survey)
+        results.append(result)
+    return results
 
 
 # ----------- QUESTIONS -------------
@@ -125,95 +207,6 @@ Answer.objects.create(
     slider_answer=8.5,
 )
 
-# -----------ENPS-----------
-Answer.objects.create(
-    is_answered=True,
-    survey=r1,
-    question=q_enps,
-    slider_answer=9.0,  # Promoter
-)
-Answer.objects.create(
-    is_answered=True,
-    survey=r1,
-    question=q_enps,
-    slider_answer=9.0,  # Promoter
-)
-Answer.objects.create(
-    is_answered=True,
-    survey=r1,
-    question=q_enps,
-    slider_answer=9.0,  # Promoter
-)
-Answer.objects.create(
-    is_answered=True,
-    survey=r1,
-    question=q_enps,
-    slider_answer=9.0,  # Promoter
-)
-Answer.objects.create(
-    is_answered=True,
-    survey=r1,
-    question=q_enps,
-    slider_answer=7.0,  # Passive
-)
-
-Answer.objects.create(
-    is_answered=True,
-    survey=r1,
-    question=q_enps,
-    slider_answer=2.0,  # Detractor
-)
-
-
-Answer.objects.create(
-    is_answered=True,
-    survey=r1,
-    question=q_enps,
-    slider_answer=10.0,  # Promoter
-)
-
-Answer.objects.create(
-    is_answered=True,
-    survey=r1,
-    question=q_enps,
-    slider_answer=9.0,  # Promoter
-)
-
-Answer.objects.create(
-    is_answered=True,
-    survey=r1,
-    question=q_enps,
-    slider_answer=7.5,  # Passive
-)
-
-Answer.objects.create(
-    is_answered=True,
-    survey=r1,
-    question=q_enps,
-    slider_answer=6.0,  # Detractor
-)
-
-Answer.objects.create(
-    is_answered=True,
-    survey=r1,
-    question=q_enps,
-    slider_answer=5.0,  # Detractor
-)
-
-Answer.objects.create(
-    is_answered=True,
-    survey=r1,
-    question=q_enps,
-    slider_answer=3.0,  # Detractor
-)
-
-Answer.objects.create(
-    is_answered=True,
-    survey=r1,
-    question=q_enps,
-    slider_answer=10.0,  # Promoter
-)
-
 
 # ----------- ANSWERS R2 -------------
 Answer.objects.create(
@@ -236,155 +229,3 @@ Answer.objects.create(
     question=q_slider,
     slider_answer=8.5,
 )
-
-
-# -----------ENPS-----------
-Answer.objects.create(
-    is_answered=True,
-    survey=r2,
-    question=q_enps,
-    slider_answer=2.0,  # Detractor
-)
-Answer.objects.create(
-    is_answered=True,
-    survey=r2,
-    question=q_enps,
-    slider_answer=2.0,  # Detractor
-)
-Answer.objects.create(
-    is_answered=True,
-    survey=r2,
-    question=q_enps,
-    slider_answer=2.0,  # Detractor
-)
-Answer.objects.create(
-    is_answered=True,
-    survey=r2,
-    question=q_enps,
-    slider_answer=9.0,  # Promoter
-)
-Answer.objects.create(
-    is_answered=True,
-    survey=r2,
-    question=q_enps,
-    slider_answer=7.0,  # Passive
-)
-
-Answer.objects.create(
-    is_answered=True,
-    survey=r2,
-    question=q_enps,
-    slider_answer=2.0,  # Detractor
-)
-
-
-Answer.objects.create(
-    is_answered=True,
-    survey=r2,
-    question=q_enps,
-    slider_answer=10.0,  # Promoter
-)
-
-Answer.objects.create(
-    is_answered=True,
-    survey=r2,
-    question=q_enps,
-    slider_answer=2.0,  # Detractor
-)
-
-Answer.objects.create(
-    is_answered=True,
-    survey=r2,
-    question=q_enps,
-    slider_answer=7.5,  # Passive
-)
-
-Answer.objects.create(
-    is_answered=True,
-    survey=r2,
-    question=q_enps,
-    slider_answer=6.0,  # Detractor
-)
-
-Answer.objects.create(
-    is_answered=True,
-    survey=r2,
-    question=q_enps,
-    slider_answer=5.0,  # Detractor
-)
-
-Answer.objects.create(
-    is_answered=True,
-    survey=r2,
-    question=q_enps,
-    slider_answer=3.0,  # Detractor
-)
-
-Answer.objects.create(
-    is_answered=True,
-    survey=r2,
-    question=q_enps,
-    slider_answer=10.0,  # Promoter
-)
-
-
-# ----------- ANSWERS R3 -------------
-
-Answer.objects.create(
-    is_answered=True,
-    survey=r3,
-    question=q_enps,
-    slider_answer=10.0,  # Promoter
-)
-Answer.objects.create(
-    is_answered=True,
-    survey=r2,
-    question=q_enps,
-    slider_answer=10.0,  # Promoter
-)
-Answer.objects.create(
-    is_answered=True,
-    survey=r2,
-    question=q_enps,
-    slider_answer=10.0,  # Promoter
-)
-Answer.objects.create(
-    is_answered=True,
-    survey=r2,
-    question=q_enps,
-    slider_answer=10.0,  # Promoter
-)
-Answer.objects.create(
-    is_answered=True,
-    survey=r2,
-    question=q_enps,
-    slider_answer=10.0,  # Promoter
-)
-Answer.objects.create(
-    is_answered=True,
-    survey=r2,
-    question=q_enps,
-    slider_answer=10.0,  # Promoter
-)
-Answer.objects.create(
-    is_answered=True,
-    survey=r2,
-    question=q_enps,
-    slider_answer=10.0,  # Promoter
-)
-Answer.objects.create(
-    is_answered=True,
-    survey=r2,
-    question=q_enps,
-    slider_answer=10.0,  # Promoter
-)
-
-# ------- ANSWER R4 -----------
-enps_scores = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-for i in range(10):
-    Answer.objects.create(
-        is_answered=True,
-        survey=r4,
-        question=q_enps,
-        slider_answer=random.choice(enps_scores),
-    )
