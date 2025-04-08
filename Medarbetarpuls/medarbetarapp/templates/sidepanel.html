@@ -4,16 +4,31 @@
 This template is designed to be used by including it and was specifically designed to be used in the template for the topnav.
 
 {%endcomment%} -->
-
+{% load static %}
 {% comment %} Sidepanel code {% endcomment %}
 <div class="sidepanel" id="panel">
-  <a href={% url 'start_user' %}>Startsida</a>
+  {% if user.admin %}
+  <a href={% url 'start_admin' %}>Startsida</a>
   <a href={% url 'unanswered_surveys' %}>Obesvarade enkäter</a>
   <a href={% url 'my_surveys' %}>Mina enkäter</a>
   <a href={% url 'create_survey' %}>Skapa enkät</a>
   <a href={% url 'my_results' %}>Se resultat</a>
   <a href={% url 'my_org' %}>Min organisation</a>
+  <a href={% url 'settings_admin' %}>Inställningar</a>
+  {% else %}
+  <a href={% url 'start_user' %}>Startsida</a>
+  <a href={% url 'unanswered_surveys' %}>Obesvarade enkäter</a>
+  <a href={% url 'my_results' %}>Se resultat</a>
   <a href={% url 'settings_user' %}>Inställningar</a>
+  {% endif %}
+  <button class="image-button logout" onclick="window.location.href='{% url 'login' %}'"
+  >
+    <img
+      src="{% static 'images/logout-btn.png' %}"
+      alt="Go Back"
+      class="image-button logout"
+    />
+  </button>
 </div>
 
 <script>

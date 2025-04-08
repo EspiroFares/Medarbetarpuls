@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="{% static 'styles.css' %}" />
   </head>
   <body>
+    {% include "topbar.html"%}
     {% if request.path == '/survey-result/420/' %}
     <div class="start-container">
 

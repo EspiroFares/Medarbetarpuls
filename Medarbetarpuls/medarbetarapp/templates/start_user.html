@@ -9,10 +9,10 @@
     <link rel="stylesheet" href="{% static 'styles.css' %}" />
   </head>
   <body>
+    {% include "topbar.html" with pagetitle=pagetitle %}
     <div class="start-container">
       <!-- Change name to variable -->
       <!-- Dose not check if user logged in and have access-->
-      <h1><center>Välkommen {{user.name}}</center></h1>
       <div class="grid-container">
         <a href="{% url 'unanswered_surveys' %}" class="grid-item yellow">
           <div class="icon">📄</div>

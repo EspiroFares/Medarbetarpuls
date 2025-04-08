@@ -10,8 +10,11 @@
     <link rel="stylesheet" href="{% static 'styles.css' %}" />
   </head>
   <body>
+    {% include "topbar.html"%}
     <div class="analysis-container">
-      <h1>Analys</h1>
+      <div class="pagetitle">
+        <h1>Analys</h1>
+      </div>
       <h2>Fritext svarsfrekvens</h2>
       <div class="graph-container">
         <canvas id="surveyChart"></canvas>

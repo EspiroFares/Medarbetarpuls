@@ -8,9 +8,11 @@
     <link rel="stylesheet" href="{% static 'styles.css' %}" />
   </head>
   <body>
+    {% include "topbar.html" with pagetitle=pagetitle %}
     <div class="start-container">
-        <h1>Resultat på besvarade enkäter</h1>
-        <h2>Du har besvarat {{ answered_count }} enkäter</h2>
+        <div class="pagetitle">
+            <h2>Du har besvarat {{ answered_count }} enkäter</h2>
+        </div>
         <div class="grid-container">
             {% for survey in answered_surveys %}
 

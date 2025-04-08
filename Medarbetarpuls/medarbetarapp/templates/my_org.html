@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="{% static 'styles.css' %}" />
   </head>
   <body>
+    {% include "topbar.html" with pagetitle=pagetitle %}
     <div class="create-container">
       <h1>{{ organization.name }}</h1>
 
