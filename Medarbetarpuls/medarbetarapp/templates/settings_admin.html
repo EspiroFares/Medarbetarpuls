@@ -7,15 +7,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Inställningar</title>
     <link rel="stylesheet" href="{% static 'styles.css' %}" />
-    <script>
-        function openPopup() {
-            document.getElementById("transfer-popup").style.display = "flex";
-        }
-
-        function closePopup() {
-            document.getElementById("transfer-popup").style.display = "none";
-        }
-    </script>
   </head>
   <body>
     {% include "topbar.html" with pagetitle=pagetitle %}
@@ -29,13 +20,13 @@
         <div class="table-row">
             <div class="label">Namn</div>
             <div class="value"> <!-- Test if username shows up -->
-              {{ user.name }} <a href="#"><span class="edit-icon">✏️</span></a>
+              {{ user.name }} <a href="#" onclick="openEditName()"><span class="edit-icon">✏️</span></a>
             </div>
           </div>
         <div class="table-row">
           <div class="label">Lösenord</div>
           <div class="value">
-            **************** <a href="#"><span class="edit-icon">✏️</span></a>
+            **************** <a href="#" onclick="openEditPass()"><span class="edit-icon">✏️</span></a>
           </div>
         </div>
         <div class="table-row">
@@ -45,7 +36,7 @@
             </div>
           </div>
         </div>
-      <button class="delete-button"onclick="openPopup()">Överlämna organisation</button>
+      <button class="delete-button"onclick="openTransfer()">Överlämna organisation</button>
 
 
       <!-- Delete Confirmation Popup -->
@@ -58,7 +49,7 @@
             hx-trigger="submit"
             hx-swap="outerHTML">
 
-            <span class="close-button" onclick="closePopup()">&times;</span> <!-- &times multiplication symbol -->
+            <span class="close-button" onclick="closeTransfer()">&times;</span> <!-- &times multiplication symbol -->
             <h2>OBS!</h2>
             <p>Är du säker på att du vill överlämna din organisation?</p>
             <p>Genom att ange en mejladress nedan kommer du att överföra hela din organisation och administratörsrollen till det konto som är kopplat till mejladressen. Ditt konto kommer därefter att tas bort.</p>
@@ -69,7 +60,72 @@
           </form>
         </div>
     </div>
+    
+    <!-- Edit name Popup -->
+    <div id="edit-name-popup" class="popup-overlay" style="display: none;">
+      <div id= "content" class="popup-content">
+        <form 
+          class="edit-name-form"
+          hx-post="/settings-name/"
+          hx-target="#content"
+          hx-trigger="submit"
+          hx-swap="outerHTML"
+          >
+          <span class="close-button" onclick="closeEditName()">&times;</span>
+          {% csrf_token %}
+              <label for="name">Ditt nya namn:</label>
+              <input type="name" id="name" name="name" placeholder="Namn" required > 
+              <!-- This line will reload the page after 100 ms (after the form is submitted) -->
+              <button type="submit" onclick="setTimeout(() => location.reload(), 100);" class="delete-button">Byt namn</button>
+        </form>
+      </div>
+  </div>
 
+    <!-- Edit password Popup -->
+    <div id="edit-pass-popup" class="popup-overlay" style="display: none;">
+      <div id= "content" class="popup-content">
+        <form 
+          class="edit-pass-form"
+          hx-post="/settings-pass/"
+          hx-target="#content"
+          hx-trigger="submit"
+          hx-swap="outerHTML"
+          >
+          <span class="close-button" onclick="closeEditPass()">&times;</span>
+          {% csrf_token %}
+              <label for="password">Ditt nuvarande lösenord:</label>
+              <input type="password" id="pass_old" name="pass_old" placeholder="Nuvarande lösenord" required > 
+              <label for="password">Ditt nya lösenord:</label>
+              <input type="password" id="pass_new" name="pass_new" placeholder="Nytt lösenord" required >
+              <!-- Must reload after 500ms in order for this form to submit (slower) --> 
+              <button type="submit" onclick="setTimeout(() => location.reload(), 500);" class="delete-button">Byt lösenord</button>
+        </form>
+      </div>
+    </div>
+    <script>
+      function openTransfer() {
+          document.getElementById("transfer-popup").style.display = "flex";
+      }
 
+      function closeTransfer() {
+          document.getElementById("transfer-popup").style.display = "none";
+      }
+
+      function openEditName() {
+          document.getElementById("edit-name-popup").style.display = "flex";
+      }
+
+      function closeEditName() {
+          document.getElementById("edit-name-popup").style.display = "none";
+      }
+
+      function openEditPass() {
+          document.getElementById("edit-pass-popup").style.display = "flex";
+      }
+
+      function closeEditPass() {
+          document.getElementById("edit-pass-popup").style.display = "none";
+      }
+  </script>
   </body>
 </html>

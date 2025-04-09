@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.shortcuts import get_object_or_404
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from .models import SurveyResult
@@ -63,12 +63,12 @@ def create_acc(request) -> HttpResponse:
 
             existing_user = models.CustomUser.objects.filter(email=email).first()
             if existing_user:
-                #Should they be able to reset name and password???
-                existing_user.name = name 
-                existing_user.set_password(password) 
+                # Should they be able to reset name and password???
+                existing_user.name = name
+                existing_user.set_password(password)
                 existing_user.save()
                 return HttpResponse(headers={"HX-Redirect": "/"})
-                #check for basegroup??
+                # check for basegroup??
             else:
                 # Create user
                 new_user = models.CustomUser.objects.create_user(email, name, password)
@@ -85,7 +85,9 @@ def create_acc(request) -> HttpResponse:
                     )
                     return HttpResponse(status=400)
 
-                return HttpResponse(headers={"HX-Redirect": "/"})  # Redirect to login page
+                return HttpResponse(
+                    headers={"HX-Redirect": "/"}
+                )  # Redirect to login page
 
     return HttpResponse(status=400)  # Bad request if no expression
 
@@ -116,17 +118,17 @@ def add_employee_view(request):
 
         if user.user_role == models.UserRole.ADMIN and hasattr(user, "admin"):
             org = user.admin
-            
+
             existing_user = models.CustomUser.objects.filter(email=email).first()
             if existing_user:
                 if not existing_user.is_active:
-                        existing_user.is_active = True
-                        existing_user.save()
+                    existing_user.is_active = True
+                    existing_user.save()
                 else:
                     logger.error("Existing user already have an active account")
                     pass
-                    #Vad gör vi med folk som vill bli registerade till 2 organisationer
-                    
+                    # Vad gör vi med folk som vill bli registerade till 2 organisationer
+
             else:
                 email_instance = models.EmailList(email=email, org=org)
                 email_instance.save()
@@ -237,9 +239,7 @@ def login_view(request):
     if request.method == "POST":
         email = request.POST.get("email")
         password = request.POST.get("password")
-
         user = authenticate(request, username=email, password=password)
-
         if user is not None:
             logger.debug("User %e has role: %e", email, user.user_role)
             if user.is_active:
@@ -289,7 +289,6 @@ def my_org_view(request):
             "pagetitle": f"Din organisation<br>{organization.name}",
         },
     )
-
 
 
 @login_required
@@ -349,7 +348,11 @@ def settings_admin_view(request):
     return render(
         request,
         "settings_admin.html",
-        {"user": request.user, "organization": request.user.admin, "pagetitle": "Inställningar"},
+        {
+            "user": request.user,
+            "organization": request.user.admin,
+            "pagetitle": "Inställningar",
+        },
     )
 
 
@@ -375,7 +378,11 @@ def settings_user_view(request):
             else:
                 # maybe return message so user knows it was wrong password
                 pass
-    return render(request, "settings_user.html", {"user": request.user, "pagetitle": "Inställningar"})
+    return render(
+        request,
+        "settings_user.html",
+        {"user": request.user, "pagetitle": "Inställningar"},
+    )
 
 
 @login_required
@@ -386,8 +393,101 @@ def start_admin_view(request):
 
 
 @login_required
+@csrf_protect
+def settings_change_name(request):
+    """
+    Changes the name of a CustomUser
+
+    Args:
+        request: The input text with the new name
+
+    Returns:
+        HttpResponse: Returns status 204 if all is good, otherwise 400
+    """
+
+    # TODO: test user input
+    if request.headers.get("HX-Request"):
+        new_name = request.POST.get("name")
+        email = request.user.email
+        user = models.CustomUser.objects.filter(email=email).first()
+        user.name = new_name
+        user.save()
+
+    if request.user.admin:
+        return render(
+            request,
+            "settings_admin.html",
+            {
+                "user": request.user,
+                "organization": request.user.admin,
+                "pagetitle": "Inställningar",
+            },
+        )
+    else:
+        return render(
+            request,
+            "settings_user.html",
+            {
+                "user": request.user,
+                "organization": request.user.admin,
+                "pagetitle": "Inställningar",
+            },
+        )
+
+
+@login_required
+@csrf_protect
+def settings_change_pass(request):
+    """
+    Changes the password of a CustomUser
+
+    Args:
+        request: The input containing the old password as well as the new password
+
+    Returns:
+        HttpResponse: Returns status 204 if all is good, otherwise 400
+    """
+
+    if request.headers.get("HX-Request"):
+        old_password = request.POST.get("pass_old")
+        new_password = request.POST.get("pass_new")
+        user = authenticate(request, username=request.user.email, password=old_password)
+        if user:
+            user.set_password(new_password)
+            user.save()
+            # Use this to keep the session alive (avoid being logged out immediately)
+            update_session_auth_hash(request, user)
+            print("saved new password")
+        else:
+            # Did not find any user with this password
+            return HttpResponse(400)
+
+    if request.user.admin:
+        return render(
+            request,
+            "settings_admin.html",
+            {
+                "user": request.user,
+                "organization": request.user.admin,
+                "pagetitle": "Inställningar",
+            },
+        )
+    else:
+        return render(
+            request,
+            "settings_user.html",
+            {
+                "user": request.user,
+                "pagetitle": "Inställningar",
+            },
+        )
+
+
+@login_required
 def start_user_view(request):
-    return render(request, "start_user.html",  {"pagetitle": f"Välkommen<br>{request.user.name}"})
+    return render(
+        request, "start_user.html", {"pagetitle": f"Välkommen<br>{request.user.name}"}
+    )
 
 
 def survey_result_view(request, survey_id):
@@ -418,7 +518,7 @@ def unanswered_surveys_view(request):
         {
             "unanswered_count": unanswered_count,
             "unanswered_surveys": unanswered_surveys,
-            "pagetitle": "Obesvarade enkäter"
+            "pagetitle": "Obesvarade enkäter",
         },
     )
 
