@@ -61,22 +61,31 @@ def create_acc(request) -> HttpResponse:
                 logger.error("This email is not authorized for registration.")
                 return HttpResponse(status=400)
 
-            # Create user
-            new_user = models.CustomUser.objects.create_user(email, name, password)
-
-            # Add new user to base (everyone) employee group of org
-            base_group = org.employee_groups.filter(name="Alla").first()  # pyright: ignore
-
-            if base_group:
-                new_user.employee_groups.add(base_group)
-                new_user.save()
+            existing_user = models.CustomUser.objects.filter(email=email).first()
+            if existing_user:
+                #Should they be able to reset name and password???
+                existing_user.name = name 
+                existing_user.set_password(password) 
+                existing_user.save()
+                return HttpResponse(headers={"HX-Redirect": "/"})
+                #check for basegroup??
             else:
-                logger.error(
-                    f"No group found with the name '{base_group}' in the organization '{org.name}'"
-                )
-                return HttpResponse(status=400)
+                # Create user
+                new_user = models.CustomUser.objects.create_user(email, name, password)
 
-            return HttpResponse(headers={"HX-Redirect": "/"})  # Redirect to login page
+                # Add new user to base (everyone) employee group of org
+                base_group = org.employee_groups.filter(name="Alla").first()  # pyright: ignore
+
+                if base_group:
+                    new_user.employee_groups.add(base_group)
+                    new_user.save()
+                else:
+                    logger.error(
+                        f"No group found with the name '{base_group}' in the organization '{org.name}'"
+                    )
+                    return HttpResponse(status=400)
+
+                return HttpResponse(headers={"HX-Redirect": "/"})  # Redirect to login page
 
     return HttpResponse(status=400)  # Bad request if no expression
 
@@ -107,8 +116,20 @@ def add_employee_view(request):
 
         if user.user_role == models.UserRole.ADMIN and hasattr(user, "admin"):
             org = user.admin
-            email_instance = models.EmailList(email=email, org=org)
-            email_instance.save()
+            
+            existing_user = models.CustomUser.objects.filter(email=email).first()
+            if existing_user:
+                if not existing_user.is_active:
+                        existing_user.is_active = True
+                        existing_user.save()
+                else:
+                    logger.error("Existing user already have an active account")
+                    pass
+                    #Vad gör vi med folk som vill bli registerade till 2 organisationer
+                    
+            else:
+                email_instance = models.EmailList(email=email, org=org)
+                email_instance.save()
             return HttpResponse(status=204)  # maybe should render back to my_org?
 
     return render(
