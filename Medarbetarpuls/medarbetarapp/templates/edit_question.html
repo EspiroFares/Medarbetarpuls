@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="sv">
   <head>
     {% load static %}
@@ -12,13 +12,28 @@
     <div class="popup-overlay">
       <div class="popup-content">
         <h2>Redigera fråga</h2>
-        <img
-          src="{% static 'images/q1.png' %}"
-          alt="Ikon 1"
-          class="question-icon"
+        <img src="{% static 'images/' %}{{ question_format }}.png" 
+            alt="{{ question_format }} image"
+            class="question-icon"
         />
 
-        <form class="question-form">
+        {% if question_id is None %} 
+        <form
+          class="question-form"
+          hx-post="{% url 'edit_question_new' survey_temp.id question_format %}"
+          hx-target=".question-form"
+          hx-trigger="submit"
+        >
+        {% else %} 
+        <form
+          class="question-form"
+          hx-post="{% url 'edit_question' survey_temp.id question_format question_id %}"
+          hx-target=".question-form"
+          hx-trigger="submit"
+        >
+        {% endif %}
+          {% csrf_token %}
+          {% if question_text is None %}
           <input
             type="text"
             id="question"
@@ -26,12 +41,21 @@
             placeholder="Fråga"
             required
           />
+          {% else %}
+          <input
+            type="text"
+            id="question"
+            name="question"
+            value="{{ question_text }}"
+            required
+          />
+          {% endif %}
+          <button type="button">Demonstrera</button>
+          <button type="submit">Spara</button>
         </form>
-        <button type="button">Demonstrera</button>
-        <button type="button">Spara</button>
         <button
-          class="image-button"
-          onclick="window.location.href='{% url 'create_question' %}'"
+          class="go-back-button"
+          onclick="window.location.href='{% url 'create_survey_with_id' survey_temp.id %}'"
         >
           <img
             src="{% static 'images/go-back-btn.png' %}"
