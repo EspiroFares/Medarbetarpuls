@@ -526,10 +526,11 @@ def unanswered_surveys_view(request):
 
 
 def chart_view(request):
-    SURVEY_ID = 2  # Choose what survey you want to show here
-
+    SURVEY_ID = 1  # Choose what survey you want to show here
+    print("HEJ1")
     # ---- ENPS SCORES ----
     enps_question = Question.objects.filter(question_type="enps").first()
+    print("HEJ2")
 
     enps_answers = Answer.objects.filter(
         is_answered=True,
@@ -537,7 +538,6 @@ def chart_view(request):
         slider_answer__isnull=False,
         survey__published_survey__id=SURVEY_ID,
     )
-
     promoters = enps_answers.filter(slider_answer__gte=9).count()
     passives = enps_answers.filter(slider_answer__gte=7, slider_answer__lt=9).count()
     detractors = enps_answers.filter(slider_answer__lt=7).count()
@@ -546,7 +546,7 @@ def chart_view(request):
     enps_data = [promoters, passives, detractors]
     enps_respondents = analysisHandler.getRespondentsDistribution(enps_answers)
     enps_slider_answer = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-
+    print("HEJ3")
     print(analysisHandler.getENPS(promoters, passives, detractors))
     context = {
         "enps_labels": enps_labels,
@@ -555,7 +555,7 @@ def chart_view(request):
         "enps_respondents": enps_respondents,
     }
 
-    return render(request, "index.html", context)
+    return render(request, "analysis.html", context)
 
 
 def chart_view_test(request):

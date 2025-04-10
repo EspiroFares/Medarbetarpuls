@@ -179,13 +179,13 @@ def createAnswers(amount: int, result: SurveyResult, question: Question):
             survey=result,
             question=question,
             slider_answer=random.choice(scores),
-            multiple_choice_answer=[
-                random.choice([True, False]),
-                random.choice([True, False]),
-                random.choice([True, False]),
-            ],
-            yes_no_answer=random.choice([True, False]),
-            free_text_answer=["Hej"],
+            # multiple_choice_answer=[
+            # random.choice([True, False]),
+            #  random.choice([True, False]),
+            #   random.choice([True, False]),
+            # ],
+            # yes_no_answer=random.choice([True, False]),
+            # free_text_answer=["Hej"],
         )
         answers.append(a)
     return answers
