@@ -1,5 +1,7 @@
 from medarbetarapp.models import (
     Answer,
+    QuestionFormat,
+    QuestionType,
     SurveyResult,
     Question,
     Survey,
@@ -13,28 +15,8 @@ import random
 # om ni kör raden ovan flera gånger kommer django skapa nya objekt med nya id'n. Vill ni komma åt ett specifikt objekt med samma id hela tiden behöver ni då flusha databasen emellan körningar. Detta kan göras med kommandot:
 # python manage.py flush
 
-
-# removing old objects to avoid problems
-Answer.objects.all().delete()
-Question.objects.all().delete()
-SurveyResult.objects.all().delete()
-Survey.objects.all().delete()
-
-yesno_questions = ["Did you have a productive day?"]
-
-
 # HELPER FUNCTIONS
 # Creates answer object connected to a specific SurveyResult
-def createENPSAnswers(amount: int, result: SurveyResult):
-    enps_scores = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-    for i in range(amount):
-        Answer.objects.create(
-            is_answered=True,
-            survey=result,
-            question=q_enps,
-            slider_answer=random.choice(enps_scores),
-        )
-    return
 
 
 def createUsers(
@@ -75,7 +57,7 @@ def createUsers(
         "Wilson",
         "Anderson",
     ]
-    result = []
+    users = []
     if userRole == UserRole.ADMIN:
         isStaff = True
         isSuperUser = True
@@ -103,8 +85,8 @@ def createUsers(
         if created:
             user.set_password("123")  #
             user.save()
-        result.append(user)
-    return result
+        users.append(user)
+    return users
 
 
 def createSurveys(amount: int, surveyCreator: CustomUser):
@@ -125,107 +107,108 @@ def createSurveys(amount: int, surveyCreator: CustomUser):
     return surveys
 
 
-def createSurveyResult(amount: int, survey: Survey):
+def createSurveyResult(amount: int, survey: Survey, user: CustomUser):
     results = []
     for i in range(amount):
-        result = SurveyResult.objects.create(published_survey=survey)
+        result = SurveyResult.objects.create(published_survey=survey, user_id=user.id)
         results.append(result)
     return results
 
 
-# ----------- QUESTIONS -------------
-q_text = Question.objects.create(
-    question="1. What's one thing that made you smile today?",
-    question_format="text",
-    question_type="onetime",
-)
+def createQuestions(
+    amount: int, questionFormat: QuestionFormat, questionType: QuestionType
+):
+    result = []
+    questions = []
+    if questionFormat == QuestionFormat.MULTIPLE_CHOICE:
+        questions = [
+            "Which of these activities did you enjoy at work today?",
+            "Which tools did you use most during your work today?",
+            "What type of task did you spend the most time on?",
+            "Which team(s) did you collaborate with today?",
+            "Which of these break activities helped you recharge today?",
+        ]
+    elif questionFormat == QuestionFormat.YES_NO:
+        questions = [
+            "Did you have a productive day?",
+            "Did you feel supported by your team today?",
+            "Did you encounter any blockers during your tasks?",
+            "Did you receive feedback on your work today?",
+            "Did you take enough breaks throughout the day?",
+        ]
 
-q_yesno = Question.objects.create(
-    question="2. Did you have a productive day?",
-    question_format="yesno",
-    question_type="onetime",
-)
+    elif questionFormat == QuestionFormat.TEXT:
+        questions = [
+            "Do you have any suggestions for future projects?",
+            "What was the highlight of your day?",
+            "Is there anything you’d like to improve in your workflow?",
+            "What’s one thing you learned today?",
+            "Any feedback for your manager or team?",
+        ]
 
-q_mc = Question.objects.create(
-    question="3. Which of these activities did you enjoy at work today?",
-    question_format="multiplechoice",
-    question_type="onetime",
-)
+    elif questionFormat == QuestionFormat.SLIDER:
+        questions = [
+            "On a scale of 1 to 10, how motivated are you feeling?",
+            "Rate your stress level today (1 being relaxed, 10 being stressed).",
+            "How focused were you during your work today?",
+            "How satisfied are you with your accomplishments today?",
+            "How would you rate your energy level throughout the day?",
+        ]
 
-q_slider = Question.objects.create(
-    question="4. On a scale of 1 to 10, how motivated are you feeling?",
-    question_format="slider",
-    question_type="onetime",
-)
+    if questionType == QuestionType.ENPS:
+        questions = ["How likely are you to recommend this company as a place to work"]
+        amount = 1
+        questionFormat = QuestionFormat.SLIDER
 
-q_enps = Question.objects.create(
-    question="How likely are you to recommend this company as a place to work?",
-    question_format="slider",
-    question_type="enps",
-)
-
-# ----------- ANSWERS R1 -------------
-Answer.objects.create(
-    is_answered=True,
-    survey=r1,
-    question=q_text,
-    free_text_answer="test.",
-)
-
-Answer.objects.create(
-    is_answered=True,
-    survey=r1,
-    question=q_text,
-    free_text_answer="test.",
-)
-
-Answer.objects.create(
-    is_answered=True,
-    survey=r1,
-    question=q_text,
-    free_text_answer="test.",
-)
-
-Answer.objects.create(
-    is_answered=True,
-    survey=r1,
-    question=q_yesno,
-    yes_no_answer=True,
-)
-
-Answer.objects.create(
-    is_answered=True,
-    survey=r1,
-    question=q_mc,
-    multiple_choice_answer=[True, False, True],  # Assumes 3 options for this question
-)
-
-Answer.objects.create(
-    is_answered=True,
-    survey=r1,
-    question=q_slider,
-    slider_answer=8.5,
-)
+    for i in range(amount):
+        q = Question.objects.create(
+            question=random.choice(questions),
+            question_format=questionFormat,
+            question_type=questionType,
+        )
+        result.append(q)
+    return result
 
 
-# ----------- ANSWERS R2 -------------
-Answer.objects.create(
-    is_answered=True,
-    survey=r2,
-    question=q_yesno,
-    yes_no_answer=True,
-)
+def createAnswers(amount: int, result: SurveyResult, question: Question):
+    scores = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    answers = []
+    for i in range(amount):
+        a = Answer.objects.create(
+            is_answered=True,
+            survey=result,
+            question=question,
+            slider_answer=random.choice(scores),
+            multiple_choice_answer=[
+                random.choice([True, False]),
+                random.choice([True, False]),
+                random.choice([True, False]),
+            ],
+            yes_no_answer=random.choice([True, False]),
+            free_text_answer=["Hej"],
+        )
+        answers.append(a)
+    return answers
 
-Answer.objects.create(
-    is_answered=True,
-    survey=r2,
-    question=q_mc,
-    multiple_choice_answer=[True, False, True],  # Assumes 3 options for this question
-)
 
-Answer.objects.create(
-    is_answered=True,
-    survey=r2,
-    question=q_slider,
-    slider_answer=8.5,
-)
+# -------------------------------------------------
+
+# removing old objects to avoid problems
+Answer.objects.all().delete()
+Question.objects.all().delete()
+SurveyResult.objects.all().delete()
+Survey.objects.all().delete()
+
+# Create new surveys with answers
+admin = createUsers(UserRole.ADMIN, 1)[0]
+survey_creator = createUsers(UserRole.SURVEY_CREATOR, 1)[0]
+survey_responders = createUsers(UserRole.SURVEY_RESPONDER, 4)
+
+surveys = createSurveys(3, survey_creator)
+
+question_enps = createQuestions(1, QuestionFormat.SLIDER, QuestionType.ENPS)
+for s in surveys:
+    for r in survey_responders:
+        survey_result = createSurveyResult(3, s, r)
+        for sr in survey_result:
+            answers = createAnswers(1, sr, question_enps[0])
