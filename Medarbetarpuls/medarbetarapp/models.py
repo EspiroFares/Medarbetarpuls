@@ -8,36 +8,41 @@ from django.contrib.auth.models import (
 )
 import logging
 from typing import cast
-from typing import List
-import math
+
 
 logger = logging.getLogger(__name__)
+
+# Define explicit type aliases to help with readability
+OneToManyManager = BaseManager  # Alias for ForeignKey reverse relations
+ManyToManyManager = BaseManager  # Alias for ManyToManyField relations
 
 
 class Organization(models.Model):
     name = models.CharField(max_length=255)
     # Add an explicit type hint for employeeGroups (this is just for readability)
-    employee_groups: BaseManager
-    admins: BaseManager
+    employee_groups: OneToManyManager["EmployeeGroup"]
+    admins: OneToManyManager["CustomUser"]
+    # Logo: How do we want to save this???
+    question_bank: OneToManyManager["Question"]
+    survey_template_bank: OneToManyManager["SurveyTemplate"]
+    org_emails = OneToManyManager["EmailList"]
 
     def __str__(self) -> str:
-        return f"{self.name}"
+        return f"{self.name} | Admins: {', '.join(str(admin) for admin in self.admins.all())}"
 
 
 class EmployeeGroup(models.Model):
     name = models.CharField(max_length=255)
-    # Add an explicit type hint for employees (this is just for readability)
-    employees: BaseManager
-    # Add an explicit type hint for managers (this is just for readability)
-    managers: BaseManager
+    employees: ManyToManyManager["CustomUser"]
+    managers: ManyToManyManager["CustomUser"]
+
+    # Relationships to parent classes
     organization = models.ForeignKey(
         Organization,
         on_delete=models.CASCADE,
         related_name="employee_groups",
         null=True,
     )
-    published_surveys: BaseManager
-    survey_templates: BaseManager
 
     def __str__(self) -> str:
         return f"{self.name} {self.organization.name}"
@@ -95,7 +100,12 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):  # pyright: ignore
     # We deafult to 0 as the lowest level of authority
     authorization_level = models.IntegerField(default=0)  # pyright: ignore
     employee_groups = models.ManyToManyField(EmployeeGroup, related_name="employees")
-    managed_groups = models.ManyToManyField(EmployeeGroup, related_name="managers")
+    survey_results = OneToManyManager["SurveyResult"]
+    survey_groups = models.ManyToManyField(EmployeeGroup, related_name="managers")
+    survey_templates = OneToManyManager["SurveyTemplate"]
+    published_surveys = OneToManyManager["Survey"]
+
+    # Relationships to parent classes
     admin = models.ForeignKey(
         Organization, on_delete=models.CASCADE, related_name="admins", null=True
     )
@@ -118,6 +128,22 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):  # pyright: ignore
     def __str__(self) -> str:
         return f"{self.name} ({self.email})"
 
+    # To see how many surveys this user has unanswered
+    def count_unanswered_surveys(self):
+        return self.survey_results.filter(is_answered=False).count()
+
+    # To see how many surveys this user has answered
+    def count_answered_surveys(self):
+        return self.survey_results.filter(is_answered=True).count()
+
+    # To get all unanswered surveys for this user
+    def get_unanswered_surveys(self):
+        return self.survey_results.filter(is_answered=False)
+
+    # To get all answered surveys for this user
+    def get_answered_surveys(self):
+        return self.survey_results.filter(is_answered=True)
+
 
 # Below are models for surveys and their results
 
@@ -128,7 +154,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):  # pyright: ignore
 class QuestionType(models.TextChoices):
     ONETIME = "onetime", "Onetime"
     REOCCURRING = "reoccurring", "Reoccurring"
-    BUILTIN = "builtin", "Builtin"
+    BUILTIN = "builtin", "Built in"
     ENPS = "enps", "ENPS"
 
 
@@ -136,8 +162,8 @@ class QuestionType(models.TextChoices):
 # The left-most string is what is saved in db
 # The right-most string is what we humans will read
 class QuestionFormat(models.TextChoices):
-    MULTIPLE_CHOICE = "multiplechoice", "MultipleChoice"
-    YES_NO = "yesno", "YesNo"
+    MULTIPLE_CHOICE = "multiplechoice", "Multiple choice"
+    YES_NO = "yesno", "Yes No"
     TEXT = "text", "Text"
     SLIDER = "slider", "Slider"
 
@@ -145,19 +171,21 @@ class QuestionFormat(models.TextChoices):
 # What this model does needs to be explained here
 class Survey(models.Model):
     name = models.CharField(max_length=255)  # Do we want names for surveys???
-    questions = BaseManager
-    creator = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    employee_groups = models.ManyToManyField(
-        EmployeeGroup, related_name="published_surveys"
+    questions = ManyToManyManager["Question"]
+    creator = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name="published_surveys",
+        null=True,
     )
-    survey_results: BaseManager
+    employee_groups = models.ManyToManyField(EmployeeGroup, related_name="+")
+    survey_results: OneToManyManager["SurveyResult"]
     deadline = (
         models.DateTimeField()
     )  # stores both date and time (e.g., YYYY-MM-DD HH:MM:SS)
     sending_date = (
         models.DateTimeField()
     )  # stores both date and time (e.g., YYYY-MM-DD HH:MM:SS)
-    # What is this???
     collected_answer_count = models.IntegerField(default=0)  # pyright: ignore
     is_viewable = models.BooleanField(default=False)  # pyright: ignore
 
@@ -168,13 +196,22 @@ class Survey(models.Model):
 # What this model does needs to be explained here
 class SurveyTemplate(models.Model):
     name = models.CharField(max_length=255)  # Do we want names for surveyTemplates???
-    creator = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
-    employee_groups = models.ManyToManyField(
-        EmployeeGroup, related_name="survey_templates"
+    questions = ManyToManyManager["Question"]
+    creator = models.ForeignKey(
+        CustomUser, on_delete=models.CASCADE, related_name="survey_templates", null=True
     )
+    employee_groups = models.ManyToManyField(EmployeeGroup, related_name="+")
     last_edited = (
         models.DateTimeField()
     )  # stores both date and time (e.g., YYYY-MM-DD HH:MM:SS)
+
+    # Relationships to parent classes
+    bank_survey = models.ForeignKey(
+        Organization,
+        on_delete=models.CASCADE,
+        related_name="survey_template_bank",
+        null=True,
+    )
 
     def __str__(self) -> str:
         return f"{self.name} ({self.creator})"
@@ -185,12 +222,58 @@ class SurveyResult(models.Model):
     published_survey = models.ForeignKey(
         Survey, on_delete=models.CASCADE, related_name="survey_results", null=True
     )
-    user_id = models.IntegerField()
-    answers: BaseManager
+    answers: OneToManyManager["Answer"]
     is_answered = models.BooleanField(default=False)  # pyright: ignore
 
+    # Relationships to parent classes
+    user = models.ForeignKey(
+        CustomUser, on_delete=models.CASCADE, related_name="survey_results", null=True
+    )
+
     def __str__(self) -> str:
-        return f"{self.user_id} ({self.is_answered})"
+        return f"{self.user} ({self.is_answered})"
+
+
+class BaseQuestionDetails(models.Model):
+    parent_question = BaseManager["Question"]
+
+    class Meta:
+        abstract = True
+
+
+# What this model does needs to be explained here
+class SliderQuestion(BaseQuestionDetails):
+    question_format = models.CharField(
+        max_length=15, choices=QuestionFormat.choices, default=QuestionFormat.SLIDER
+    )
+    max_interval = models.IntegerField(default=10)  # pyright: ignore
+    min_interval = models.IntegerField(default=0)  # pyright: ignore
+    max_text = models.CharField(max_length=255)
+    min_text = models.CharField(max_length=255)
+
+
+# What this model does needs to be explained here
+class MultipleChoiceQuestion(BaseQuestionDetails):
+    question_format = models.CharField(
+        max_length=15,
+        choices=QuestionFormat.choices,
+        default=QuestionFormat.MULTIPLE_CHOICE,
+    )
+    options = models.JSONField(default=list)  # Stores a list of strings
+
+
+# What this model does needs to be explained here
+class YesNoQuestion(BaseQuestionDetails):
+    question_format = models.CharField(
+        max_length=15, choices=QuestionFormat.choices, default=QuestionFormat.YES_NO
+    )
+
+
+# What this model does needs to be explained here
+class TextQuestion(BaseQuestionDetails):
+    question_format = models.CharField(
+        max_length=15, choices=QuestionFormat.choices, default=QuestionFormat.TEXT
+    )
 
 
 # What this model does needs to be explained here
@@ -203,6 +286,54 @@ class Question(models.Model):
     question_type = models.CharField(
         max_length=15, choices=QuestionType.choices, default=QuestionType.ONETIME
     )
+    answers = OneToManyManager["Answer"]
+
+    # Relationships to parent classes
+    survey_template = models.ManyToManyField(SurveyTemplate, related_name="questions")
+    bank_question = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, related_name="question_bank", null=True
+    )
+
+    # All questions tyoe possible
+    slider_question = models.OneToOneField(
+        SliderQuestion, on_delete=models.CASCADE, null=True, blank=True
+    )
+    multiple_choice_question = models.OneToOneField(
+        MultipleChoiceQuestion, on_delete=models.CASCADE, null=True, blank=True
+    )
+    yes_no_question = models.OneToOneField(
+        YesNoQuestion, on_delete=models.CASCADE, null=True, blank=True
+    )
+    text_question = models.OneToOneField(
+        TextQuestion, on_delete=models.CASCADE, null=True, blank=True
+    )
+
+    @property
+    def specific_question(self) -> BaseQuestionDetails | None:
+        """
+        This method is a getter function for this question specific question (type).
+        The @property decorator makes it possible to call this
+        method without ().
+
+        Args:
+            self.question_format (QuestionFormat): The question format of this question
+
+        Returns:
+            BaseQuestionDetails or None: Returns a specific question if it exists, otherwise None
+        """
+        if self.question_format == QuestionFormat.TEXT:
+            return cast(TextQuestion, self.text_question)
+        elif self.question_format == QuestionFormat.MULTIPLE_CHOICE:
+            return cast(MultipleChoiceQuestion, self.multiple_choice_question)
+        elif self.question_format == QuestionFormat.YES_NO:
+            return cast(YesNoQuestion, self.yes_no_question)
+        elif self.question_format == QuestionFormat.SLIDER:
+            return cast(SliderQuestion, self.slider_question)
+
+        logger.warning(
+            "No specific question could be found. This suggests the question was initialized wrong!"
+        )
+        return None
 
     def __str__(self) -> str:
         return f"{self.question_format} ({self.question_type})"
@@ -214,14 +345,14 @@ class Answer(models.Model):
     survey = models.ForeignKey(
         SurveyResult, on_delete=models.CASCADE, related_name="answers", null=True
     )
-    question = models.ForeignKey(Question, on_delete=models.CASCADE)
-    comment = models.CharField(max_length=255, null=True)
-    free_text_answer = models.CharField(max_length=255, null=True)
-    multiple_choice_answer = models.JSONField(
-        default=list, null=True
-    )  # Stores a list of booleans
-    yes_no_answer = models.BooleanField(default=False, null=True)  # pyright: ignore
-    slider_answer = models.FloatField(null=True)
+    question = models.ForeignKey(
+        Question, on_delete=models.CASCADE, related_name="answers", null=True
+    )
+    comment = models.CharField(max_length=255)
+    free_text_answer = models.CharField(max_length=255)
+    multiple_choice_answer = models.JSONField(default=list)  # Stores a list of booleans
+    yes_no_answer = models.BooleanField(default=False)  # pyright: ignore
+    slider_answer = models.FloatField()
 
     @property
     def answer_format(self) -> QuestionFormat | None:
@@ -311,3 +442,18 @@ class AnalysisHandler:
     def _processAnswers(self, answers: List[Answer], diagramType: DiagramType):
         data = [a.free_text_answer for a in answers if a.is_answered]
         return {"type": diagramType.value, "data": data}
+
+
+class EmailList(models.Model):
+    email = models.EmailField(unique=True)
+    org = models.ForeignKey(
+        Organization,
+        on_delete=models.CASCADE,
+        related_name="org_emails",
+        null=True,
+        blank=True,
+    )
+    objects: models.Manager
+
+    def __str__(self) -> str:
+        return f"{self.email}"
