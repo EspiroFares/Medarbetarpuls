@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser, Organization  # Import your CustomUser model
+from .models import CustomUser, SurveyTemplate, Organization  # Import your CustomUser model
 
 
 class CustomUserAdmin(UserAdmin):
@@ -66,3 +66,12 @@ class OrganizationAdmin(admin.ModelAdmin):
     @admin.display(description="Organization Emails")
     def get_org_emails(self, obj): 
         return ", ".join([template.email for template in obj.org_emails.all()])
+
+
+@admin.register(SurveyTemplate)
+class SurveyTemplateAdmin(admin.ModelAdmin):
+    list_display = ("name", "creator", "last_edited", "bank_survey")
+    search_fields = ("name", "creator__email")
+    filter_horizontal = ("employee_groups",)
+    autocomplete_fields = ("creator", "bank_survey")
+    ordering = ("-last_edited",)

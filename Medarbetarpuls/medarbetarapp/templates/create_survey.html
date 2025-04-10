@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="sv">
   <head>
     {% load static %}
@@ -11,35 +11,61 @@
   <body>
     {% include "topbar.html"%}
     <div class="start-container">
-      <div class="editable-title-container">
-        <input
-          type="text"
-          class="editable-title"
-          placeholder="Skriv din titel här..."
-          value=""
-        />
+      <div class="title-background">
+        <button
+          class="title-back-button"
+          onclick="window.location.href='{% url 'my_surveys'%}'"
+        >
+          Tillbaka
+        </button>
+        <h2>Skapa enkät</h2>
       </div>
+
       <div class="grid-container">
         <!-- Make all of this dynamic -->
-        <a href="{% url 'edit_question' %}" class="grid-item blue">
-          <h2>Fråga 1</h2>
-          <!-- Fix so edits this question, not creating a new one -->
-          <div class="editable-question-container">
-            <input
-              type="text"
-              class="editable-question"
-              placeholder="Fråga..."
-              value=""
+        {% for question in survey_temp.questions.all %}
+        <a
+          href="{% url 'edit_question' survey_temp.id question.question_format question.id %}"
+          class="grid-item blue"
+        >
+          <div class="question-title">
+            <h1>Fråga {{forloop.counter}}</h1>
+            <form
+              hx-post="{% url 'delete_question' question.id survey_temp.id %}"
+              hx-trigger="submit"
+              hx-confirm="Are you sure you want to delete this survey?"
+              hx-swap="none"
+            >
+              {% csrf_token %}
+              <button class="question-remove-button" type="submit">
+                Ta bort
+              </button>
+            </form>
+          </div>
+
+          <div class="question-background">
+            <p>{{question.question}}</p>
+          </div>
+          <div class="question-result">
+            <img
+              src="{% static 'images/' %}{{ question.question_format }}.png"
+              alt="{{ question.question_format.label }} image"
+              class="question-icon"
             />
-            <button class="delete-button">Ta bort</button>
           </div>
         </a>
-        <a href="{% url 'create_question' %}" class="add-button-link">
+        {% endfor %}
+
+        <a
+          href="{% url 'create_question' survey_temp.id %}"
+          class="add-button-link"
+        >
           <div class="add-button">
             <span>+</span>
           </div>
         </a>
       </div>
+
       <button class="button" onclick="openPopup()">Publicera enkät</button>
     </div>
     <div id="publish-popup" class="popup-overlay" style="display: none">
@@ -92,13 +118,16 @@
           <label>Påminn efter:</label>
           <div class="reminder-tags">
             <div class="reminder-tag">
-              1 v <span class="close">&times;</span>
+              1 v
+              <span class="close">&times;</span>
             </div>
             <div class="reminder-tag">
-              2 v <span class="close">&times;</span>
+              2 v
+              <span class="close">&times;</span>
             </div>
             <div class="reminder-tag">
-              3 v <span class="close">&times;</span>
+              3 v
+              <span class="close">&times;</span>
             </div>
           </div>
         </div>
@@ -106,8 +135,8 @@
         <!-- Buttons -->
         <div class="popup-buttons">
           <button
-            class="image-button"
-            onclick="window.location.href='{% url 'create_survey' %}'"
+            class="go-back-button"
+            onclick="window.location.href='{% url 'create_survey_with_id' survey_temp.id %}'"
           >
             <img
               src="{% static 'images/go-back-btn.png' %}"
@@ -126,6 +155,12 @@
 
       function closePopup() {
         document.getElementById("publish-popup").style.display = "none";
+      }
+
+      function handleRemove(event) {
+        event.preventDefault(); // Prevent the link from being followed
+        // Add your logic to handle the removal of the question here
+        console.log("Remove button clicked for question:", event.target);
       }
     </script>
   </body>

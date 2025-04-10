@@ -271,10 +271,6 @@ def authentication_org_view(request):
             base_group = models.EmployeeGroup(name="Alla", organization=org)
             base_group.save()
 
-            # Adding a org approved email for easy testing
-            test_email = models.EmailList(email="user22@example.com", org=org)
-            test_email.save()
-
             return HttpResponse(headers={"HX-Redirect": "/"}) 
         else:
             logger.error("Wrong authentication code")
@@ -287,8 +283,28 @@ def create_org_view(request):
     return render(request, "create_org.html")
 
 
-def create_question(request):
-    return render(request, "create_question.html")
+def create_question(request, survey_id: int) -> HttpResponse: 
+    """
+    Makes it possible to create a question with predefined formats. 
+    This function is reachable from create_survey.
+
+    Agrs:
+        request: The input text from the question text field
+        survey_id (int): The id of the opened survey
+    Returns:
+        HttpResponse: Returns status 404 if the survey template does not exist
+    """
+    user: models.CustomUser = request.user
+    # Retrieve the survey template from the database if it belongs to the user
+    survey_temp: models.SurveyTemplate = user.survey_templates.filter(id=survey_id).first()
+    if survey_temp is None:
+        # Handle the case where the survey template does not exist
+        return HttpResponse("Survey template not found", status=404)
+    
+    return render(request, "create_question.html", 
+                  {"survey_temp": survey_temp, 
+                   "QuestionFormat": models.QuestionFormat,
+                   })
 
 
 def create_org_redirect(request):
@@ -345,14 +361,122 @@ def create_org(request) -> HttpResponse:
     return HttpResponse(status=400)  # Bad request if no expression
 
 
-def create_survey_view(request):
-    return render(request, "create_survey.html")
+@csrf_protect
+def delete_question(request, question_id: int, survey_id: int) -> HttpResponse:
+    """
+    Makes it possible to delete a specific question from 
+    a specific survey. 
+
+    Args:
+        request: The input click from trash button 
+        survey_id (int): The id of the opened survey
+        question_id (int): The id of the clicked question
+    Returns:
+        HttpResponse: Redirects to create_survey or 400
+    """
+    if request.method == "POST":  
+        if request.headers.get("HX-Request"):
+            question: models.Question = get_object_or_404(models.Question, id=question_id)
+            question.delete()
+            return HttpResponse(headers={"HX-Redirect": "/create-survey/" + str(survey_id)})  
+    
+    return HttpResponse(status=400)  # Bad request if no expression
 
 
-def edit_question_view(request):
-    return render(request, "edit_question.html")
+def create_survey_view(request, survey_id: int | None = None) -> HttpResponse:
+    """
+    Creates a survey template. If no survey_id is given, a new
+    survey template is created. If the survey_id is given, the
+    corresponding survey template is fetched from the database.
+
+    Args:
+        request: The input text from the question text field
+        survey_id (int): The id of the opened survey
+
+    Returns:
+        HttpResponse: Redirects to create_survey or renders create_survey_view
+    """
+
+    # Check if survey_id is not given
+    if survey_id is None:
+        # Create a new survey template and assign it to the user
+        survey_temp: models.SurveyTemplate = models.SurveyTemplate(creator=request.user, last_edited=timezone.now())
+        survey_temp.save()
+        # Set a placeholder name for the survey
+        survey_id = survey_temp.id
+        survey_temp.name = "Survey " + str(survey_id)
+        survey_temp.save()
+        
+        # Redirect to the create_survey view with the new survey_id
+        # This will allow the user to edit the survey template immediately
+        return redirect("create_survey_with_id", survey_id=survey_temp.id)
+    
+    # If survey_id is given, fetch the corresponding survey template
+    # from the database and render the create_survey view
+    user: models.CustomUser = request.user
+    survey_temp: models.SurveyTemplate = user.survey_templates.filter(id=survey_id).first()
+    if survey_temp is None:
+        # Handle the case where the survey template does not exist
+        return HttpResponse("Survey template not found", status=404)
+
+    return render(request, "create_survey.html", {"survey_temp": survey_temp})
 
 
+def edit_question_view(request, survey_id: int, question_format: models.QuestionFormat, question_id: str | None = None) -> HttpResponse:
+    """
+    Makes it possible to edit a question. This function is reachable
+    from both create_survey and create_question views. 
+
+    Args:
+        request: The input text from the question text field 
+        survey_id (int): The id of the opened survey
+        question_format (QuestionFormat): The format of the question being created/edited 
+        question_id (int): The id of edited/created question, None if no question has been created
+
+    Returns:
+        HttpResponse: Redirects to create_survey or renders edit_question_view  
+    """
+    user: models.CustomUser = request.user
+    
+    # Get the survey from given id
+    survey_temp: models.SurveyTemplate = user.survey_templates.filter(id=survey_id).first()
+    if survey_temp is None:
+        # Handle the case where the survey template does not exist
+        return HttpResponse("Survey template not found", status=404)
+    
+    if request.method == "POST":
+        if request.headers.get("HX-Request"):
+            # Special case for when a question is created
+            if question_id is None: 
+                question: models.Question = models.Question()
+                question.save()
+                survey_temp.questions.add(question)
+            else: 
+                question = survey_temp.questions.filter(id=question_id).first()
+            
+            # Check for valid question format
+            if question_format not in [choice.value for choice in models.QuestionFormat]:
+                return HttpResponse("Invalid question type", status=404)
+            
+            # Specify question format
+            question.question_format = question_format 
+            question.save()
+
+            # Add question text
+            question.question = request.POST.get("question")
+            question.save()
+
+            return HttpResponse(headers={"HX-Redirect": "/create-survey/" + str(survey_id)})  
+
+
+    # Checks if there is a specific question text to be displayed
+    question_text: str | None = None 
+    if question_id is not None: 
+        question_text = models.Question.objects.filter(id=question_id).first().question
+
+    return render(request, "edit_question.html", {"survey_temp": survey_temp, "question_format": question_format, "question_id": question_id, "question_text": question_text})
+
+ 
 def login_view(request):
     # maybe implement sesion timer so you dont get logged out??
     if request.user.is_authenticated:
