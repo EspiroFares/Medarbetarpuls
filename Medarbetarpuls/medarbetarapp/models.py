@@ -7,6 +7,7 @@ from django.contrib.auth.models import (
     PermissionsMixin,
 )
 import logging
+import math
 from typing import cast
 
 
@@ -438,10 +439,6 @@ class AnalysisHandler:
 
     def calcResult(self):
         return
-
-    def _processAnswers(self, answers: List[Answer], diagramType: DiagramType):
-        data = [a.free_text_answer for a in answers if a.is_answered]
-        return {"type": diagramType.value, "data": data}
 
 
 class EmailList(models.Model):

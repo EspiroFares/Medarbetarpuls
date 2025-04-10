@@ -1,10 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-<<<<<<< HEAD
-from .models import CustomUser  # Import your CustomUser model
-=======
 from .models import CustomUser, Organization  # Import your CustomUser model
->>>>>>> origin/dev
 
 
 class CustomUserAdmin(UserAdmin):
@@ -21,11 +17,7 @@ class CustomUserAdmin(UserAdmin):
     ordering = ("email",)  # Default sorting order
     fieldsets = (
         (None, {"fields": ("email", "password")}),
-<<<<<<< HEAD
-        ("Personal Info", {"fields": ("name", "role")}),
-=======
         ("Personal Info", {"fields": ("name", "user_role")}),
->>>>>>> origin/dev
         ("Permissions", {"fields": ("is_active", "is_staff", "is_superuser")}),
     )
     add_fieldsets = (
@@ -36,11 +28,7 @@ class CustomUserAdmin(UserAdmin):
                 "fields": (
                     "email",
                     "name",
-<<<<<<< HEAD
-                    "role",
-=======
                     "user_role",
->>>>>>> origin/dev
                     "password1",
                     "password2",
                     "is_staff",
@@ -53,12 +41,18 @@ class CustomUserAdmin(UserAdmin):
 
 # Register the CustomUser model
 admin.site.register(CustomUser, CustomUserAdmin)
-<<<<<<< HEAD
-=======
+
 
 @admin.register(Organization)
 class OrganizationAdmin(admin.ModelAdmin):
-    list_display = ("name", "get_admins", "get_employee_groups", "get_question_bank", "get_survey_templates", "get_org_emails")
+    list_display = (
+        "name",
+        "get_admins",
+        "get_employee_groups",
+        "get_question_bank",
+        "get_survey_templates",
+        "get_org_emails",
+    )
     search_fields = ("name",)
 
     @admin.display(description="Admins")
@@ -78,6 +72,5 @@ class OrganizationAdmin(admin.ModelAdmin):
         return ", ".join([template.name for template in obj.survey_template_bank.all()])
 
     @admin.display(description="Organization Emails")
-    def get_org_emails(self, obj): 
+    def get_org_emails(self, obj):
         return ", ".join([template.email for template in obj.org_emails.all()])
->>>>>>> origin/dev

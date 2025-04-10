@@ -23,39 +23,6 @@ def index_view(request):
     return render(request, "index.html")
 
 
-def chart_view1(request):
-    # Get only answered answers with a non-empty free_text_answer
-    answers = Answer.objects.filter(
-        is_answered=True, free_text_answer__isnull=False
-    ).exclude(free_text_answer="")
-
-    # Count the frequency of each unique answer
-    texts = [answer.free_text_answer for answer in answers]
-    frequency = Counter(texts)
-
-    # Prepare labels and data for Chart.js
-    labels = list(frequency.keys())
-    print(labels)
-    data = list(frequency.values())
-    print(data)
-    context = {
-        "labels": labels,
-        "data": data,
-    }
-
-    return render(request, "index.html", context)
-
-
-def chart_view(request):
-    SURVEY_ID = 1  # Choose what survey you want to show here
-    RESULT_ID = 2
-    analysisHandler = AnalysisHandler()
-
-    enps_answers = analysisHandler.getENPSAnswersSurvey(SURVEY_ID, RESULT_ID)
-
-    # move these 3 rows somewhere else?
-
-
 def create_acc_redirect(request):
     if request.headers.get("HX-Request"):
         return HttpResponse(
@@ -558,7 +525,7 @@ def unanswered_surveys_view(request):
     )
 
 
-def chart_view1(request):
+def chart_view(request):
     SURVEY_ID = 2  # Choose what survey you want to show here
 
     # ---- ENPS SCORES ----
@@ -574,7 +541,7 @@ def chart_view1(request):
     promoters = enps_answers.filter(slider_answer__gte=9).count()
     passives = enps_answers.filter(slider_answer__gte=7, slider_answer__lt=9).count()
     detractors = enps_answers.filter(slider_answer__lt=7).count()
-
+    analysisHandler = AnalysisHandler()
     enps_labels = ["Promoters", "Passives", "Detractors"]
     enps_data = [promoters, passives, detractors]
     enps_respondents = analysisHandler.getRespondentsDistribution(enps_answers)
