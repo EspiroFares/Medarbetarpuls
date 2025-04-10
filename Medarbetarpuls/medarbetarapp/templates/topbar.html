@@ -1,0 +1,44 @@
+{% load static %}
+
+<!--
+{%comment%} 
+This template is designed to be used by including it at the start of the body. The code could bring a better result if the code for a specific page is implemented in a seperate container. 
+To include this template, use the following code and input the wanted value for the variable for the page title:
+
+  {% include "topbar.html" with pagetitle="The title for the page" %}
+
+{%endcomment%} -->
+
+<!-- Implementation of the topbar -->
+<div class="topbar">
+  <!-- Code for the logo -->
+  <div class="topbar-logo">
+    {% if user.admin %}
+    <a href={% url 'start_admin' %}
+      ><img
+        src="{% static 'logo.png' %}"
+        alt="Medarbetarpuls"
+        class="topbar-logo"
+    /></a>
+    {% else %}
+    <a href={% url 'start_user' %}
+      ><img
+        src="{% static 'logo.png' %}"
+        alt="Medarbetarpuls"
+        class="topbar-logo"
+    /></a>
+    {% endif %} 
+  </div>
+
+  <!-- The title in the topbar needs to be sent by a variable when the template is included. -->
+  <div class="pagetitle">
+    <h1>{{ pagetitle|safe }}</h1>
+  </div>
+
+  <!-- Code for the menu -->
+  <div class="menu">
+    <a href="javascript:void(0);" onclick="openPanel()"> ☰ </a>
+  </div>
+  <!-- Including the code for the sidepanel -->
+  {% include 'sidepanel.html' %}
+</div>

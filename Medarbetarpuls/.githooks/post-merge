@@ -1,0 +1,22 @@
+# Navigera till rotmappen
+cd "$(git rev-parse --show-toplevel)" || exit
+
+cd Medarbetarpuls || exit 
+
+# Aktivera Venv
+if [ -d "venv" ]; then
+    source venv/bin/activate
+elif [ -d "env" ]; then
+    source env/bin/activate
+elif [ -d ".venv" ]; then
+    source .venv/bin/activate
+elif [ -d "venv/Scripts" ]; then
+    source venv/Scripts/activate  # Windows
+elif [ -d "env/Scripts" ]; then
+    source env/Scripts/activate  # Windows
+elif [ -d ".venv/Scripts" ]; then
+    source .venv/Scripts/activate  # Windows
+fi
+
+# Kör migrate
+python manage.py migrate

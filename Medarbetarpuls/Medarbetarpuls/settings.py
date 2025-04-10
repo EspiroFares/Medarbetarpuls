@@ -29,6 +29,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/5.1/howto/static-files/
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "medarbetarapp", "static"),
@@ -89,6 +91,69 @@ DATABASES = {
 }
 
 
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {message}",
+            "style": "{",
+        },
+        "simple": {
+            "format": "{levelname} {message}",
+            "style": "{",
+        },
+        "json": {  # For structured logs (optional)
+            "()": "pythonjsonlogger.jsonlogger.JsonFormatter",
+            "format": '{"time": "%(asctime)s", "level": "%(levelname)s", "module": "%(module)s", "message": "%(message)s"}',
+            "style": "%",
+        },
+    },
+    "handlers": {
+        "file": {
+            "level": "WARNING",
+            "class": "logging.FileHandler",
+            "filename": "logs/calc_debug.log",
+            "formatter": "verbose",
+        },
+        "console": {
+            "level": "INFO",
+            "class": "logging.StreamHandler",
+            "formatter": "simple",
+        },
+        "json_file": {  # JSON logs (optional)
+            "level": "INFO",
+            "class": "logging.FileHandler",
+            "filename": "logs/calc_logs.json",
+            "formatter": "json",
+        },
+    },
+    "root": {
+        "handlers": [
+            "file",
+            "json_file",
+            "console",
+        ],
+        "level": "INFO",
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["file", "console", "json_file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "django.db.backends": {  # Logs SQL queries (useful for debugging slow queries)
+            "handlers": ["file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+    },
+}
+
+
+# Replaces Djangos built-in user with our custom one
+AUTH_USER_MODEL = "medarbetarapp.CustomUser"
+
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
@@ -119,11 +184,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.1/howto/static-files/
-
-STATIC_URL = "static/"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

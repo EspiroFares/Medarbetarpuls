@@ -1,0 +1,82 @@
+<!-- My organization -->
+<!DOCTYPE html>
+<html lang="sv">
+  <head>
+    {% load static %}
+    <script src="https://unpkg.com/htmx.org@1.8.4"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Inställningar</title>
+    <link rel="stylesheet" href="{% static 'styles.css' %}" />
+  </head>
+  <body>
+    {% include "topbar.html" with pagetitle=pagetitle %}
+    <div class="create-container">
+      <h1>{{ organization.name }}</h1>
+
+      <!-- Search Bar -->
+      <div class="search-container">
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Sök..."
+          onkeyup="filterTable()"
+        />
+        <button type="button">Sök</button>
+      </div>
+
+      <!-- Employee table -->
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Namn</th>
+              <th>Mejladress</th>
+              <th></th>
+              <!-- Empty column for removal symbol -->
+            </tr>
+          </thead>
+          <tbody id="employeeTable">
+            {% for employee in employees %} {% if employee.is_active %}
+            <tr>
+              <td>{{ employee.name }}</td>
+              <td>{{ employee.email }}</td>
+              <td>
+                <form
+                  action="{% url 'my_org' %}"
+                  method="POST"
+                  style="display: inline"
+                >
+                  {% csrf_token %}
+                  <input
+                    type="hidden"
+                    name="user_id"
+                    value="{{ employee.id }}"
+                  />
+                  <button type="submit" class="trashcan-button">
+                    <!-- Maybe confirm popup???-->
+                    <img
+                      src="{% static 'images/trashcan.png' %}"
+                      alt="Delete"
+                      class="icon"
+                    />
+                  </button>
+                </form>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <a href="{% url 'add_employee' %}">
+        <button class="button">Lägg till medarbetare</button>
+      </a>
+    </div>
+
+    <!-- Script for filtering -->
+    <script>
+      function filterTable() {}
+    </script>
+  </body>
+</html>
