@@ -15,7 +15,13 @@
       <h1>Skapa ditt nya konto</h1>
       <h2>En kod har skickats till din mejladress</h2>
       <!-- This form sends the input data to the server using a POST request -->
-      <form class="create-form" action="..." method="POST">
+      <form
+      class="create-form" 
+      hx-post="/authentication-acc/" 
+      hx-trigger="submit"
+      hx-target=".create-form"
+      hx-swap="innerHTML">
+      {% csrf_token %}
         <label for="auth_code">Ange koden:</label>
         <input
           type="text"
