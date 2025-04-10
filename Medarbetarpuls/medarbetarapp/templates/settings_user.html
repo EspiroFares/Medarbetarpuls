@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="sv">
+  <head>
+    {% load static %}
+    <script src="https://unpkg.com/htmx.org@1.8.4"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Inställningar</title>
+    <link rel="stylesheet" href="{% static 'styles.css' %}" />
+  </head>
+  <body>
+    {% include "topbar.html" with pagetitle=pagetitle %}
+    <div class="settings-container">
+      <!-- Change later, if time, so user.profile_pic shows here (or default) -->
+      <div class="info-table">
+        <div class="table-header">Inloggningsuppgifter</div>
+        <div class="table-row">
+            <div class="label">Namn</div>
+            <div class="value"> 
+              {{ user.name }} <a href="#" onclick="openEditName()"><span class="edit-icon">✏️</span></a>
+            </div>
+          </div>
+        <div class="table-row">
+          <div class="label">Lösenord</div>
+          <div class="value">
+            **************** <a href="#" onclick="openEditPass()"><span class="edit-icon">✏️</span></a>
+          </div>
+        </div>
+        <div class="table-row">
+            <div class="label">Mailadress</div>
+            <div class="value">
+              {{ user.email }} 
+            </div>
+          </div>
+        </div>
+      <button class="delete-button"onclick="openDelete()">Radera konto</button>
+      
+      <!-- Delete Confirmation Popup -->
+    <div id="delete-popup" class="popup-overlay" style="display: none;">
+        <div id= "content" class="popup-content">
+          <form 
+            class="delete-acc-form"
+            hx-post="/settings-user/"
+            hx-target="#content"
+            hx-trigger="submit"
+            hx-swap="outerHTML"
+            >
+            
+              <span class="close-button" onclick="closeDelete()">&times;</span> <!-- &times multiplication symbol -->
+              <h2>OBS!</h2>
+              <p>Är du säker på att du vill ta bort ditt konto?</p>
+              <p>Detta kommer genast logga ut dig och du kommer inte kunna logga in igen.</p>
+              
+              {% csrf_token %}
+              <label for="password">Lösenord:</label>
+              <input type="password" id="password" name="password" placeholder="*************" required > <!--fix-->
+              <button type="submit" class="delete-button">Radera konto</button>
+          </form>
+        </div>
+    </div>
+
+    <!-- Edit name Popup -->
+    <div id="edit-name-popup" class="popup-overlay" style="display: none;">
+      <div id= "content" class="popup-content">
+        <form 
+          class="edit-name-form"
+          hx-post="/settings-name/"
+          hx-target="#content"
+          hx-trigger="submit"
+          hx-swap="outerHTML"
+          >
+          <span class="close-button" onclick="closeEditName()">&times;</span>
+          {% csrf_token %}
+              <label for="name">Ditt nya namn:</label>
+              <input type="name" id="name" name="name" placeholder="Namn" required > 
+              <!-- This line will reload the page after 100 ms (after the form is submitted) -->
+              <button type="submit" onclick="setTimeout(() => location.reload(), 100);" class="delete-button">Byt namn</button>
+        </form>
+      </div>
+  </div>
+
+    <!-- Edit password Popup -->
+    <div id="edit-pass-popup" class="popup-overlay" style="display: none;">
+      <div id= "content" class="popup-content">
+        <form 
+          class="edit-pass-form"
+          hx-post="/settings-pass/"
+          hx-target="#content"
+          hx-trigger="submit"
+          hx-swap="outerHTML"
+          >
+          <span class="close-button" onclick="closeEditPass()">&times;</span>
+          {% csrf_token %}
+              <label for="password">Ditt nuvarande lösenord:</label>
+              <input type="password" id="pass_old" name="pass_old" placeholder="Nuvarande lösenord" required > 
+              <label for="password">Ditt nya lösenord:</label>
+              <input type="password" id="pass_new" name="pass_new" placeholder="Nytt lösenord" required >
+              <!-- Must reload after 500ms in order for this form to submit (slower) --> 
+              <button type="submit" onclick="setTimeout(() => location.reload(), 500);" class="delete-button">Byt lösenord</button>
+        </form>
+      </div>
+    </div>
+    <script>
+      function openDelete() {
+          document.getElementById("delete-popup").style.display = "flex";
+      }
+
+      function closeDelete() {
+          document.getElementById("delete-popup").style.display = "none";
+      }
+
+      function openEditName() {
+          document.getElementById("edit-name-popup").style.display = "flex";
+      }
+
+      function closeEditName() {
+          document.getElementById("edit-name-popup").style.display = "none";
+      }
+
+      function openEditPass() {
+          document.getElementById("edit-pass-popup").style.display = "flex";
+      }
+
+      function closeEditPass() {
+          document.getElementById("edit-pass-popup").style.display = "none";
+      }
+  </script>
+  </body>
+</html>

@@ -1,0 +1,38 @@
+<!-- Authenticate account -->
+<!DOCTYPE html>
+<html lang="sv">
+  <head>
+    {% load static %}
+    <script src="https://unpkg.com/htmx.org@1.8.4"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Skapa din nya organisation</title>
+    <link rel="stylesheet" href="{% static 'styles.css' %}" />
+  </head>
+  <body>
+    <!-- To test this, switch to authentication_acc.html in views.py -->
+    <div class="create-container">
+      <h1>Skapa ditt nya konto</h1>
+      <h2>En kod har skickats till din mejladress</h2>
+      <!-- This form sends the input data to the server using a POST request -->
+      <form class="create-form" action="..." method="POST">
+        <label for="auth_code">Ange koden:</label>
+        <input
+          type="text"
+          id="auth_code"
+          name="auth_code"
+          placeholder="6-siffrig kod"
+          inputmode="numeric"
+          maxlength="6"
+          required
+        />
+
+        <button type="submit">Fortsätt</button>
+      </form>
+      <div class="account-help-links">
+        <!-- Replace # later with actual path -->
+        <a href="#">Fick du ingen kod? Klicka här för att skicka igen</a>
+      </div>
+    </div>
+  </body>
+</html>

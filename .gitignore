@@ -9,6 +9,7 @@ local_settings.pyc
 db.sqlite3
 
 *.log
+*.json
 
 *~~
 
