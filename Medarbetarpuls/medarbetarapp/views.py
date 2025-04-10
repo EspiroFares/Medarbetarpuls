@@ -58,6 +58,7 @@ def create_acc(request) -> HttpResponse:
             name = request.POST.get("name")
             email = request.POST.get("email")
             password = request.POST.get("password")
+            from_settings = request.POST.get('from_settings') == 'true'
             code = 123456 # make random later, just test now
             cache.set(f'verify_code_{email}', code, timeout=300)
             send_mail(
@@ -71,39 +72,13 @@ def create_acc(request) -> HttpResponse:
             request.session['user_data'] = {
                 'name': name,
                 'password': password,
+                'from_settings': from_settings,
             }
 
             # Save the mail where the two factor code is sent
             request.session['email_two_factor_code'] = email
 
             return HttpResponse(headers={"HX-Redirect": "/authentication-acc/"})  # Redirect to authentication account page
-            existing_user = models.CustomUser.objects.filter(email=email).first()
-            if existing_user:
-                # Should they be able to reset name and password???
-                existing_user.name = name
-                existing_user.set_password(password)
-                existing_user.save()
-                return HttpResponse(headers={"HX-Redirect": "/"})
-                # check for basegroup??
-            else:
-                # Create user
-                new_user = models.CustomUser.objects.create_user(email, name, password)
-
-                # Add new user to base (everyone) employee group of org
-                base_group = org.employee_groups.filter(name="Alla").first()  # pyright: ignore
-
-                if base_group:
-                    new_user.employee_groups.add(base_group)
-                    new_user.save()
-                else:
-                    logger.error(
-                        f"No group found with the name '{base_group}' in the organization '{org.name}'"
-                    )
-                    return HttpResponse(status=400)
-
-                return HttpResponse(
-                    headers={"HX-Redirect": "/"}
-                )  # Redirect to login page
 
     return HttpResponse(status=400)  # Bad request if no expression
 
@@ -188,34 +163,43 @@ def authentication_acc_view(request):
             data = request.session.get('user_data')
             name=data['name']
             password=data['password']
+            from_settings = data['from_settings']
 
             # Delete everything saved in session and cache - data not needed anymore
             del request.session['user_data']
             del request.session['email_two_factor_code']
             cache.delete(f'verify_code_{email}')
             
-
-            # Check that email is registrated to an org
-            org = find_organization_by_email(email)
-            if org is None:
-                logger.error("This email is not authorized for registration.")
-                return HttpResponse(status=400)
-            # Create user
-            new_user = models.CustomUser.objects.create_user(email, name, password)
-
-            # Add new user to base (everyone) employee group of org
-            base_group = org.employee_groups.filter(name="Alla").first()  # pyright: ignore
-
-            if base_group:
-                new_user.employee_groups.add(base_group)
-                new_user.save()
+            existing_user = models.CustomUser.objects.filter(email=email).first()
+            if existing_user and str(from_settings)=='true': #and coming from settings page
+                # Should they be able to reset name and password???
+                existing_user.name = name
+                existing_user.set_password(password)
+                existing_user.save()
+                return HttpResponse(headers={"HX-Redirect": "/"})
+                # check for basegroup??
             else:
-                logger.error(
-                    f"No group found with the name '{base_group}' in the organization '{org.name}'"
-                )
-                return HttpResponse(status=400)
-            
-            return HttpResponse(headers={"HX-Redirect": "/"})
+                # Check that email is registrated to an org
+                org = find_organization_by_email(email)
+                if org is None:
+                    logger.error("This email is not authorized for registration.")
+                    return HttpResponse(status=400)
+                # Create user
+                new_user = models.CustomUser.objects.create_user(email, name, password)
+
+                # Add new user to base (everyone) employee group of org
+                base_group = org.employee_groups.filter(name="Alla").first()  # pyright: ignore
+
+                if base_group:
+                    new_user.employee_groups.add(base_group)
+                    new_user.save()
+                else:
+                    logger.error(
+                        f"No group found with the name '{base_group}' in the organization '{org.name}'"
+                    )
+                    return HttpResponse(status=400)
+                
+                return HttpResponse(headers={"HX-Redirect": "/"})
         else:
             logger.error("Wrong authentication code")
             return HttpResponse(status=400)
