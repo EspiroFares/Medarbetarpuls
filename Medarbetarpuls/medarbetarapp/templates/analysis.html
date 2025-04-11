@@ -28,8 +28,8 @@
 
     <script>
       // Chart 1: Free text frequency
-      const textLabels = {{ labels|default:"[]"|safe }};
-      const textData = {{ data|default:"[]"|safe }};
+      const textLabels = {{ slider_values|default:"[]"|safe }};
+      const textData = {{ distribution|default:"[]"|safe }};
 
       const ctx1 = document.getElementById("surveyChart").getContext("2d");
       new Chart(ctx1, {

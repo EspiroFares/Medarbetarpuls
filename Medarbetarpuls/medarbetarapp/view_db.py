@@ -19,12 +19,14 @@ print("\n")
 for s in Survey.objects.all():
     print(f"Survey ID: {s.id}, Name: {s.name}")
 print("\n")
+
+print(type(SurveyResult.objects.filter(published_survey=Survey.objects.first())))
 for s in SurveyResult.objects.all():
     print(f"Survey Result ID: {s.id}")
 print("\n")
 
-for a in Answer.objects.all():
-    print(f"Answer: {a}")
+# for a in Answer.objects.all():
+#   print(f"Answer: {a}")
 # survey = Survey.objects.get(id=1)
 # results = SurveyResult.objects.filter(published_survey=survey, id=1)
 # print("Survey Results:", results)

@@ -156,7 +156,7 @@ def createQuestions(
         ]
 
     if questionType == QuestionType.ENPS:
-        questions = ["How likely are you to recommend this company as a place to work"]
+        questions = ["How likely are you to recommend this company as a place to work?"]
         amount = 1
         questionFormat = QuestionFormat.SLIDER
 

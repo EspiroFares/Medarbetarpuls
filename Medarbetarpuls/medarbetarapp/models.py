@@ -1,5 +1,6 @@
 from getpass import getuser
 from django.db import models
+from django.db.models.query import QuerySet
 from django.db.models.manager import BaseManager
 from django.contrib.auth.models import (
     AbstractBaseUser,
@@ -393,52 +394,89 @@ class DiagramType(models.TextChoices):
 
 class AnalysisHandler:
     """
-    This class handles all functionality that is needed for the analysis webpage.
+    Handles logic for survey analysis, especially ENPS-related calculations.
     """
 
-    def groupFilter(self):
-        # to be implemented
-        return
+    def get_survey(self, survey_id: int) -> Survey:
+        """Retrieve a survey by its ID."""
+        return Survey.objects.get(id=survey_id)
 
-    def getSurvey(self, surveyID: int):
-        return Survey.objects.get(id=surveyID)
+    def get_survey_result(self, survey_id: int, result_id: int):
+        """Retrieve a specific SurveyResult."""
+        return SurveyResult.objects.filter(published_survey__id=survey_id, id=result_id)
 
-    def getResultsSurvey(self, survey: Survey, resultID: int):
-        return SurveyResult.objects.filter(published_survey=survey, id=resultID)
+    def get_question(self, question_txt: str) -> Question:
+        """Fetch the question object by text. Assumes there is only one question phrased the same way."""
+        # Right now the question is fetched by an exact match,
+        # use question__icontains= instead of question= for a more flexible match.
+        return Question.objects.filter(question=question_txt).first()
 
-    def getENPSAnswersAll(self):
-        enps_q = Question.objects.filter(question_type="enps").first()
-        return Answer.objects.filter(question=enps_q, is_answered=True)
+    def get_answers(
+        self,
+        question: Question,
+        survey_id: int | None = None,
+        result_id: int | None = None,
+    ):
+        """Get answers for a given question, optionally filtered to a specific survey/result."""
 
-    def getENPSAnswersSurvey(self, surveyID: int, resultID: int):
-        results = SurveyResult.objects.filter(
-            published_survey=self.getSurvey(surveyID), id=resultID
+        filters = {"question": question, "is_answered": True}
+
+        if survey_id and result_id:
+            results = self.get_survey_result(survey_id, result_id)
+            filters["survey__in"] = results
+
+        return Answer.objects.filter(**filters)
+
+    def calculate_enps_data(self, answers) -> tuple[int, int, int]:
+        """Categorize responses into promoters, passives, and detractors."""
+
+        promoters = answers.filter(slider_answer__gte=9).count()
+
+        passives = answers.filter(slider_answer__gte=7, slider_answer__lt=9).count()
+        detractors = answers.filter(slider_answer__lt=7).count()
+        return promoters, passives, detractors
+
+    def calculate_enps_score(
+        self, promoters: int, passives: int, detractors: int
+    ) -> int:
+        """Compute eNPS score."""
+        total = promoters + passives + detractors
+        return (
+            math.floor(((promoters - detractors) / total) * 100) if total > 0 else 0
+        )  # if statement needed because we can get zero division error otherwise
+
+    def get_response_distribution(self, answers) -> list[int]:
+        """Count how many respondents picked each value (1-10)."""
+        return [answers.filter(slider_answer=i).count() for i in range(1, 11)]
+
+    def get_enps_summary(
+        self,
+        survey_id: int | None = None,
+        result_id: int | None = None,
+    ):
+        """
+        Get all data needed to render ENPS analysis:
+        score, labels, data distribution, raw responses.
+        """
+        question_txt = (
+            "How likely are you to recommend this company as a place to work?"
         )
-        enps_q = Question.objects.filter(question_type="enps").first()
-        return Answer.objects.filter(
-            survey__in=results, question=enps_q, is_answered=True
-        )
+        question = self.get_question(question_txt)
+        print(question)
+        # answers = self.get_answers(question, survey_id, result_id)
+        answers = self.get_answers(question)
+        promoters, passives, detractors = self.calculate_enps_data(answers)
+        print(promoters, passives, detractors)
+        score = self.calculate_enps_score(promoters, passives, detractors)
+        distribution = self.get_response_distribution(answers)
 
-    def getENPS(self, promoters, passives, detractors):
-        respondents = promoters + passives + detractors
-        eNPS = ((promoters - detractors) / respondents) * 100
-        return math.floor(eNPS)
-
-    def getRespondentsDistribution(self, answers):
-        respondents = []
-        for i in range(1, 11):
-            print(i)
-            respondents.append(answers.filter(slider_answer=i).count())
-        return respondents
-
-    def calcENPSChange(self, past, present):
-        return present - past
-
-    def calcTrends(self):
-        return
-
-    def calcResult(self):
-        return
+        return {
+            "score": score,
+            "labels": ["Promoters", "Passives", "Detractors"],
+            "data": [promoters, passives, detractors],
+            "slider_values": list(range(1, 11)),
+            "distribution": distribution,
+        }
 
 
 class EmailList(models.Model):
