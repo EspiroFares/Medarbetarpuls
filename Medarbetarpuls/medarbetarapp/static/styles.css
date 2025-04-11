@@ -20,11 +20,7 @@ body {
   background-color: var(--white);
   /* white; */
   margin: 0;
-}
-
-.login-container {
-  width: 70%;
-  max-width: 500px;
+  padding: 0;
   text-align: center;
   background: var(--white);
   /* white; */
@@ -141,6 +137,9 @@ button:hover {
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: 10px 20px;
+  background-color: #f8f9fa;
+  position: relative;
 }
 
 .create-form label {
@@ -150,11 +149,12 @@ button:hover {
   color: var(--dark_blue);
   /* #102b46; */
   font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 500px;
 }
 
-.create-form input {
-  width: 70%;
-  padding: 14px;
+.search-button {
+  padding: 10px 20px;
   font-size: 16px;
   border: none;
   border-radius: 10px;
@@ -170,11 +170,8 @@ button:hover {
   color: var(--white);
   /* white; */
   border: none;
-  padding: 10px 20px;
-  border-radius: 10px;
-  font-size: 16px;
+  border-radius: 4px;
   cursor: pointer;
-  margin-top: 5%;
 }
 
 .create-form button:hover {
@@ -330,7 +327,12 @@ button:hover {
   transition: transform 0.2s;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+}
+
+.grid-view .survey-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
   align-items: center;
   max-height: 80vh;
   /* Limit the height */
@@ -363,25 +365,37 @@ button:hover {
   min-width: 250px;
 }
 
-/* Add specific classes for different colors */
-.grid-item.pink::after {
-  background-color: #ff77a1;
+.survey-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  margin-top: auto;
 }
 
-.grid-item.lightblue::after {
-  background-color: #8bbdf8;
+.action-icon {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
 }
 
-.grid-item.blue::after {
-  background-color: #3e82d8;
+.add-survey-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
 }
 
-.grid-item.green::after {
-  background-color: #7ed23e;
+.add-survey-button {
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
 }
 
-.grid-item.yellow::after {
-  background-color: #ffc757;
+.add-survey-button:hover {
+  background-color: #0056b3;
 }
 
 .grid-item.orange::after {
