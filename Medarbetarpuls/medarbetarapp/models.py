@@ -394,7 +394,7 @@ class DiagramType(models.TextChoices):
 
 class AnalysisHandler:
     """
-    Handles logic for survey analysis, especially ENPS-related calculations.
+    Handles logic for survey analysis.
     """
 
     def get_survey(self, survey_id: int) -> Survey:
@@ -427,6 +427,7 @@ class AnalysisHandler:
 
         return Answer.objects.filter(**filters)
 
+    # --------- SLIDER-QUESTION FUNCTIONALITY -------------
     def calculate_enps_data(self, answers) -> tuple[int, int, int]:
         """Categorize responses into promoters, passives, and detractors."""
 
@@ -457,6 +458,8 @@ class AnalysisHandler:
         """
         Get all data needed to render ENPS analysis:
         score, labels, data distribution, raw responses.
+
+        With survey_id and result_id set to None you get all the answers from an eNPS question.
         """
         question_txt = (
             "How likely are you to recommend this company as a place to work?"
@@ -469,14 +472,51 @@ class AnalysisHandler:
         print(promoters, passives, detractors)
         score = self.calculate_enps_score(promoters, passives, detractors)
         distribution = self.get_response_distribution(answers)
-
+        standard_deviation = self.calculate_standard_deviation(answers)
+        variation_coefficient = self.calculate_variation_coefficient(answers)
         return {
             "score": score,
             "labels": ["Promoters", "Passives", "Detractors"],
             "data": [promoters, passives, detractors],
             "slider_values": list(range(1, 11)),
             "distribution": distribution,
+            "standard_deviation": standard_deviation,
+            "variation_coefficient": variation_coefficient,
         }
+
+    def calculate_mean(self, answers) -> float:
+        "Calculates mean for slider answers."
+        values = [a.slider_answer for a in answers if a.slider_answer is not None]
+        n = len(values)
+        if n == 0:
+            return 0.0
+        mean = sum(values) / n
+        return mean
+
+    def calculate_standard_deviation(self, answers) -> float:
+        """Calculate standard deviation for slider answers."""
+        values = [a.slider_answer for a in answers if a.slider_answer is not None]
+        n = len(values)
+        if n == 0:
+            return 0.0
+        mean = sum(values) / n  # maybe change this for the calculate_mean function?
+        variance = sum((x - mean) ** 2 for x in values) / n
+        standard_deviation = math.sqrt(variance)
+        return standard_deviation
+
+    def calculate_variation_coefficient(self, answers) -> float:
+        """Calculate coefficient of variation for slider answers."""
+        values = [a.slider_answer for a in answers if a.slider_answer is not None]
+        n = len(values)
+        if n == 0:
+            return 0.0
+        mean = sum(values) / n  # maybe change this for the calculate_mean function?
+        if mean == 0:
+            return 0.0
+        variance = sum((x - mean) ** 2 for x in values) / n
+        std_dev = math.sqrt(variance)
+        cv = (std_dev / mean) * 100
+        return round(cv, 2)
 
 
 class EmailList(models.Model):
