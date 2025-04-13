@@ -527,9 +527,12 @@ def unanswered_surveys_view(request):
 
 def chart_view(request):
     SURVEY_ID = 1  # Choose which survey to show here
-    RESULT_ID = 3  # Choose which result to show here
+    RESULT_ID = 2  # Choose which result to show here
     analysisHandler = AnalysisHandler()
-    context = analysisHandler.get_enps_summary(SURVEY_ID, RESULT_ID)
+    question_txt = "What type of task did you spend the most time on?"
+    context = analysisHandler.get_multiple_choice_summary(
+        question_txt, SURVEY_ID, RESULT_ID
+    )
 
     return render(request, "analysis.html", context)
 

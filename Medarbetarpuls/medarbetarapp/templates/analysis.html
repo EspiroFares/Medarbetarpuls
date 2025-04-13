@@ -28,7 +28,7 @@
 
     <script>
       // Chart 1: Free text frequency
-      const textLabels = {{ slider_values|default:"[]"|safe }};
+      const textLabels = {{ answer_options|default:"[]"|safe }};
       const textData = {{ distribution|default:"[]"|safe }};
 
       const ctx1 = document.getElementById("surveyChart").getContext("2d");
@@ -58,8 +58,8 @@
       });
 
       // Chart 2: eNPS breakdown
-      const enpsLabels = {{ enps_labels|default:"[\"Happy\", \"Neutral\", \"Sad\"]"|safe }};
-      const enpsData = {{ enps_data|default:"[3, 2, 1]"|safe }};
+      const enpsLabels = {{ answer_options|default:"[\"Happy\", \"Neutral\", \"Sad\"]"|safe }};
+      const enpsData = {{ distribution|default:"[3, 2, 1]"|safe }};
 
       const ctx2 = document.getElementById("enpsChart").getContext("2d");
       new Chart(ctx2, {

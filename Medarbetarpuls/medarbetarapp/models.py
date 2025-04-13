@@ -1,4 +1,5 @@
 from getpass import getuser
+from importlib.metadata import distribution
 from django.db import models
 from django.db.models.query import QuerySet
 from django.db.models.manager import BaseManager
@@ -350,11 +351,13 @@ class Answer(models.Model):
     question = models.ForeignKey(
         Question, on_delete=models.CASCADE, related_name="answers", null=True
     )
-    comment = models.CharField(max_length=255)
-    free_text_answer = models.CharField(max_length=255)
-    multiple_choice_answer = models.JSONField(default=list)  # Stores a list of booleans
-    yes_no_answer = models.BooleanField(default=False)  # pyright: ignore
-    slider_answer = models.FloatField()
+    comment = models.CharField(max_length=255, null=True, blank=True)
+    free_text_answer = models.CharField(max_length=255, null=True, blank=True)
+    multiple_choice_answer = models.JSONField(
+        default=list, null=True, blank=True
+    )  # Stores a list of booleans
+    yes_no_answer = models.BooleanField(default=False, null=True, blank=True)  # pyright: ignore
+    slider_answer = models.FloatField(null=True, blank=True)
 
     @property
     def answer_format(self) -> QuestionFormat | None:
@@ -409,7 +412,7 @@ class AnalysisHandler:
         """Fetch the question object by text. Assumes there is only one question phrased the same way."""
         # Right now the question is fetched by an exact match,
         # use question__icontains= instead of question= for a more flexible match.
-        return Question.objects.filter(question=question_txt).first()
+        return Question.objects.filter(question__icontains=question_txt).first()
 
     def get_answers(
         self,
@@ -440,13 +443,13 @@ class AnalysisHandler:
     def calculate_enps_score(
         self, promoters: int, passives: int, detractors: int
     ) -> int:
-        """Compute eNPS score."""
+        # Compute eNPS score.
         total = promoters + passives + detractors
         return (
             math.floor(((promoters - detractors) / total) * 100) if total > 0 else 0
         )  # if statement needed because we can get zero division error otherwise
 
-    def get_response_distribution(self, answers) -> list[int]:
+    def get_response_distribution_slider(self, answers) -> list[int]:
         """Count how many respondents picked each value (1-10)."""
         return [answers.filter(slider_answer=i).count() for i in range(1, 11)]
 
@@ -457,7 +460,7 @@ class AnalysisHandler:
     ):
         """
         Get all data needed to render ENPS analysis:
-        score, labels, data distribution, raw responses.
+        standard deviation, variation coefficient, score, labels, data distribution, raw responses.
 
         With survey_id and result_id set to None you get all the answers from an eNPS question.
         """
@@ -471,7 +474,7 @@ class AnalysisHandler:
         promoters, passives, detractors = self.calculate_enps_data(answers)
         print(promoters, passives, detractors)
         score = self.calculate_enps_score(promoters, passives, detractors)
-        distribution = self.get_response_distribution(answers)
+        distribution = self.get_response_distribution_slider(answers)
         standard_deviation = self.calculate_standard_deviation(answers)
         variation_coefficient = self.calculate_variation_coefficient(answers)
         return {
@@ -517,6 +520,79 @@ class AnalysisHandler:
         std_dev = math.sqrt(variance)
         cv = (std_dev / mean) * 100
         return round(cv, 2)
+
+    def get_slider_summary(
+        self,
+        question_txt: str,
+        survey_id: int | None = None,
+        result_id: int | None = None,
+    ):
+        """
+        Get all data needed to render slider analysis:
+        standard deviation, variation coefficient, data distribution, raw responses.
+
+        With survey_id and result_id set to None you get all the answers from the question.
+        """
+        question = self.get_question(question_txt)
+        answers = self.get_answers(question, survey_id, result_id)
+        distribution = self.get_response_distribution_slider(answers)
+        standard_deviation = self.calculate_standard_deviation(answers)
+        variation_coefficient = self.calculate_variation_coefficient(answers)
+        return {
+            "slider_values": list(range(1, 11)),
+            "distribution": distribution,
+            "standard_deviation": standard_deviation,
+            "variation_coefficient": variation_coefficient,
+        }
+
+    # ---------------- MULTIPLE CHOICE ------------
+    def get_response_distribution_mc(self, answers, answer_options) -> list[int]:
+        """Count how many respondents picked each answer."""
+        # this function is a little weird because of the structure of the answers (list with booleans) and the structure of the answer options (list with strings)
+        # it looks at all occurences of true at the corresponding index to answer option
+
+        dist = [0] * len(answer_options)
+        print("HEJ: ", dist)
+
+        for a in answers:
+            selected_options = a.multiple_choice_answer
+            if selected_options:
+                for idx, selected in enumerate(selected_options):
+                    if selected and idx < len(dist):
+                        dist[idx] += 1
+        return dist
+
+    def get_multiple_choice_summary(
+        self,
+        question_txt: str,
+        survey_id: int | None = None,
+        result_id: int | None = None,
+    ):
+        question = self.get_question(question_txt)
+        answer_options = question.specific_question.options
+        answers = self.get_answers(question, survey_id, result_id)
+        distribution = self.get_response_distribution_mc(answers, answer_options)
+        print(answers.filter(multiple_choice_answer="A").count())
+        print(distribution)
+        return {
+            "question": question,
+            "answer_options": answer_options,
+            "distribution": distribution,
+        }
+
+    # ----------- YES NO --------------------
+    def get_yes_no_summary(
+        self,
+        question_txt: str,
+        survey_id: int | None = None,
+        result_id: int | None = None,
+    ):
+        question = self.get_question(question_txt)
+        answer_options = question.specific_question.options
+        answers = self.get_answers(question, survey_id, result_id)
+        # distribution =
+
+        return {}
 
 
 class EmailList(models.Model):

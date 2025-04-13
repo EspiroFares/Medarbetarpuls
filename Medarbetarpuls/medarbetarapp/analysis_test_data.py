@@ -1,3 +1,4 @@
+from http.client import MULTIPLE_CHOICES
 from medarbetarapp.models import (
     Answer,
     QuestionFormat,
@@ -7,6 +8,7 @@ from medarbetarapp.models import (
     Survey,
     CustomUser,
     UserRole,
+    MultipleChoiceQuestion,
 )
 import random
 
@@ -166,6 +168,13 @@ def createQuestions(
             question_format=questionFormat,
             question_type=questionType,
         )
+        if q.question_format == QuestionFormat.MULTIPLE_CHOICE:
+            mcq = MultipleChoiceQuestion.objects.create(
+                question_format=QuestionFormat.MULTIPLE_CHOICE,
+                options=["A", "B", "C", "D"],
+            )
+            q.multiple_choice_question = mcq
+            q.save()
         result.append(q)
     return result
 
@@ -174,19 +183,29 @@ def createAnswers(amount: int, result: SurveyResult, question: Question):
     scores = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     answers = []
     for i in range(amount):
-        a = Answer.objects.create(
-            is_answered=True,
-            survey=result,
-            question=question,
-            slider_answer=random.choice(scores),
-            # multiple_choice_answer=[
-            # random.choice([True, False]),
-            #  random.choice([True, False]),
-            #   random.choice([True, False]),
-            # ],
-            # yes_no_answer=random.choice([True, False]),
-            # free_text_answer=["Hej"],
-        )
+        if question.question_format == QuestionFormat.MULTIPLE_CHOICE:
+            num_options = len(question.specific_question.options)
+            answer_data = [random.choice([True, False]) for j in range(num_options)]
+            a = Answer.objects.create(
+                is_answered=True,
+                survey=result,
+                question=question,
+                multiple_choice_answer=answer_data,
+            )
+        elif question.question_format == QuestionFormat.SLIDER:
+            a = Answer.objects.create(
+                is_answered=True,
+                survey=result,
+                question=question,
+                slider_answer=random.choice(scores),
+            )
+        elif question.question_format == QuestionFormat.YES_NO:
+            a = Answer.objects.create(
+                is_answered=True,
+                survey=result,
+                question=question,
+                yes_no_answer=random.choice([True, False]),
+            )
         answers.append(a)
     return answers
 
@@ -207,8 +226,9 @@ survey_responders = createUsers(UserRole.SURVEY_RESPONDER, 4)
 surveys = createSurveys(3, survey_creator)
 
 question_enps = createQuestions(1, QuestionFormat.SLIDER, QuestionType.ENPS)
+question_mc = createQuestions(1, QuestionFormat.MULTIPLE_CHOICE, QuestionType.ONETIME)
 for s in surveys:
     for r in survey_responders:
         survey_result = createSurveyResult(3, s, r)
         for sr in survey_result:
-            answers = createAnswers(1, sr, question_enps[0])
+            answers = createAnswers(1, sr, question_mc[0])
