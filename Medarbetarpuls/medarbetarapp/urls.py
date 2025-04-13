@@ -23,7 +23,6 @@ urlpatterns = [
     path("create-survey/<int:survey_id>/", views.create_survey_view, name="create_survey_with_id"),
     path("edit-question/<int:survey_id>/<str:question_format>/", views.edit_question_view, name="edit_question_new"),
     path("edit-question/<int:survey_id>/<str:question_format>/<int:question_id>/", views.edit_question_view, name="edit_question"),
-    path("publish_survey/<int:survey_id>/", views.publish_survey, name="publish_survey"),
     path("index/", views.index_view, name="index"),
     path("", views.login_view, name="login"),
     path("my-org/", views.my_org_view, name="my_org"),

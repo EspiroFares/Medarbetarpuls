@@ -1006,9 +1006,3 @@ th {
   position: fixed;
   width: 5%;
 }
-
-#error-box {
-  min-height: 1.5em;
-  color: red;
-  margin-bottom: 1em;
-}
