@@ -1,5 +1,4 @@
 from django.db import models
-from django.core.mail import send_mail
 from django.db.models.manager import BaseManager
 from django.contrib.auth.models import (
     AbstractBaseUser,
@@ -183,28 +182,6 @@ class Survey(models.Model):
     def __str__(self) -> str:
         return f"{self.name} ({self.creator})"
 
-    def publish_survey(self): 
-        """
-        Publishes the survey to all employees in all
-        employee groups linked to this survey
-        """
-        seen_employees = set()
-
-        for group in self.employee_groups.all():
-            for employee in group.employees.all():
-                if employee.id not in seen_employees:
-                    SurveyResult.objects.create(published_survey=self, user=employee)
-                    seen_employees.add(employee)
-
-        # Send email to notify 
-        send_mail(
-            subject="Ny obesvaradenkät",
-            message="Det finns en ny enkät att svara på i Medarbetarpuls",
-            from_email='medarbetarpuls@gmail.com',
-            recipient_list=[employee.email for employee in seen_employees],
-            fail_silently=False,
-        )
-
 
 # What this model does needs to be explained here
 class SurveyTemplate(models.Model): 
@@ -333,7 +310,7 @@ class Question(models.Model):
         return None
 
     def __str__(self) -> str:
-        return f"{self.question_format} ({self.question})"
+        return f"{self.question_format} ({self.question_type})"
 
 
 # What this model does needs to be explained here
