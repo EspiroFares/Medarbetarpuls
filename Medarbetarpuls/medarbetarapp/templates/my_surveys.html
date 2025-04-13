@@ -1,155 +1,129 @@
 {% load static %}
-<!doctype html>
+<!DOCTYPE html>
 <html lang="sv">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mina enkäter</title>
-    <link rel="stylesheet" href="{% static 'my_surveys_styles.css' %}" />
-  </head>
-  <body>
-    <header class="top-bar">
-      <div class="left-icon">
-        <img src="{% static 'logo.png' %}" alt="logo" class="logo" />
-      </div>
-      <h1 class="survey">Mina enkäter</h1>
-      <div class="right-icon">
-        <img
-          src="{% static 'go-back-btn.png' %}"
-          alt="back"
-          class="back-button"
-        />
-      </div>
-    </header>
-
-    <div class="search-container">
-      <input
-        type="text"
-        id="search-bar"
-        class="search-bar"
-        placeholder="Sök enkäter..."
-      />
-      <button type="button" class="search-button">Sök</button>
-      <div class="view-icons">
-        <img
-          src="{% static 'list.png' %}"
-          alt="List View"
-          class="view-icon"
-          onclick="setListView()"
-        />
-        <img
-          src="{% static 'grid.png' %}"
-          alt="Grid View"
-          class="view-icon"
-          onclick="setGridView()"
-        />
-      </div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mina enkäter</title>
+  <link rel="stylesheet" href="{% static 'styles.css' %}" />
+</head>
+<body>
+  <header class="top-bar">
+    <div class="left-icon">
+      <img src="{% static 'logo.png' %}" alt="logo" class="logo" />
     </div>
+    <h1 class="survey">Mina enkäter</h1>
+    <div class="right-icon">
+      <img src="{% static 'go-back-btn.png' %}" alt="back" class="back-button" />
+    </div>
+  </header>
 
-    <div class="survey-list list-view" id="surveyList">
-      <!-- Enkät 1 -->
-      <div class="survey-item">
-        <div class="survey-content">
-          <div class="survey-icons">
-            <span class="tooltip" data-tooltip="Samtliga svar är anonymiserade">
-              <div class="icon-wrapper">
-                <img src="{% static 'anonymous.png' %}" class="icon-img" />
-              </div>
-            </span>
-            <span
-              class="tooltip"
-              data-tooltip="Resultatet presenteras efter deadline"
-            >
-              <div class="icon-wrapper">
-                <img src="{% static 'survey-info.png' %}" class="icon-img" />
-              </div>
-            </span>
-          </div>
-          <h2 class="survey-title">Enkät 1</h2>
-          <div class="survey-actions">
-            <img src="{% static 'trashcan.png' %}" class="action-icon" />
-            <img src="{% static 'edit-icon.png' %}" class="action-icon" />
-            <img src="{% static 'share-icon.png' %}" class="action-icon" />
-          </div>
+  <div class="search-container">
+    <input type="text" id="search-bar" class="search-bar" placeholder="Sök enkäter..." />
+    <button type="button" class="search-button">Sök</button>
+    <div class="view-icons">
+      <img src="{% static 'list.png' %}" alt="List View" class="view-icon" onclick="setListView()" />
+      <img src="{% static 'grid.png' %}" alt="Grid View" class="view-icon" onclick="setGridView()" />
+    </div>
+  </div>
+
+  <div class="survey-list list-view" id="surveyList">
+
+    <!-- Enkät 1 -->
+    <div class="survey-item">
+      <div class="survey-content">
+        <div class="survey-icons">
+          <span class="tooltip" data-tooltip="Samtliga svar är anonymiserade">
+            <div class="icon-wrapper">
+              <img src="{% static 'anonymous.png' %}" class="icon-img" />
+            </div>
+          </span>
+          <span class="tooltip" data-tooltip="Resultatet presenteras efter deadline">
+            <div class="icon-wrapper">
+              <img src="{% static 'survey-info.png' %}" class="icon-img" />
+            </div>
+          </span>
         </div>
-      </div>
-
-      <!-- Enkät 2 -->
-      <div class="survey-item">
-        <div class="survey-content">
-          <div class="survey-icons">
-            <span class="tooltip" data-tooltip="Svaren är INTE anonymiserade">
-              <div class="icon-wrapper">
-                <img src="{% static 'anonymous.png' %}" class="icon-img" />
-                <img src="{% static 'xsymbol.png' %}" class="x-overlay" />
-              </div>
-            </span>
-            <span
-              class="tooltip"
-              data-tooltip="Resultatet presenteras inte efter deadline"
-            >
-              <div class="icon-wrapper">
-                <img src="{% static 'survey-info.png' %}" class="icon-img" />
-                <img src="{% static 'xsymbol.png' %}" class="x-overlay" />
-              </div>
-            </span>
-          </div>
-          <h2 class="survey-title">Enkät 2</h2>
-          <div class="survey-actions">
-            <img src="{% static 'trashcan.png' %}" class="action-icon" />
-            <img src="{% static 'edit-icon.png' %}" class="action-icon" />
-            <img src="{% static 'share-icon.png' %}" class="action-icon" />
-          </div>
-        </div>
-      </div>
-
-      <!-- Enkät 3 -->
-      <div class="survey-item">
-        <div class="survey-content">
-          <div class="survey-icons">
-            <span class="tooltip" data-tooltip="Svaren är INTE anonymiserade">
-              <div class="icon-wrapper">
-                <img src="{% static 'anonymous.png' %}" class="icon-img" />
-                <img src="{% static 'xsymbol.png' %}" class="x-overlay" />
-              </div>
-            </span>
-            <span
-              class="tooltip"
-              data-tooltip="Resultatet presenteras efter deadline"
-            >
-              <div class="icon-wrapper">
-                <img src="{% static 'survey-info.png' %}" class="icon-img" />
-              </div>
-            </span>
-          </div>
-          <h2 class="survey-title">Enkät 3</h2>
-          <div class="survey-actions">
-            <img src="{% static 'trashcan.png' %}" class="action-icon" />
-            <img src="{% static 'edit-icon.png' %}" class="action-icon" />
-            <img src="{% static 'share-icon.png' %}" class="action-icon" />
-          </div>
+        <h2 class="survey-title">Enkät 1</h2>
+        <div class="survey-actions">
+          <img src="{% static 'trashcan.png' %}" class="action-icon" />
+          <img src="{% static 'edit-icon.png' %}" class="action-icon" />
+          <img src="{% static 'share-icon.png' %}" class="action-icon" />
         </div>
       </div>
     </div>
 
-    <div class="add-survey-container">
-      <button type="button" class="add-survey-button">
-        <img src="{% static 'add.png' %}" class="action-icon" />
-      </button>
+    <!-- Enkät 2 -->
+    <div class="survey-item">
+      <div class="survey-content">
+        <div class="survey-icons">
+          <span class="tooltip" data-tooltip="Svaren är INTE anonymiserade">
+            <div class="icon-wrapper">
+              <img src="{% static 'anonymous.png' %}" class="icon-img" />
+              <img src="{% static 'xsymbol.png' %}" class="x-overlay" />
+            </div>
+          </span>
+          <span class="tooltip" data-tooltip="Resultatet presenteras inte efter deadline">
+            <div class="icon-wrapper">
+              <img src="{% static 'survey-info.png' %}" class="icon-img" />
+              <img src="{% static 'xsymbol.png' %}" class="x-overlay" />
+            </div>
+          </span>
+        </div>
+        <h2 class="survey-title">Enkät 2</h2>
+        <div class="survey-actions">
+          <img src="{% static 'trashcan.png' %}" class="action-icon" />
+          <img src="{% static 'edit-icon.png' %}" class="action-icon" />
+          <img src="{% static 'share-icon.png' %}" class="action-icon" />
+        </div>
+      </div>
     </div>
 
-    <script>
-      function setListView() {
-        const surveyList = document.getElementById("surveyList");
-        surveyList.classList.remove("grid-view");
-        surveyList.classList.add("list-view");
-      }
+    <!-- Enkät 3 -->
+    <div class="survey-item">
+      <div class="survey-content">
+        <div class="survey-icons">
+          <span class="tooltip" data-tooltip="Svaren är INTE anonymiserade">
+            <div class="icon-wrapper">
+              <img src="{% static 'anonymous.png' %}" class="icon-img" />
+              <img src="{% static 'xsymbol.png' %}" class="x-overlay" />
+            </div>
+          </span>
+          <span class="tooltip" data-tooltip="Resultatet presenteras efter deadline">
+            <div class="icon-wrapper">
+              <img src="{% static 'survey-info.png' %}" class="icon-img" />
+            </div>
+          </span>
+        </div>
+        <h2 class="survey-title">Enkät 3</h2>
+        <div class="survey-actions">
+          <img src="{% static 'trashcan.png' %}" class="action-icon" />
+          <img src="{% static 'edit-icon.png' %}" class="action-icon" />
+          <img src="{% static 'share-icon.png' %}" class="action-icon" />
+        </div>
+      </div>
+    </div>
 
-      function setGridView() {
-        const surveyList = document.getElementById("surveyList");
-        surveyList.classList.remove("list-view");
-        surveyList.classList.add("grid-view");
-      }
-    </script>
-  </body>
+  </div>
+
+  <div class="add-survey-container">
+    <button type="button" class="add-survey-button">
+      <img src="{% static 'add.png' %}" class="action-icon" />
+    </button>
+  </div>
+
+  <script>
+    function setListView() {
+      const surveyList = document.getElementById('surveyList');
+      surveyList.classList.remove('grid-view');
+      surveyList.classList.add('list-view');
+    }
+
+    function setGridView() {
+      const surveyList = document.getElementById('surveyList');
+      surveyList.classList.remove('list-view');
+      surveyList.classList.add('grid-view');
+    }
+  </script>
+</body>
 </html>
