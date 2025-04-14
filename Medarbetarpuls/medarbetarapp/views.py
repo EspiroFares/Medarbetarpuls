@@ -111,6 +111,7 @@ def add_employee_view(request):
 
     if request.method == "POST":
         email = request.POST.get("email")
+        team = request.POST.get("team")
         user = request.user
 
         if user.user_role == models.UserRole.ADMIN and hasattr(user, "admin"):
@@ -127,8 +128,15 @@ def add_employee_view(request):
                     # Vad gör vi med folk som vill bli registerade till 2 organisationer
 
             else:
+                if models.EmployeeGroup.objects.filter(name=team).exists():
+                    group = models.EmployeeGroup.objects.get(name=team)
+                else:
+                    #create new employee group
+                    group = models.EmployeeGroup(name=team, organization=org)
+                    group.save()
                 email_instance = models.EmailList(email=email, org=org)
                 email_instance.save()
+                email_instance.employee_groups.add(group)
             return HttpResponse(status=204)  # maybe should render back to my_org?
 
     return render(
@@ -192,7 +200,12 @@ def authentication_acc_view(request):
                     return HttpResponse(status=400)
                 # Create user
                 new_user = models.CustomUser.objects.create_user(email, name, password)
-
+                # get the email and get the correct employeegroups
+                email_from_list = models.EmailList.objects.get(email=email)
+                group =  email_from_list.employee_groups.all()
+                # add group to employee
+                new_user.employee_groups.add(*group)
+                new_user.save()
                 # Add new user to base (everyone) employee group of org
                 base_group = org.employee_groups.filter(name="Alla").first()  # pyright: ignore
 
