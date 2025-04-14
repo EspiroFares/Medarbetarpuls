@@ -1,7 +1,23 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser, SurveyTemplate, Organization  # Import your CustomUser model
+from .models import CustomUser, SurveyTemplate, Organization, SurveyResult, Answer  # Import your CustomUser model
 
+class SurveyResultAdmin(admin.ModelAdmin):
+    list_display = ("user", "published_survey", "is_answered", "get_answers")
+    
+    @admin.display(description="Answers")
+    def get_answers(self, obj):
+        return ", ".join([
+            f"{a.question.question[:30]}: {a.answer_format}"  # Show partial question text
+            for a in obj.answers.all()
+        ])
+
+class AnswerAdmin(admin.ModelAdmin):
+    list_display = ("survey", "question", "is_answered", "free_text_answer", "slider_answer")
+
+admin.site.register(Answer, AnswerAdmin)
+
+admin.site.register(SurveyResult, SurveyResultAdmin)
 
 class CustomUserAdmin(UserAdmin):
     model = CustomUser

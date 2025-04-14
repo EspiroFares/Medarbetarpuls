@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="sv">
+  <head>
+    {% load static %}
+    <script src="https://unpkg.com/htmx.org@1.8.4"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fråga {{ question_index|add:1 }} / {{ total }}</title>
+    <link rel="stylesheet" href="{% static 'styles.css' %}" />
+  </head>
+  <body>
+    <div class="create-container">
+      <form method="POST">
+        {% csrf_token %}
+        <h2>{{ question.question }}</h2>
+
+        {% if question.question_format == "slider" %}
+        <input type="range" name="slider" min="0" max="10" step="1" required />
+        
+        {% elif question.question_format == "text" %}
+        <input type="text" name="text" required />
+        
+        {% elif question.question_format == "yesno" %}
+        <label>
+          <input type="radio" name="yesno" value="True" required />
+          Ja
+        </label>
+        <label>
+          <input type="radio" name="yesno" value="False" required />
+          Nej
+        </label>
+
+        {% elif question.question_format == "multiplechoice" %} 
+            {% for option in question.multiple_choice_question.options %}
+            <label>
+            <input type="checkbox" name="multiplechoice" value="{{ option }}" />
+            {{ option }} </label
+            ><br />
+            {% endfor %} 
+            <label>
+                <input type="checkbox" name="multiplechoice" value="Option 1" />
+                Option 1 </label
+                ><br />
+        {% endif %}
+
+        <div>
+          <button type="submit">Nästa</button>
+        </div>
+      </form>
+      <div>
+        <p>{{ question_index|add:1 }} / {{ total }}</p>
+      </div>
+    </div>
+  </body>
+</html>
