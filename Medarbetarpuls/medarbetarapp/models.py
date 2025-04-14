@@ -383,6 +383,7 @@ class EmailList(models.Model):
     org = models.ForeignKey(
         Organization, on_delete=models.CASCADE, related_name="org_emails", null=True, blank=True
     )
+    employee_groups = models.ManyToManyField(EmployeeGroup, related_name="group")
     objects: models.Manager 
 
     def __str__(self) -> str:
