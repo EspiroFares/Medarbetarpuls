@@ -12,6 +12,8 @@ from django.core.mail import send_mail
 from django.core.cache import cache
 from datetime import datetime, time
 from django.utils.timezone import make_aware
+from django.db.models import Count
+from django.db.models import Case, When, IntegerField, Value
 from .tasks import publish_survey_async
 
 import logging
@@ -459,6 +461,10 @@ def edit_question_view(request, survey_id: int, question_format: models.Question
             question.question = request.POST.get("question")
             question.save()
 
+            # Update last edited date of survey
+            survey_temp.last_edited = timezone.now()
+            survey_temp.save()
+
             return HttpResponse(headers={"HX-Redirect": "/create-survey/" + str(survey_id)})  
 
 
@@ -644,9 +650,65 @@ def my_results_view(request):
     )
 
 
-@login_required
-def my_surveys_view(request):
-    return render(request, "my_surveys.html")
+@csrf_protect
+def delete_survey_template(request, survey_id: int) -> HttpResponse:
+    if request.method == "POST":  
+        if request.headers.get("HX-Request"):
+            survey_temp = get_object_or_404(models.SurveyTemplate, id=survey_id, creator=request.user)
+            survey_temp.delete()
+            return HttpResponse(headers={"HX-Redirect": "/my-surveys/"})  
+
+    return HttpResponse(status=400)
+
+
+@csrf_protect
+@login_required 
+def my_surveys_view(request, search_str: str | None = None) -> HttpResponse:
+    """
+    Displays the my surveys page with all created survey templates. 
+    Also gives functionality for searching for specific surveys via 
+    their name. 
+
+    Args:
+        request: The input text from the search field 
+        search_str (str | None): The search pattern to be filtered for
+
+    Returns:
+        HttpResponse: Renders my_surveys page with survey templates list 
+        or redirects recursively with specific search pattern. 
+    """
+    # Annotate and filter templates with 0 questions
+    empty_templates: models.SurveyTemplate = request.user.survey_templates.annotate(num_questions=Count("questions")).filter(num_questions=0)
+
+    # Delete them
+    empty_templates.delete()
+
+    if search_str is None: 
+        # Order templates by last time edited
+        survey_templates = request.user.survey_templates.all().order_by('-last_edited')
+    else: 
+        # Order templates by search bar input relevance 
+        survey_templates = request.user.survey_templates.annotate(
+            relevance=Case(
+            When(name__iexact=search_str, then=Value(3)),  # exact match
+            When(name__istartswith=search_str, then=Value(2)),  # startswith
+            When(name__icontains=search_str, then=Value(1)),  # somewhere inside
+            default=Value(0),
+            output_field=IntegerField()
+            )
+        ).order_by('-relevance', '-last_edited')
+
+    # Post request for when search button is pressed
+    if request.method == "POST":  
+        if request.headers.get("HX-Request"):
+            search_str_input: str = request.POST.get("search-bar")
+
+            if search_str_input is None: 
+                return HttpResponse(headers={"HX-Redirect": "/my-surveys/"})  
+            else: 
+                return HttpResponse(headers={"HX-Redirect": "/my-surveys/" + search_str_input})  
+
+    return render(request, "my_surveys.html", {"survey_templates": survey_templates})
 
 
 def settings_admin_view(request):

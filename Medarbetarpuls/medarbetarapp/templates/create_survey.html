@@ -33,7 +33,7 @@
             <form
               hx-post="{% url 'delete_question' question.id survey_temp.id %}"
               hx-trigger="submit"
-              hx-confirm="Are you sure you want to delete this survey?"
+              hx-confirm="Är du säker att du vill ta bort den här frågan?"
               hx-swap="none"
             >
               {% csrf_token %}
@@ -197,6 +197,13 @@
         // Add your logic to handle the removal of the question here
         console.log("Remove button clicked for question:", event.target);
       }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("trigger_popup") === "true") {
+          openPopup();
+        }
+      });
     </script>
   </body>
 </html>
