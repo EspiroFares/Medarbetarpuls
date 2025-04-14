@@ -5,7 +5,7 @@ from medarbetarapp.models import *
 print("Answers:", Answer.objects.count())
 print("Questions:", Question.objects.count())
 print("Surveys:", Survey.objects.count())
-print("SurveyResults:", SurveyResult.objects.count())
+print("SurveyUserResults:", SurveyUserResult.objects.count())
 print("\n")
 # View some actual entries
 # print("\nSome Answers:")
@@ -31,17 +31,24 @@ for s in Survey.objects.all():
     print(f"Survey ID: {s.id}, Name: {s.name}")
 print("-" * 40)
 
-print(type(SurveyResult.objects.filter(published_survey=Survey.objects.first())))
-# for s in SurveyResult.objects.all():
-#   print(f"Survey Result ID: {s.id}")
-# print("\n")
-answers = Answer.objects.all()
-for a in Answer.objects.all():
-    print(f"Answer: {a.multiple_choice_answer}")
+print(type(SurveyUserResult.objects.filter(published_survey=Survey.objects.first())))
+count = 0
+for s in Survey.objects.all():
+    print("-" * 40)
+    print(f"Survey ID:{count} \n")
+    for j in SurveyUserResult.objects.filter(published_survey=s):
+        print(f"Survey User Result :{j.user} \n")
+    count += 1
+    print("-" * 40)
+print("\n")
 
-print("HEJ: ", answers.filter(multiple_choice_answer=True))
+answers = Answer.objects.all()
+# for a in Answer.objects.all():
+#   print(f"Answer: {a.multiple_choice_answer}")
+
+# print("HEJ: ", answers.filter(multiple_choice_answer=True))
 # survey = Survey.objects.get(id=1)
-# results = SurveyResult.objects.filter(published_survey=survey, id=1)
+# results = SurveyUserResult.objects.filter(published_survey=survey, id=1)
 # print("Survey Results:", results)
 
 # enps_question = Question.objects.filter(question_type="enps").first()

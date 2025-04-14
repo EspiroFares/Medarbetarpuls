@@ -103,7 +103,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):  # pyright: ignore
     # We deafult to 0 as the lowest level of authority
     authorization_level = models.IntegerField(default=0)  # pyright: ignore
     employee_groups = models.ManyToManyField(EmployeeGroup, related_name="employees")
-    survey_results = OneToManyManager["SurveyResult"]
+    survey_results = OneToManyManager["SurveyUserResult"]
     survey_groups = models.ManyToManyField(EmployeeGroup, related_name="managers")
     survey_templates = OneToManyManager["SurveyTemplate"]
     published_surveys = OneToManyManager["Survey"]
@@ -182,7 +182,7 @@ class Survey(models.Model):
         null=True,
     )
     employee_groups = models.ManyToManyField(EmployeeGroup, related_name="+")
-    survey_results: OneToManyManager["SurveyResult"]
+    survey_results: OneToManyManager["SurveyUserResult"]
     deadline = (
         models.DateTimeField()
     )  # stores both date and time (e.g., YYYY-MM-DD HH:MM:SS)
@@ -221,7 +221,7 @@ class SurveyTemplate(models.Model):
 
 
 # What this model does needs to be explained here
-class SurveyResult(models.Model):
+class SurveyUserResult(models.Model):
     published_survey = models.ForeignKey(
         Survey, on_delete=models.CASCADE, related_name="survey_results", null=True
     )
@@ -346,7 +346,7 @@ class Question(models.Model):
 class Answer(models.Model):
     is_answered = models.BooleanField(default=False)  # pyright: ignore
     survey = models.ForeignKey(
-        SurveyResult, on_delete=models.CASCADE, related_name="answers", null=True
+        SurveyUserResult, on_delete=models.CASCADE, related_name="answers", null=True
     )
     question = models.ForeignKey(
         Question, on_delete=models.CASCADE, related_name="answers", null=True
@@ -404,9 +404,9 @@ class AnalysisHandler:
         """Retrieve a survey by its ID."""
         return Survey.objects.get(id=survey_id)
 
-    def get_survey_result(self, survey_id: int, result_id: int):
-        """Retrieve a specific SurveyResult."""
-        return SurveyResult.objects.filter(published_survey__id=survey_id, id=result_id)
+    def get_survey_result(self, survey_id: int):
+        """Retrieve a specific SurveyUserResult."""
+        return SurveyUserResult.objects.filter(published_survey__id=survey_id)
 
     def get_question(self, question_txt: str) -> Question:
         """Fetch the question object by text. Assumes there is only one question phrased the same way."""
@@ -418,14 +418,13 @@ class AnalysisHandler:
         self,
         question: Question,
         survey_id: int | None = None,
-        result_id: int | None = None,
     ):
         """Get answers for a given question, optionally filtered to a specific survey/result."""
 
         filters = {"question": question, "is_answered": True}
 
-        if survey_id and result_id:
-            results = self.get_survey_result(survey_id, result_id)
+        if survey_id:
+            results = self.get_survey_result(survey_id)
             filters["survey__in"] = results
 
         return Answer.objects.filter(**filters)
@@ -435,7 +434,6 @@ class AnalysisHandler:
         """Categorize responses into promoters, passives, and detractors."""
 
         promoters = answers.filter(slider_answer__gte=9).count()
-
         passives = answers.filter(slider_answer__gte=7, slider_answer__lt=9).count()
         detractors = answers.filter(slider_answer__lt=7).count()
         return promoters, passives, detractors
@@ -456,21 +454,20 @@ class AnalysisHandler:
     def get_enps_summary(
         self,
         survey_id: int | None = None,
-        result_id: int | None = None,
     ):
         """
         Get all data needed to render ENPS analysis:
         standard deviation, variation coefficient, score, labels, data distribution, raw responses.
 
-        With survey_id and result_id set to None you get all the answers from an eNPS question.
+        With survey_id set to None you get all the answers from an eNPS question.
         """
         question_txt = (
             "How likely are you to recommend this company as a place to work?"
         )
         question = self.get_question(question_txt)
         print(question)
-        # answers = self.get_answers(question, survey_id, result_id)
-        answers = self.get_answers(question)
+        answers = self.get_answers(question, survey_id)
+        # answers = self.get_answers(question)
         promoters, passives, detractors = self.calculate_enps_data(answers)
         print(promoters, passives, detractors)
         score = self.calculate_enps_score(promoters, passives, detractors)
@@ -525,16 +522,15 @@ class AnalysisHandler:
         self,
         question_txt: str,
         survey_id: int | None = None,
-        result_id: int | None = None,
     ):
         """
         Get all data needed to render slider analysis:
         standard deviation, variation coefficient, data distribution, raw responses.
 
-        With survey_id and result_id set to None you get all the answers from the question.
+        With survey_id set to None you get all the answers from the question.
         """
         question = self.get_question(question_txt)
-        answers = self.get_answers(question, survey_id, result_id)
+        answers = self.get_answers(question, survey_id)
         distribution = self.get_response_distribution_slider(answers)
         standard_deviation = self.calculate_standard_deviation(answers)
         variation_coefficient = self.calculate_variation_coefficient(answers)
@@ -566,11 +562,10 @@ class AnalysisHandler:
         self,
         question_txt: str,
         survey_id: int | None = None,
-        result_id: int | None = None,
     ):
         question = self.get_question(question_txt)
         answer_options = question.specific_question.options
-        answers = self.get_answers(question, survey_id, result_id)
+        answers = self.get_answers(question, survey_id)
         distribution = self.get_response_distribution_mc(answers, answer_options)
         print(answers.filter(multiple_choice_answer="A").count())
         print(distribution)
@@ -585,11 +580,10 @@ class AnalysisHandler:
         self,
         question_txt: str,
         survey_id: int | None = None,
-        result_id: int | None = None,
     ):
         question = self.get_question(question_txt)
         answer_options = question.specific_question.options
-        answers = self.get_answers(question, survey_id, result_id)
+        answers = self.get_answers(question, survey_id)
         # distribution =
 
         return {}

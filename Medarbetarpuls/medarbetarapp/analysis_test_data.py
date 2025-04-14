@@ -3,7 +3,7 @@ from medarbetarapp.models import (
     Answer,
     QuestionFormat,
     QuestionType,
-    SurveyResult,
+    SurveyUserResult,
     Question,
     Survey,
     CustomUser,
@@ -18,7 +18,7 @@ import random
 # python manage.py flush
 
 # HELPER FUNCTIONS
-# Creates answer object connected to a specific SurveyResult
+# Creates answer object connected to a specific SurveyUserResult
 
 
 def createUsers(
@@ -109,10 +109,12 @@ def createSurveys(amount: int, surveyCreator: CustomUser):
     return surveys
 
 
-def createSurveyResult(amount: int, survey: Survey, user: CustomUser):
+def createSurveyUserResult(amount: int, survey: Survey, user: CustomUser):
     results = []
     for i in range(amount):
-        result = SurveyResult.objects.create(published_survey=survey, user_id=user.id)
+        result = SurveyUserResult.objects.create(
+            published_survey=survey, user_id=user.id
+        )
         results.append(result)
     return results
 
@@ -179,7 +181,7 @@ def createQuestions(
     return result
 
 
-def createAnswers(amount: int, result: SurveyResult, question: Question):
+def createAnswers(amount: int, result: SurveyUserResult, question: Question):
     scores = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     answers = []
     for i in range(amount):
@@ -215,7 +217,7 @@ def createAnswers(amount: int, result: SurveyResult, question: Question):
 # removing old objects to avoid problems
 Answer.objects.all().delete()
 Question.objects.all().delete()
-SurveyResult.objects.all().delete()
+SurveyUserResult.objects.all().delete()
 Survey.objects.all().delete()
 
 # Create new surveys with answers
@@ -229,6 +231,6 @@ question_enps = createQuestions(1, QuestionFormat.SLIDER, QuestionType.ENPS)
 question_mc = createQuestions(1, QuestionFormat.MULTIPLE_CHOICE, QuestionType.ONETIME)
 for s in surveys:
     for r in survey_responders:
-        survey_result = createSurveyResult(3, s, r)
+        survey_result = createSurveyUserResult(1, s, r)
         for sr in survey_result:
             answers = createAnswers(1, sr, question_mc[0])

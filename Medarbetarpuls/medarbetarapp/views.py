@@ -6,11 +6,11 @@ from django.shortcuts import get_object_or_404
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
-from .models import SurveyResult
+from .models import SurveyUserResult
 
 import logging
 from collections import Counter
-from .models import Answer, AnalysisHandler, Question, Survey, SurveyResult
+from .models import Answer, AnalysisHandler, Question, Survey, SurveyUserResult
 
 logger = logging.getLogger(__name__)
 
@@ -493,7 +493,7 @@ def start_user_view(request):
 
 
 def survey_result_view(request, survey_id):
-    survey_result = SurveyResult.objects.filter(id=survey_id).first()
+    survey_result = SurveyUserResult.objects.filter(id=survey_id).first()
 
     if survey_result is not None:
         # Check if the survey is accessible to the user
@@ -527,12 +527,10 @@ def unanswered_surveys_view(request):
 
 def chart_view(request):
     SURVEY_ID = 1  # Choose which survey to show here
-    RESULT_ID = 2  # Choose which result to show here
+
     analysisHandler = AnalysisHandler()
     question_txt = "What type of task did you spend the most time on?"
-    context = analysisHandler.get_multiple_choice_summary(
-        question_txt, SURVEY_ID, RESULT_ID
-    )
+    context = analysisHandler.get_multiple_choice_summary(question_txt, SURVEY_ID)
 
     return render(request, "analysis.html", context)
 
