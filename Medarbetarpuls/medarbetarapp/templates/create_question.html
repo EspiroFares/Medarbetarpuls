@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="sv">
   <head>
     {% load static %}
@@ -76,7 +76,6 @@
               class="back-icon"
             />
           </button>
-
           <button id="suggestions" type="button" onclick="openCloseSugg()">
             Förslag på frågor
           </button>
@@ -89,7 +88,7 @@
         const suggestionsButton = document.getElementById("suggestions");
         const standardQuestions = document.getElementById("standard-questions");
         const predefinedQuestions = document.getElementById(
-          "predefined-questions",
+          "predefined-questions"
         );
 
         if (standardQuestions.style.display === "none") {

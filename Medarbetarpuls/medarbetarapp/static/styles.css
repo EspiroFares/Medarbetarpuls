@@ -380,7 +380,6 @@ button:hover {
 .grid-item.yellow::after {
   background-color: #ffc757;
 }
-
 .grid-item.orange::after {
   background-color: #ff8565;
 }
@@ -511,7 +510,6 @@ button:hover {
   padding: 10px;
   border-bottom: 1px solid #ddd;
 }
-
 .label {
   color: #102b46;
   font-weight: normal;
@@ -768,7 +766,6 @@ th {
   width: 20px;
   height: 20px;
 }
-
 .question-list {
   list-style-type: none;
   padding: 0;

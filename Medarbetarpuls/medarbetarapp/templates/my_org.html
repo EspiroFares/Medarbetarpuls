@@ -42,9 +42,8 @@
               <td>{{ employee.name }}</td>
               <td>{{ employee.email }}</td>
               <td>
-                {% for group in employee.employee_groups.all %}
-                  {{ group.name }}{% if not forloop.last %}, {% endif %}
-                {% endfor %}
+                {% for group in employee.employee_groups.all %} {{ group.name
+                }}{% if not forloop.last %}, {% endif %} {% endfor %}
               </td>
 
               <td>
@@ -72,9 +71,6 @@
               </td>
             </tr>
             {% endfor %}
-            
-
-
           </tbody>
         </table>
       </div>

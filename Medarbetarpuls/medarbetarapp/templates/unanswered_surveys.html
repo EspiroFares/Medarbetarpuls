@@ -20,9 +20,9 @@
           href="{% url 'answer_survey' survey.id 0 %}"
           class="grid-item lightblue"
         >
-            <p>Publicerades: {{ survey.published_survey.sending_date }}</p>
-            <p><strong>*{{ survey.published_survey.name }}*</strong></p>
-            <p>Deadline: {{ survey.published_survey.deadline }}</p>
+          <p>Publicerades: {{ survey.published_survey.sending_date }}</p>
+          <p><strong>*{{ survey.published_survey.name }}*</strong></p>
+          <p>Deadline: {{ survey.published_survey.deadline }}</p>
         </a>
         {% endfor %}
       </div>
