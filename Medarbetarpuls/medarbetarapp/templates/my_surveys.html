@@ -2,6 +2,7 @@
 <!doctype html>
 <html lang="sv">
   <head>
+    <script src="https://unpkg.com/htmx.org@1.9.2"></script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Mina enkäter</title>
@@ -10,12 +11,12 @@
   <body>
     <header class="top-bar">
       <div class="left-icon">
-        <img src="{% static 'logo.png' %}" alt="logo" class="logo" />
+        <img src="{% static 'images/logo.png' %}" alt="logo" class="logo" />
       </div>
       <h1 class="survey">Mina enkäter</h1>
       <div class="right-icon">
         <img
-          src="{% static 'go-back-btn.png' %}"
+          src="{% static 'images/go-back-btn.png' %}"
           alt="back"
           class="back-button"
         />
@@ -23,22 +24,29 @@
     </header>
 
     <div class="search-container">
-      <input
-        type="text"
-        id="search-bar"
-        class="search-bar"
-        placeholder="Sök enkäter..."
-      />
-      <button type="button" class="search-button">Sök</button>
+      <form 
+          hx-post="{% url 'my_surveys' %}"
+          hx-trigger="submit"
+      >
+        {% csrf_token %}
+        <input
+          type="text"
+          id="search-bar"
+          name="search-bar"
+          class="search-bar"
+          placeholder="Sök enkäter..."
+        />
+        <button type="submit" class="search-button">Sök</button>
+      </form>
       <div class="view-icons">
         <img
-          src="{% static 'list.png' %}"
+          src="{% static 'images/list.png' %}"
           alt="List View"
           class="view-icon"
           onclick="setListView()"
         />
         <img
-          src="{% static 'grid.png' %}"
+          src="{% static 'images/grid.png' %}"
           alt="Grid View"
           class="view-icon"
           onclick="setGridView()"
@@ -47,13 +55,16 @@
     </div>
 
     <div class="survey-list list-view" id="surveyList">
-      <!-- Enkät 1 -->
+      <!-- Add all survey templates dynamically -->
+      {% for survey_temp in survey_templates %}
+      <a href="{% url 'create_survey_with_id' survey_temp.id %}">
       <div class="survey-item">
         <div class="survey-content">
+          <!-- This code should not be here, templates do not have these features! 
           <div class="survey-icons">
             <span class="tooltip" data-tooltip="Samtliga svar är anonymiserade">
               <div class="icon-wrapper">
-                <img src="{% static 'anonymous.png' %}" class="icon-img" />
+                <img src="{% static 'images/anonymous.png' %}" class="icon-img" />
               </div>
             </span>
             <span
@@ -61,84 +72,47 @@
               data-tooltip="Resultatet presenteras efter deadline"
             >
               <div class="icon-wrapper">
-                <img src="{% static 'survey-info.png' %}" class="icon-img" />
+                <img src="{% static 'images/survey-info.png' %}" class="icon-img" />
               </div>
             </span>
           </div>
-          <h2 class="survey-title">Enkät 1</h2>
+          --> 
+          <h2 class="survey-title">{{ survey_temp.name }}</h2>
+          <p>{{ survey_temp.last_edited }}</p>
           <div class="survey-actions">
-            <img src="{% static 'trashcan.png' %}" class="action-icon" />
-            <img src="{% static 'edit-icon.png' %}" class="action-icon" />
-            <img src="{% static 'share-icon.png' %}" class="action-icon" />
-          </div>
+            <img src="{% static 'images/trashcan.png' %}" 
+              class="action-icon" 
+              onclick="event.stopPropagation(); event.preventDefault();"
+              hx-post="{% url 'delete_survey_template' survey_temp.id %}"
+              hx-confirm="Är du säker att du vill ta bort den här enkäten?"
+              hx-target=".survey-item"
+            />
+            <meta name="csrf-token" content="{{ csrf_token }}">
+            <img src="{% static 'images/edit-icon.png' %}" class="action-icon" />
+            <a href="{% url 'create_survey_with_id' survey_temp.id %}?trigger_popup=true"
+               onclick="event.stopPropagation();"
+              >
+              <img src="{% static 'images/share-icon.png' %}" class="action-icon" />
+            </a> </div>
         </div>
       </div>
+      </a>
+      {% endfor %}
 
-      <!-- Enkät 2 -->
-      <div class="survey-item">
-        <div class="survey-content">
-          <div class="survey-icons">
-            <span class="tooltip" data-tooltip="Svaren är INTE anonymiserade">
-              <div class="icon-wrapper">
-                <img src="{% static 'anonymous.png' %}" class="icon-img" />
-                <img src="{% static 'xsymbol.png' %}" class="x-overlay" />
-              </div>
-            </span>
-            <span
-              class="tooltip"
-              data-tooltip="Resultatet presenteras inte efter deadline"
-            >
-              <div class="icon-wrapper">
-                <img src="{% static 'survey-info.png' %}" class="icon-img" />
-                <img src="{% static 'xsymbol.png' %}" class="x-overlay" />
-              </div>
-            </span>
-          </div>
-          <h2 class="survey-title">Enkät 2</h2>
-          <div class="survey-actions">
-            <img src="{% static 'trashcan.png' %}" class="action-icon" />
-            <img src="{% static 'edit-icon.png' %}" class="action-icon" />
-            <img src="{% static 'share-icon.png' %}" class="action-icon" />
-          </div>
-        </div>
-      </div>
-
-      <!-- Enkät 3 -->
-      <div class="survey-item">
-        <div class="survey-content">
-          <div class="survey-icons">
-            <span class="tooltip" data-tooltip="Svaren är INTE anonymiserade">
-              <div class="icon-wrapper">
-                <img src="{% static 'anonymous.png' %}" class="icon-img" />
-                <img src="{% static 'xsymbol.png' %}" class="x-overlay" />
-              </div>
-            </span>
-            <span
-              class="tooltip"
-              data-tooltip="Resultatet presenteras efter deadline"
-            >
-              <div class="icon-wrapper">
-                <img src="{% static 'survey-info.png' %}" class="icon-img" />
-              </div>
-            </span>
-          </div>
-          <h2 class="survey-title">Enkät 3</h2>
-          <div class="survey-actions">
-            <img src="{% static 'trashcan.png' %}" class="action-icon" />
-            <img src="{% static 'edit-icon.png' %}" class="action-icon" />
-            <img src="{% static 'share-icon.png' %}" class="action-icon" />
-          </div>
-        </div>
-      </div>
-    </div>
-
+    <a href="{% url 'create_survey' %}">
     <div class="add-survey-container">
       <button type="button" class="add-survey-button">
-        <img src="{% static 'add.png' %}" class="action-icon" />
+        <img src="{% static 'images/add.png' %}" class="action-icon" />
       </button>
     </div>
+    </a>
 
     <script>
+      // Set to grid view on page refresh 
+      const surveyList = document.getElementById("surveyList");
+      surveyList.classList.remove("list-view");
+      surveyList.classList.add("grid-view");
+
       function setListView() {
         const surveyList = document.getElementById("surveyList");
         surveyList.classList.remove("grid-view");
@@ -150,6 +124,11 @@
         surveyList.classList.remove("list-view");
         surveyList.classList.add("grid-view");
       }
+
+      document.body.addEventListener('htmx:configRequest', (event) => {
+          const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+          event.detail.headers['X-CSRFToken'] = csrfToken;
+      });
     </script>
   </body>
 </html>
