@@ -349,7 +349,7 @@ class Answer(models.Model):
     free_text_answer = models.CharField(max_length=255) 
     multiple_choice_answer = models.JSONField(default=list)  # Stores a list of booleans
     yes_no_answer = models.BooleanField(default=False)  # pyright: ignore
-    slider_answer = models.FloatField()
+    slider_answer = models.FloatField(null=True)
     
     @property
     def answer_format(self) -> QuestionFormat | None:
