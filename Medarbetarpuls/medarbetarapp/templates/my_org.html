@@ -14,16 +14,23 @@
     <div class="create-container">
       <h1>{{ organization.name }}</h1>
 
-      <!-- Search Bar -->
-      <div class="search-container">
+      <!-- Form för att trigga sökning via HTMX -->
+      <form
+        id="searchForm"
+        hx-get="{% url 'my_org' %}"
+        hx-target="#employeeTable"
+        hx-trigger="keyup changed delay:500ms"
+        class="search-container"
+      >
+        {% csrf_token %}
         <input
           type="text"
-          id="searchInput"
+          name="search"
           placeholder="Sök..."
-          onkeyup="filterTable()"
+          value="{{ search_query }}"
         />
-        <button type="button">Sök</button>
-      </div>
+        <button type="submit">Sök</button>
+      </form>
 
       <!-- Employee table -->
       <div class="table-container">
@@ -42,9 +49,8 @@
               <td>{{ employee.name }}</td>
               <td>{{ employee.email }}</td>
               <td>
-                {% for group in employee.employee_groups.all %} 
-                {{ group.name}} {% if not forloop.last %}, {% endif %} 
-                {% endfor %}
+                {% for group in employee.employee_groups.all %} {{ group.name}}
+                {% if not forloop.last %}, {% endif %} {% endfor %}
               </td>
 
               <td>
@@ -79,10 +85,5 @@
         <button class="button">Lägg till medarbetare</button>
       </a>
     </div>
-
-    <!-- Script for filtering -->
-    <script>
-      function filterTable() {}
-    </script>
   </body>
 </html>
