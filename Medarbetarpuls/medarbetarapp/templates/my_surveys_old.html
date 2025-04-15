@@ -9,20 +9,8 @@
     <link rel="stylesheet" href="{% static 'my_surveys_styles.css' %}" />
   </head>
   <body>
-    <header class="top-bar">
-      <div class="left-icon">
-        <img src="{% static 'images/logo.png' %}" alt="logo" class="logo" />
-      </div>
-      <h1 class="survey">Mina enkäter</h1>
-      <div class="right-icon">
-        <img
-          src="{% static 'images/go-back-btn.png' %}"
-          alt="back"
-          class="back-button"
-        />
-      </div>
-    </header>
-
+    {% include "topbar.html"%}
+    
     <div class="search-container">
       <form 
           hx-post="{% url 'my_surveys' %}"
