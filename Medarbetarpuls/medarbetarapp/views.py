@@ -10,7 +10,8 @@ from .models import SurveyUserResult
 
 import logging
 from collections import Counter
-from .models import Answer, AnalysisHandler, Question, Survey, SurveyUserResult
+from .models import Answer, Question, Survey, SurveyUserResult
+from .analysis_handler import AnalysisHandler
 
 logger = logging.getLogger(__name__)
 
@@ -526,11 +527,11 @@ def unanswered_surveys_view(request):
 
 
 def chart_view(request):
-    SURVEY_ID = 1  # Choose which survey to show here
+    SURVEY_NAME = "Weekly Pulse Check 1"  # Choose which survey to show here
 
     analysisHandler = AnalysisHandler()
-    question_txt = "What type of task did you spend the most time on?"
-    context = analysisHandler.get_multiple_choice_summary(question_txt, SURVEY_ID)
+    question_txt = "Did you take enough breaks throughout the day?"
+    context = analysisHandler.get_yes_no_summary(question_txt, SURVEY_NAME)
 
     return render(request, "analysis.html", context)
 

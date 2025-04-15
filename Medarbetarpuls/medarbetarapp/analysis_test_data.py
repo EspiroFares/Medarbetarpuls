@@ -9,6 +9,7 @@ from medarbetarapp.models import (
     CustomUser,
     UserRole,
     MultipleChoiceQuestion,
+    YesNoQuestion,
 )
 import random
 
@@ -177,6 +178,12 @@ def createQuestions(
             )
             q.multiple_choice_question = mcq
             q.save()
+        elif q.question_format == QuestionFormat.YES_NO:
+            ynq = YesNoQuestion.objects.create(
+                question_format=QuestionFormat.YES_NO,
+            )
+            q.yes_no_question = ynq
+            q.save()
         result.append(q)
     return result
 
@@ -229,8 +236,10 @@ surveys = createSurveys(3, survey_creator)
 
 question_enps = createQuestions(1, QuestionFormat.SLIDER, QuestionType.ENPS)
 question_mc = createQuestions(1, QuestionFormat.MULTIPLE_CHOICE, QuestionType.ONETIME)
+question_yn = createQuestions(1, QuestionFormat.YES_NO, QuestionType.ONETIME)
+print(question_yn)
 for s in surveys:
     for r in survey_responders:
         survey_result = createSurveyUserResult(1, s, r)
         for sr in survey_result:
-            answers = createAnswers(1, sr, question_mc[0])
+            answers = createAnswers(1, sr, question_yn[0])

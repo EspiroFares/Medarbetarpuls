@@ -16,12 +16,9 @@ print("\n")
 # for q in Question.objects.all()[:5]:
 #   print(q.question, q.question_format)
 
-print("\nMultiple Choice Questions and Their Options:\n")
-for q in Question.objects.filter(question_format=QuestionFormat.MULTIPLE_CHOICE):
-    print("HEJ:", q.specific_question)
+for q in Question.objects.filter(question_format=QuestionFormat.YES_NO):
     if q.specific_question:
         print(f"Question: {q.question}")
-        print(f"Options: {q.specific_question.options}")
         print("-" * 40)
 
 for u in CustomUser.objects.all():
@@ -43,8 +40,8 @@ for s in Survey.objects.all():
 print("\n")
 
 answers = Answer.objects.all()
-# for a in Answer.objects.all():
-#   print(f"Answer: {a.multiple_choice_answer}")
+for a in Answer.objects.all():
+    print(f"Answer: {a.yes_no_answer}")
 
 # print("HEJ: ", answers.filter(multiple_choice_answer=True))
 # survey = Survey.objects.get(id=1)
