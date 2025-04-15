@@ -120,8 +120,15 @@ def add_employee_view(request):
             existing_user = models.CustomUser.objects.filter(email=email).first()
             if existing_user:
                 if not existing_user.is_active:
-                    existing_user.is_active = True
-                    existing_user.save()
+                    if models.EmployeeGroup.objects.filter(name=team).exists():
+                        group = models.EmployeeGroup.objects.get(name=team)
+                    else:
+                        #create new employee group
+                        group = models.EmployeeGroup(name=team, organization=org)
+                        group.save()
+                    email_instance = models.EmailList(email=email, org=org)
+                    email_instance.save()
+                    email_instance.employee_groups.add(group)
                 else:
                     logger.error("Existing user already have an active account")
                     pass
@@ -225,6 +232,11 @@ def authentication_acc_view(request):
             existing_user = models.CustomUser.objects.filter(email=email).first()
             if existing_user and existing_user.is_active == False: #and coming from settings page
                 # Should they be able to reset name and password???
+                org = find_organization_by_email(email)
+                if org is None:
+                    logger.error("This email is not authorized for registration.")
+                    return HttpResponse(status=400)
+                existing_user.is_active = True
                 existing_user.name = name
                 existing_user.set_password(password)
                 existing_user.save()
@@ -666,6 +678,7 @@ def my_org_view(request):
             print("removing ", employee_to_remove)
             employee_to_remove.is_active = False
             employee_to_remove.save()
+            models.EmailList.objects.filter(email=employee_to_remove.email).delete()
         return redirect("my_org")
     # Retrieve all employee groups associated with this organization
     employee_groups = models.EmployeeGroup.objects.filter(organization=organization)
