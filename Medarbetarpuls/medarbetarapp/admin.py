@@ -27,14 +27,15 @@ class CustomUserAdmin(UserAdmin):
         "user_role",
         "is_staff",
         "is_superuser",
+        "display_employee_groups",
     )  # Customize displayed fields
     search_fields = ("email", "name")  # Add search functionality
-    list_filter = ("user_role", "is_staff", "is_superuser")  # Add filters
+    list_filter = ("user_role", "is_staff", "is_superuser", "employee_groups")  # Add filters
     ordering = ("email",)  # Default sorting order
     fieldsets = (
         (None, {"fields": ("email", "password")}),
         ("Personal Info", {"fields": ("name", "user_role")}),
-        ("Permissions", {"fields": ("is_active", "is_staff", "is_superuser")}),
+        ("Permissions", {"fields": ("is_active", "is_staff", "is_superuser","employee_groups")}),
     )
     add_fieldsets = (
         (
@@ -49,10 +50,15 @@ class CustomUserAdmin(UserAdmin):
                     "password2",
                     "is_staff",
                     "is_superuser",
+                    "employee_groups",
                 ),
             },
         ),
     )
+
+    def display_employee_groups(self, obj):
+        return ", ".join([group.name for group in obj.employee_groups.all()])
+    display_employee_groups.short_description = "Employee Groups"  # Set column header name
 
 
 # Register the CustomUser model
