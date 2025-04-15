@@ -10,38 +10,28 @@
   <body>
     {% include "topbar.html" with pagetitle=pagetitle %}
     <div class="start-container">
-        <div class="pagetitle">
-          <h2>Du har {{ unanswered_count }} obesvarade enkäter</h2>
-        </div>
-        <div class="grid-container">
-            {% for survey in unanswered_surveys %}
-            <div class="grid-item lightblue">
-                <p>Publicerades: {{ survey.published_survey.sending_date }}</p>
-                <p><strong>*{{ survey.published_survey.name }}*</strong></p>
-                <p>Deadline: {{ survey.published_survey.deadline }}</p>
-            </div>
-            {% endfor %}
-
-            <!-- Example survey cards for testing -->
-            <div class="grid-item lightblue">
-                <p>Publicerades: 2025-02-20</p>
-                <p><strong>*Namn på enkät*</strong></p>
-                <p>Deadline: 2026-02-20</p>
-            </div>
-            <div class="grid-item lightblue">
-                <p>Publicerades: 2025-02-20</p>
-                <p><strong>*Namn på enkät*</strong></p>
-                <p>Deadline: 2026-02-20</p>
-            </div>
-            <div class="grid-item lightblue">
-                <p>Publicerades: 2025-02-20</p>
-                <p><strong>*Namn på enkät*</strong></p>
-                <p>Deadline: 2026-02-20</p>
-            </div>
-            <!-- Add more survey cards as needed -->
-        </div>
-        <button class="view-survey_result" onclick="window.location.href='{% url 'my_results' %}'"> 
-          Visa resultat på tidigare enkäter</button>
+      <div class="pagetitle">
+        <h2>Du har {{ unanswered_count }} obesvarade enkäter</h2>
+      </div>
+      <div class="grid-container">
+        {% for survey in unanswered_surveys %}
+        <!-- Click on the survey and this will take it to answer_survey with correct parameters  -->
+        <a
+          href="{% url 'answer_survey' survey.id 0 %}"
+          class="grid-item lightblue"
+        >
+          <p>Publicerades: {{ survey.published_survey.sending_date }}</p>
+          <p><strong>*{{ survey.published_survey.name }}*</strong></p>
+          <p>Deadline: {{ survey.published_survey.deadline }}</p>
+        </a>
+        {% endfor %}
+      </div>
+      <button
+        class="view-survey_result"
+        onclick="window.location.href='{% url 'my_results' %}'"
+      >
+        Visa resultat på tidigare enkäter
+      </button>
     </div>
   </body>
 </html>
