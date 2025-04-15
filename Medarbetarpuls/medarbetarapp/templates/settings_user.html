@@ -96,7 +96,6 @@
               <input type="password" id="pass_old" name="pass_old" placeholder="Nuvarande lösenord" required > 
               <label for="password">Ditt nya lösenord:</label>
               <input type="password" id="pass_new" name="pass_new" placeholder="Nytt lösenord" required >
-              <input type="hidden" name="from_settings" value="true">
               <!-- Must reload after 500ms in order for this form to submit (slower) --> 
               <button type="submit" onclick="setTimeout(() => location.reload(), 500);" class="delete-button">Byt lösenord</button>
         </form>
