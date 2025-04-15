@@ -219,7 +219,7 @@ def authentication_acc_view(request):
             cache.delete(f'verify_code_{email}')
             
             existing_user = models.CustomUser.objects.filter(email=email).first()
-            if existing_user and str(from_settings)=='true': #and coming from settings page
+            if existing_user and existing_user.is_active == False: #and coming from settings page
                 # Should they be able to reset name and password???
                 existing_user.name = name
                 existing_user.set_password(password)
