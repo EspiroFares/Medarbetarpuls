@@ -119,8 +119,21 @@ def add_employee_view(request):
         email = request.POST.get("email")
         team = request.POST.get("team")
         user = request.user
-
-        if user.user_role == models.UserRole.ADMIN and hasattr(user, "admin"):
+        editGroup = request.POST.get("edit_employee")
+        editName = request.POST.get("new_employee_group")
+        editUserMail = request.POST.get("employee")
+        if(editGroup == "true"):
+            org = user.admin
+            if models.EmployeeGroup.objects.filter(name=editName).exists():
+                    group = models.EmployeeGroup.objects.get(name=editName)
+            else:
+                #create new employee group
+                group = models.EmployeeGroup(name=editName, organization=org)
+                group.save()
+            editUser = models.CustomUser.objects.get(email=editUserMail)
+            editUser.employee_groups.add(group)
+            user.survey_groups.add(group)
+        elif user.user_role == models.UserRole.ADMIN and hasattr(user, "admin"):
             org = user.admin
 
             existing_user = models.CustomUser.objects.filter(email=email).first()
@@ -135,6 +148,7 @@ def add_employee_view(request):
                     email_instance = models.EmailList(email=email, org=org)
                     email_instance.save()
                     email_instance.employee_groups.add(group)
+                    user.survey_groups.add(group)
                 else:
                     logger.error("Existing user already have an active account")
                     pass
@@ -150,6 +164,7 @@ def add_employee_view(request):
                 email_instance = models.EmailList(email=email, org=org)
                 email_instance.save()
                 email_instance.employee_groups.add(group)
+                user.survey_groups.add(group)
             return HttpResponse(status=204)  # maybe should render back to my_org?
 
     return render(
