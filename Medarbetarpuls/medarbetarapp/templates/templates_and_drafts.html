@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="{% static 'styles.css' %}" />
   </head>
   <body>
-    {% include "topbar.html" %}
+    {% include "topbar.html" with pagetitle=pagetitle%}
 
     <div class="start-container">
       <div class="title-background">
