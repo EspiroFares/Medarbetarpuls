@@ -65,6 +65,11 @@ def create_acc(request) -> HttpResponse:
             email = request.POST.get("email")
             password = request.POST.get("password")
             from_settings = request.POST.get('from_settings') == 'true'
+            org = find_organization_by_email(email=email)
+            if org is None:
+                logger.error("This email is not authorized for registration.")
+                return HttpResponse(status=400)
+
             code = 123456 # make random later, just test now
             cache.set(f'verify_code_{email}', code, timeout=300)
             send_mail(
