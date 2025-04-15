@@ -166,13 +166,16 @@ def analysis_view(request):
 
 @login_required
 def answer_survey_view(request, survey_result_id, question_index=0):
-    survey = get_object_or_404(SurveyResult, pk=survey_result_id, user=request.user)
-    questions = survey.published_survey.questions.all()
+    survey_result = get_object_or_404(SurveyResult, pk=survey_result_id, user=request.user)
+    questions = survey_result.published_survey.questions.all()
 
     if question_index >= len(questions):
         # All questions answered, redirect somewhere else
-        survey.is_answered = True
-        survey.save()
+        survey_result.is_answered = True
+        # This survey has now been answered by another user
+        survey_result.published_survey.collected_answer_count += 1 
+        survey_result.published_survey.save()
+        survey_result.save()
         return redirect("start_user")  # or a summary page
 
     question = questions[question_index]
@@ -180,26 +183,27 @@ def answer_survey_view(request, survey_result_id, question_index=0):
     if request.method == "POST":
         if "slider" in request.POST:
             # Returns the object with Boolean 'created', which says if a new object was created
-            answer, created = models.Answer.objects.get_or_create(survey=survey, question=question, slider_answer=request.POST.get("slider"))
+            answer, created = models.Answer.objects.get_or_create(survey=survey_result, question=question, slider_answer=request.POST.get("slider"))
 
         elif "text" in request.POST:
-            answer, created = models.Answer.objects.get_or_create(survey=survey, question=question, free_text_answer=request.POST.get("text"))
+            answer, created = models.Answer.objects.get_or_create(survey=survey_result, question=question, free_text_answer=request.POST.get("text"))
         
         elif "yesno" in request.POST:
-            answer, created = models.Answer.objects.get_or_create(survey=survey, question=question, yes_no_answer=request.POST.get("yesno"))
+            answer, created = models.Answer.objects.get_or_create(survey=survey_result, question=question, yes_no_answer=request.POST.get("yesno"))
         
         elif "multiplechoice" in request.POST:
-            answer, created = models.Answer.objects.get_or_create(survey=survey, question=question, multiple_choice_answer=request.POST.get("multiplechoice"))
+            answer, created = models.Answer.objects.get_or_create(survey=survey_result, question=question, multiple_choice_answer=request.POST.get("multiplechoice"))
             
         answer.is_answered = True
         answer.save()
-        return redirect("answer_survey", survey_result_id=survey.id, question_index=question_index + 1)
-
+        # Redirects to the next question to answer
+        return redirect("answer_survey", survey_result_id=survey_result.id, question_index=question_index + 1)
+    
     return render(request, "answer_survey.html", {
         "question": question,
         "question_index": question_index,
         "total": len(questions),
-        "survey_result_id": survey.id,
+        "survey_result_id": survey_result.id,
     })
 
 @csrf_exempt
@@ -990,15 +994,31 @@ def start_user_view(request):
 
 
 def survey_result_view(request, survey_id):
-    survey_result = SurveyResult.objects.filter(id=survey_id).first()
+    survey = models.Survey.objects.filter(id=survey_id).first()
+    # Retrieve all survey results of this survey
+    survey_results = survey.survey_results
+    questions = survey.questions.all()
+    result = {} # Map every question to its answer statistics here
 
-    if survey_result is not None:
-        # Check if the survey is accessible to the user
-        if survey_result.user != request.user:
-            survey_result = None
+    #TODO: some analysis here before sending to survey_result?
+    
+    for question in questions:
+        if question.question_format == models.QuestionFormat.MULTIPLE_CHOICE:
+            pass
+        elif question.question_format == models.QuestionFormat.YES_NO:
+            pass
+        elif question.question_format == models.QuestionFormat.TEXT:
+            pass
+        elif question.question_format == models.QuestionFormat.SLIDER:
+            pass
+
+
+    if survey_results is None:
+        # This survey has no answers (should not even be displayed to the user then)
+        return HttpResponse(400)
 
     # Proceed to render the survey results
-    return render(request, "survey_result.html", {"survey_result": survey_result})
+    return render(request, "survey_result.html", {"survey_result": result})
 
 
 @login_required
@@ -1011,6 +1031,7 @@ def unanswered_surveys_view(request):
     user = request.user  # Assuming the user is authenticated
     unanswered_count = user.count_unanswered_surveys()
     unanswered_surveys = user.get_unanswered_surveys()
+    current_time = timezone.now()
     return render(
         request,
         "unanswered_surveys.html",
@@ -1018,6 +1039,7 @@ def unanswered_surveys_view(request):
             "unanswered_count": unanswered_count,
             "unanswered_surveys": unanswered_surveys,
             "pagetitle": "Obesvarade enkäter",
+            "current_time": current_time
         },
     )
 
