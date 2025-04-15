@@ -1,5 +1,6 @@
 from . import models
 import platform
+from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
@@ -688,15 +689,32 @@ def my_org_view(request):
     employees = models.CustomUser.objects.filter(
         employee_groups__in=employee_groups
     ).distinct()
-    return render(
-        request,
-        "my_org.html",
-        {
-            "user": request.user,
+
+     # Fånga sökterm
+    search_query = request.GET.get("search", "")
+    if search_query:
+        employees = employees.filter(
+            Q(name__icontains=search_query) |
+            Q(email__icontains=search_query)
+        )
+
+     # Kolla om detta är en HTMX-request
+    if "HX-Request" in request.headers:
+        # Returnera bara tabell-rader
+        return render(request, "my_org_table.html", {
             "employees": employees,
-            "pagetitle": f"Din organisation<br>{organization.name}",
-        },
-    )
+        })
+    else:
+        return render(
+            request,
+            "my_org.html",
+            {
+                "user": request.user,
+                "employees": employees,
+                "pagetitle": f"Din organisation<br>{organization.name}",
+                "search_query": search_query,
+            },
+        )
 
 
 @login_required
