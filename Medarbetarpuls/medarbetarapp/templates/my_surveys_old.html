@@ -1,0 +1,122 @@
+{% load static %}
+<!doctype html>
+<html lang="sv">
+  <head>
+    <script src="https://unpkg.com/htmx.org@1.9.2"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mina enkäter</title>
+    <link rel="stylesheet" href="{% static 'my_surveys_styles.css' %}" />
+  </head>
+  <body>
+    {% include "topbar.html"%}
+    
+    <div class="search-container">
+      <form 
+          hx-post="{% url 'my_surveys' %}"
+          hx-trigger="submit"
+      >
+        {% csrf_token %}
+        <input
+          type="text"
+          id="search-bar"
+          name="search-bar"
+          class="search-bar"
+          placeholder="Sök enkäter..."
+        />
+        <button type="submit" class="search-button">Sök</button>
+      </form>
+      <div class="view-icons">
+        <img
+          src="{% static 'images/list.png' %}"
+          alt="List View"
+          class="view-icon"
+          onclick="setListView()"
+        />
+        <img
+          src="{% static 'images/grid.png' %}"
+          alt="Grid View"
+          class="view-icon"
+          onclick="setGridView()"
+        />
+      </div>
+    </div>
+
+    <div class="survey-list list-view" id="surveyList">
+      <!-- Add all survey templates dynamically -->
+      {% for survey_temp in survey_templates %}
+      <a href="{% url 'create_survey_with_id' survey_temp.id %}">
+      <div class="survey-item">
+        <div class="survey-content">
+          <!-- This code should not be here, templates do not have these features! 
+          <div class="survey-icons">
+            <span class="tooltip" data-tooltip="Samtliga svar är anonymiserade">
+              <div class="icon-wrapper">
+                <img src="{% static 'images/anonymous.png' %}" class="icon-img" />
+              </div>
+            </span>
+            <span
+              class="tooltip"
+              data-tooltip="Resultatet presenteras efter deadline"
+            >
+              <div class="icon-wrapper">
+                <img src="{% static 'images/survey-info.png' %}" class="icon-img" />
+              </div>
+            </span>
+          </div>
+          --> 
+          <h2 class="survey-title">{{ survey_temp.name }}</h2>
+          <p>{{ survey_temp.last_edited }}</p>
+          <div class="survey-actions">
+            <img src="{% static 'images/trashcan.png' %}" 
+              class="action-icon" 
+              onclick="event.stopPropagation(); event.preventDefault();"
+              hx-post="{% url 'delete_survey_template' survey_temp.id %}"
+              hx-confirm="Är du säker att du vill ta bort den här enkäten?"
+              hx-target=".survey-item"
+            />
+            <meta name="csrf-token" content="{{ csrf_token }}">
+            <img src="{% static 'images/edit-icon.png' %}" class="action-icon" />
+            <a href="{% url 'create_survey_with_id' survey_temp.id %}?trigger_popup=true"
+               onclick="event.stopPropagation();"
+              >
+              <img src="{% static 'images/share-icon.png' %}" class="action-icon" />
+            </a> </div>
+        </div>
+      </div>
+      </a>
+      {% endfor %}
+
+    <a href="{% url 'create_survey' %}">
+    <div class="add-survey-container">
+      <button type="button" class="add-survey-button">
+        <img src="{% static 'images/add.png' %}" class="action-icon" />
+      </button>
+    </div>
+    </a>
+
+    <script>
+      // Set to grid view on page refresh 
+      const surveyList = document.getElementById("surveyList");
+      surveyList.classList.remove("list-view");
+      surveyList.classList.add("grid-view");
+
+      function setListView() {
+        const surveyList = document.getElementById("surveyList");
+        surveyList.classList.remove("grid-view");
+        surveyList.classList.add("list-view");
+      }
+
+      function setGridView() {
+        const surveyList = document.getElementById("surveyList");
+        surveyList.classList.remove("list-view");
+        surveyList.classList.add("grid-view");
+      }
+
+      document.body.addEventListener('htmx:configRequest', (event) => {
+          const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+          event.detail.headers['X-CSRFToken'] = csrfToken;
+      });
+    </script>
+  </body>
+</html>

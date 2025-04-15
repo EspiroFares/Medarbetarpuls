@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="sv">
   <head>
     {% load static %}
@@ -11,30 +11,55 @@
   <body>
     {% include "topbar.html"%}
     <div class="start-container">
-      <div class="editable-title-container">
-        <input
-          type="text"
-          class="editable-title"
-          placeholder="Skriv din titel här..."
-          value=""
-        />
+      <div class="title-background">
+        <button
+          class="title-back-button"
+          onclick="window.location.href='{% url 'templates_and_drafts'%}'"
+        >
+          Tillbaka
+        </button>
+        <h2>Skapa enkät</h2>
       </div>
+
       <div class="grid-container">
         <!-- Make all of this dynamic -->
-        <a href="{% url 'edit_question' %}" class="grid-item blue">
-          <h2>Fråga 1</h2>
-          <!-- Fix so edits this question, not creating a new one -->
-          <div class="editable-question-container">
-            <input
-              type="text"
-              class="editable-question"
-              placeholder="Fråga..."
-              value=""
+        {% for question in survey_temp.questions.all %}
+        <a
+          href="{% url 'edit_question' survey_temp.id question.question_format question.id %}"
+          class="grid-item blue"
+        >
+          <div class="question-title">
+            <h1>Fråga {{forloop.counter}}</h1>
+            <form
+              hx-post="{% url 'delete_question' question.id survey_temp.id %}"
+              hx-trigger="submit"
+              hx-confirm="Är du säker att du vill ta bort den här frågan?"
+              hx-swap="none"
+            >
+              {% csrf_token %}
+              <button class="question-remove-button" type="submit">
+                Ta bort
+              </button>
+            </form>
+          </div>
+
+          <div class="question-background">
+            <p>{{question.question}}</p>
+          </div>
+          <div class="question-result">
+            <img
+              src="{% static 'images/' %}{{ question.question_format }}.png"
+              alt="{{ question.question_format.label }} image"
+              class="question-icon"
             />
-            <button class="delete-button">Ta bort</button>
           </div>
         </a>
-        <a href="{% url 'create_question' %}" class="add-button-link">
+        {% endfor %}
+
+        <a
+          href="{% url 'create_question' survey_temp.id %}"
+          class="add-button-link"
+        >
           <div class="add-button">
             <span>+</span>
           </div>
@@ -46,77 +71,115 @@
       <div class="popup-content">
         <h2>Publicera enkät</h2>
 
-        <!-- Checkbox Options -->
-        <div class="checkbox-group">
-          <label>
-            <input type="checkbox" name="privacy" value="anonymous" />
-            Anonyma svar
-          </label>
-          <label>
-            <input type="checkbox" name="privacy" value="public" />
-            Publicera resultat för svarande
-          </label>
-        </div>
-        <!-- Retrieve the title from create_survey -->
-        <label for="survey-name">Enkätens namn:</label>
-        <input
-          type="text"
-          id="survey-name"
-          placeholder="Namn"
-          class="text-input"
-        />
-        <label for="send-to">Skicka till:</label>
-
-        <!-- Recipient List -->
-        <input
-          type="text"
-          id="send-to"
-          placeholder="Lägg till grupp"
-          class="text-input"
-        />
-
-        <!-- Date Inputs -->
-        <div class="date-group">
-          <div>
-            <label>Publiceringsdatum:</label>
-            <input type="date" class="date-input" />
-          </div>
-          <div>
-            <label>Sista svarsdatum:</label>
-            <input type="date" class="date-input" />
-          </div>
-        </div>
-
-        <!-- Reminder Options -->
-        <div class="reminder-group">
-          <label>Påminn efter:</label>
-          <div class="reminder-tags">
-            <div class="reminder-tag">
-              1 v <span class="close">&times;</span>
-            </div>
-            <div class="reminder-tag">
-              2 v <span class="close">&times;</span>
-            </div>
-            <div class="reminder-tag">
-              3 v <span class="close">&times;</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Buttons -->
-        <div class="popup-buttons">
-          <button
-            class="image-button"
-            onclick="window.location.href='{% url 'create_survey' %}'"
+        <form
+          hx-post="{% url 'publish_survey' survey_temp.id %}"
+          hx-trigger="submit"
+          hx-confirm="Are you sure you want to publish this survey?"
+          hx-target="#error-box"
+          hx-swap="innerHTML"
+        >
+          {% csrf_token %}
+          <!-- For showing error messages -->
+          <div
+            id="error-box"
+            class="error-msg"
+            style="color: red; font-weight: bold"
           >
-            <img
-              src="{% static 'images/go-back-btn.png' %}"
-              alt="Go Back"
-              class="back-icon"
-            />
-          </button>
-          <button type="button">Publicera</button>
-        </div>
+            {{ message }}
+          </div>
+
+          <!-- Checkbox Options -->
+          <div class="checkbox-group">
+            <label>
+              <input type="checkbox" name="privacy" value="anonymous" />
+              Anonyma svar
+            </label>
+            <label>
+              <input type="checkbox" name="privacy" value="public" />
+              Publicera resultat för svarande
+            </label>
+          </div>
+          <!-- Retrieve the title from create_survey -->
+          <label for="survey-name">Enkätens namn:</label>
+          <input
+            type="text"
+            id="survey-name"
+            name="survey-name"
+            placeholder="Namn"
+            class="text-input"
+            required
+          />
+          <label for="send-to">Skicka till:</label>
+
+          <!-- Recipient List -->
+          <input
+            type="text"
+            id="send-to"
+            name="send-to"
+            placeholder="Lägg till grupp"
+            class="text-input"
+            list="employee-groups"
+            autocomplete="off"
+            required
+          />
+
+          <!-- Auto suggest valid inputs -->
+          <datalist id="employee-groups">
+            {% for group in user.survey_groups.all %}
+            <option value="{{ group.name }}">{% endfor %}</option>
+          </datalist>
+
+          <!-- Date Inputs -->
+          <div class="date-group">
+            <div>
+              <label>Publiceringsdatum:</label>
+              <input
+                type="date"
+                class="date-input"
+                name="publish-date"
+                required
+              />
+            </div>
+            <div>
+              <label>Sista svarsdatum:</label>
+              <input type="date" class="date-input" name="end-date" required />
+            </div>
+          </div>
+
+          <!-- Reminder Options -->
+          <div class="reminder-group">
+            <label>Påminn efter:</label>
+            <div class="reminder-tags">
+              <div class="reminder-tag">
+                1 v
+                <span class="close">&times;</span>
+              </div>
+              <div class="reminder-tag">
+                2 v
+                <span class="close">&times;</span>
+              </div>
+              <div class="reminder-tag">
+                3 v
+                <span class="close">&times;</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Buttons -->
+          <div class="popup-buttons">
+            <button
+              class="image-button"
+              onclick="window.location.href='{% url 'create_survey_with_id' survey_temp.id %}'"
+            >
+              <img
+                src="{% static 'images/go-back-btn.png' %}"
+                alt="Go Back"
+                class="back-icon"
+              />
+            </button>
+            <button type="submit">Publicera</button>
+          </div>
+        </form>
       </div>
     </div>
     <script>
@@ -127,6 +190,19 @@
       function closePopup() {
         document.getElementById("publish-popup").style.display = "none";
       }
+
+      function handleRemove(event) {
+        event.preventDefault(); // Prevent the link from being followed
+        // Add your logic to handle the removal of the question here
+        console.log("Remove button clicked for question:", event.target);
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("trigger_popup") === "true") {
+          openPopup();
+        }
+      });
     </script>
   </body>
 </html>
