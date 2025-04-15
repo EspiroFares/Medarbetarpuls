@@ -65,6 +65,9 @@
                     name="user_id"
                     value="{{ employee.id }}"
                   />
+                  <div class="value"><a href="#" onclick="openEditUser()">
+                  <span class="edit-icon">✏️</span></a></div>
+
                   <button type="submit" class="trashcan-button">
                     <!-- Maybe confirm popup???-->
                     <img
@@ -85,5 +88,43 @@
         <button class="button">Lägg till medarbetare</button>
       </a>
     </div>
+
+    <!-- Edit password Popup -->
+    <div id="edit-user-popup" class="popup-overlay" style="display: none;">
+      <div id= "content" class="popup-content">
+        <form 
+          class="edit-pass-form"
+          hx-post="/add-employee/"
+          hx-target="#content"
+          hx-trigger="submit"
+          hx-swap="outerHTML"
+          >
+          <span class="close-button" onclick="closeEditUser()">&times;</span>
+          {% csrf_token %}
+              <label for="medarbetare">Bekräfta mejl för medarbetare: </label> <!-- FIX username shows -->
+              <input type="medarbetare" id="employee" name="employee" placeholder="Mejl" required > 
+              <label for="medarbetargrupp">Lägg till ny medarbetargrupp: </label> <!-- FIX username shows -->
+              <input type="medarbetargrupp" id="new_employee_group" name="new_employee_group" placeholder="Medarbetargrupp" required > 
+              <input type="hidden" name="edit_employee" id="edit_employee" value="true">
+
+              <button type="submit" onclick="setTimeout(() => location.reload(), 500);" class="delete-button">Lägg till</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Script for filtering -->
+    <script>
+
+      function openEditUser() {
+          document.getElementById("edit-user-popup").style.display = "flex";
+      }
+
+      function closeEditUser() {
+          document.getElementById("edit-user-popup").style.display = "none";
+      }
+
+      function filterTable() {}
+
+    </script>
   </body>
 </html>
