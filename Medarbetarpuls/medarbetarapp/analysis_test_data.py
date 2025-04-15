@@ -99,12 +99,24 @@ def createSurveys(amount: int, surveyCreator: CustomUser):
         )
         return
     surveys = []
+    deadlines = [
+        "2025-01-01 12:00:00",
+        "2025-02-01 12:00:00",
+        "2025-03-01 12:00:00",
+        "2025-04-01 12:00:00",
+        "2025-05-01 12:00:00",
+        "2025-06-01 12:00:00",
+        "2025-07-01 12:00:00",
+        "2025-08-01 12:00:00",
+        "2025-09-01 12:00:00",
+        "2025-10-01 12:00:00",
+    ]
     for i in range(amount):
         survey = Survey.objects.create(
             name=f"Weekly Pulse Check {i}",
             creator=surveyCreator,
-            deadline="2025-07-01 12:00:00",
-            sending_date="2025-06-01 12:00:00",
+            deadline=deadlines[i],
+            sending_date="2025-01-01 10:00:00",
         )
         surveys.append(survey)
     return surveys
@@ -232,14 +244,16 @@ admin = createUsers(UserRole.ADMIN, 1)[0]
 survey_creator = createUsers(UserRole.SURVEY_CREATOR, 1)[0]
 survey_responders = createUsers(UserRole.SURVEY_RESPONDER, 4)
 
-surveys = createSurveys(3, survey_creator)
+surveys = createSurveys(6, survey_creator)  # max 12 surveys
 
 question_enps = createQuestions(1, QuestionFormat.SLIDER, QuestionType.ENPS)
-question_mc = createQuestions(1, QuestionFormat.MULTIPLE_CHOICE, QuestionType.ONETIME)
-question_yn = createQuestions(1, QuestionFormat.YES_NO, QuestionType.ONETIME)
-print(question_yn)
+question_mc = createQuestions(
+    1, QuestionFormat.MULTIPLE_CHOICE, QuestionType.REOCCURRING
+)
+question_yn = createQuestions(1, QuestionFormat.YES_NO, QuestionType.REOCCURRING)
+
 for s in surveys:
     for r in survey_responders:
         survey_result = createSurveyUserResult(1, s, r)
         for sr in survey_result:
-            answers = createAnswers(1, sr, question_yn[0])
+            answers = createAnswers(1, sr, question_enps[0])

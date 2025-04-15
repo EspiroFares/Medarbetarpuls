@@ -28,12 +28,12 @@
 
     <script>
       // Chart 1: Free text frequency
-      const textLabels = {{ answer_options|default:"[]"|safe }};
-      const textData = {{ distribution|default:"[]"|safe }};
+      const textLabels = {{ deadlines|default:"[]"|safe }};
+      const textData = {{ scores|default:"[]"|safe }};
 
       const ctx1 = document.getElementById("surveyChart").getContext("2d");
       new Chart(ctx1, {
-        type: "bar",
+        type: "line",
         data: {
           labels: textLabels,
           datasets: [{
@@ -48,6 +48,8 @@
           responsive: true,
           scales: {
             y: {
+              min: -100,
+              max: 100,
               beginAtZero: true,
               ticks: {
                 precision: 0

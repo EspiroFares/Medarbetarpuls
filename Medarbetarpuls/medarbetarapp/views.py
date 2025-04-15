@@ -531,7 +531,7 @@ def chart_view(request):
 
     analysisHandler = AnalysisHandler()
     question_txt = "Did you take enough breaks throughout the day?"
-    context = analysisHandler.get_yes_no_summary(question_txt, SURVEY_NAME)
+    context = analysisHandler.enps_history_distribution()
 
     return render(request, "analysis.html", context)
 

@@ -235,7 +235,34 @@ class AnalysisHandler:
 
     # ----------------------- HISTORY ----------------------
 
-    # def enps_history_distribution(self,
-    # start
+    def enps_history_distribution(self):
+        # TO DO: Add time filters
+        # TO DO: add employeegroup option
+        question_txt = (
+            "How likely are you to recommend this company as a place to work?"
+        )
 
-    # )
+        question = self.get_question(question_txt)
+        surveys = Survey.objects.order_by("sending_date")
+        history = []
+
+        for s in surveys:
+            answers = self.get_answers(question, s)
+            promoters, passives, detractors = self.calculate_enps_data(answers)
+            score = self.calculate_enps_score(promoters, passives, detractors)
+            history.append(
+                {
+                    "survey_name": s.name,
+                    "deadline": s.deadline.strftime("%Y-%m-%d"),
+                    "score": score,
+                }
+            )
+        survey_names = [item["survey_name"] for item in history]
+        enps_scores = [item["score"] for item in history]
+        survey_deadlines = [item["deadline"] for item in history]
+
+        return {
+            "deadlines": survey_deadlines,
+            "names": survey_names,
+            "scores": enps_scores,
+        }
