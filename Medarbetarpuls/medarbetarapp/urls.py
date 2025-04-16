@@ -36,7 +36,7 @@ urlpatterns = [
     path("settings-name/", views.settings_change_name, name="settings_name"),
     path("settings-pass/", views.settings_change_pass, name="settings_pass"),
     path("settings-user/", views.settings_user_view, name="settings_user"),
-    path("start-admin/", views.start_admin_view, name="start_admin"),
+    path("start-creator/", views.start_creator_view, name="start_creator"),
     path("start-user/", views.start_user_view, name="start_user"),
     path(
         "survey-result/<int:survey_id>/", views.survey_result_view, name="survey_result"

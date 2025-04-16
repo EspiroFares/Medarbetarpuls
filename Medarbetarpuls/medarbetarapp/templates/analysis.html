@@ -11,19 +11,23 @@
   </head>
   <body>
     {% include "topbar.html"%}
-    <div class="analysis-container">
+    <div class="start-container">
       <div class="pagetitle">
         <h1>Analys</h1>
       </div>
-      <h2>Fritext svarsfrekvens</h2>
-      <div class="graph-container">
-        <canvas id="surveyChart"></canvas>
-      </div>
+      <div class="grid-container">
+        <div class="grid-item">
+          <div class="graph-container">
+            <canvas id="surveyChart"></canvas>
+          </div>
+        </div>
 
-      <h2>eNPS-värde</h2>
-      <div class="graph-container">
-        <canvas id="enpsChart"></canvas>
-      </div>
+        <div class="grid-item">
+          <h2>eNPS-värde</h2>
+          <div class="graph-container">
+            <canvas id="enpsChart"></canvas>
+          </div>
+        </div>
     </div>
 
     <script>

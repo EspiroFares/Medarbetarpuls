@@ -12,7 +12,6 @@ body {
   /* change later to PK font */
   display: flex;
   justify-content: center;
-  align-items: center;
   height: 100vh;
   /* Ensure the body takes full height */
   overflow: auto;
@@ -223,14 +222,15 @@ button:hover {
 
 .start-container {
   max-width: 1000px;
+  
   width: 100%;
-  height: auto;
-  justify-content: center;
   padding: 20px;
+  padding-top: 0; /* Remove top padding if needed */
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: 100px;
+  position: relative; /* Allow positioning */
+  top: 17%; /* Start 100px down from the top */
 }
 
 .start-container .search-container {
@@ -336,11 +336,10 @@ button:hover {
   display: flex;
   width: 100%;
   max-width: 1000px;
-  margin-top: 5%;
   flex-wrap: wrap;
   justify-content: center;
   gap: 20px;
-  max-height: 80vh; /* Limit height */
+  padding: 40px;
 }
 
 /* Items within the grid dose not scale at the moment */
@@ -988,8 +987,8 @@ th {
 }
 
 .graph-container {
-  width: 35%;
-  height: 35%;
+  width: 90%;
+  height: 90%;
 }
 
 /* ---Topbar--- */
