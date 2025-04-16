@@ -37,7 +37,7 @@
       
       <!-- Delete Confirmation Popup -->
     <div id="delete-popup" class="popup-overlay" style="display: none;">
-        <div id= "content" class="popup-content">
+        <div id= "content" class="popup-content messages">
           <form 
             class="delete-acc-form"
             hx-post="/settings-user/"
@@ -61,7 +61,7 @@
 
     <!-- Edit name Popup -->
     <div id="edit-name-popup" class="popup-overlay" style="display: none;">
-      <div id= "content" class="popup-content">
+      <div id= "content" class="popup-content messages">
         <form 
           class="edit-name-form"
           hx-post="/settings-name/"
@@ -82,26 +82,54 @@
 
     <!-- Edit password Popup -->
     <div id="edit-pass-popup" class="popup-overlay" style="display: none;">
-      <div id= "content" class="popup-content">
-        <form 
-          class="edit-pass-form"
+      <div id= "content" class="popup-content messages">
+        <form class="edit-pass-form"
           hx-post="/settings-pass/"
-          hx-target="#content"
           hx-trigger="submit"
-          hx-swap="outerHTML"
+          hx-target="#error-box"
+          hx-swap="none"
+        >
+          {% csrf_token %}
+          <!-- For showing error messages -->
+          <div
+            id="error-box"
+            class="error-msg"
+            style="color: red; font-weight: bold"
           >
-          <span class="close-button" onclick="closeEditPass()">&times;</span>
+            {{ message }}
+          </div>
+          
+          <span class="close-button" onclick="closeEditPass();">&times;</span>
           {% csrf_token %}
               <label for="password">Ditt nuvarande lösenord:</label>
               <input type="password" id="pass_old" name="pass_old" placeholder="Nuvarande lösenord" required > 
               <label for="password">Ditt nya lösenord:</label>
               <input type="password" id="pass_new" name="pass_new" placeholder="Nytt lösenord" required >
+              <label for="password">Repetera ditt nya lösenord:</label>
+              <input type="password" id="pass_check" name="pass_check" placeholder="Repetera lösenord" required >
               <!-- Must reload after 500ms in order for this form to submit (slower) --> 
-              <button type="submit" onclick="setTimeout(() => location.reload(), 500);" class="delete-button">Byt lösenord</button>
+              <button type="submit"  class="delete-button">Byt lösenord</button>
         </form>
       </div>
+    </div> 
     </div>
     <script>
+      // Error handling
+      document.body.addEventListener("htmx:afterRequest", function (event) {
+        const errorBox = document.getElementById("error-box");
+
+        if (event.detail.successful) {
+        errorBox.innerHTML = "Lösenordet har ändrats";
+        errorBox.style.color = "green";
+        errorBox.style.display = "block";
+        // Close the popup for the user
+        setTimeout(() => location.reload(), 1000);
+      } else {
+        errorBox.innerHTML = event.detail.xhr.responseText || "Fel lösenord";
+        errorBox.style.color = "red";
+        errorBox.style.display = "block";
+      }
+      });
       function openDelete() {
           document.getElementById("delete-popup").style.display = "flex";
       }
@@ -125,6 +153,8 @@
       function closeEditPass() {
           document.getElementById("edit-pass-popup").style.display = "none";
       }
+    
+
   </script>
   </body>
 </html>

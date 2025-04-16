@@ -659,6 +659,11 @@ button:hover {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
+.popup-content.messages {
+  width: 300px; /* Make this smaller than for example publish survey popup */
+  padding: 25px;
+}
+
 .tag-container,
 .reminder-group {
   display: flex;
