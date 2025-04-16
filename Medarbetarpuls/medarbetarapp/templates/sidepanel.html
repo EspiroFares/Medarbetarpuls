@@ -8,7 +8,7 @@ This template is designed to be used by including it and was specifically design
 {% comment %} Sidepanel code {% endcomment %}
 <div class="sidepanel" id="panel">
   {% if user.admin %}
-  <a href={% url 'start_admin' %}>Startsida</a>
+  <a href={% url 'start_creator' %}>Startsida</a>
   <a href={% url 'unanswered_surveys' %}>Obesvarade enkäter</a>
   <a href={% url 'templates_and_drafts' %}>Mallar & Utkast</a>
   <a href={% url 'create_survey' %}>Skapa enkät</a>

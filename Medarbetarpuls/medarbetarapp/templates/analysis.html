@@ -11,29 +11,33 @@
   </head>
   <body>
     {% include "topbar.html"%}
-    <div class="analysis-container">
+    <div class="start-container">
       <div class="pagetitle">
         <h1>Analys</h1>
       </div>
-      <h2>Fritext svarsfrekvens</h2>
-      <div class="graph-container">
-        <canvas id="surveyChart"></canvas>
-      </div>
+      <div class="grid-container">
+        <div class="grid-item">
+          <div class="graph-container">
+            <canvas id="surveyChart"></canvas>
+          </div>
+        </div>
 
-      <h2>eNPS-värde</h2>
-      <div class="graph-container">
-        <canvas id="enpsChart"></canvas>
-      </div>
+        <div class="grid-item">
+          <h2>eNPS-värde</h2>
+          <div class="graph-container">
+            <canvas id="enpsChart"></canvas>
+          </div>
+        </div>
     </div>
 
     <script>
       // Chart 1: Free text frequency
-      const textLabels = {{ labels|default:"[]"|safe }};
-      const textData = {{ data|default:"[]"|safe }};
+      const textLabels = {{ deadlines|default:"[]"|safe }};
+      const textData = {{ scores|default:"[]"|safe }};
 
       const ctx1 = document.getElementById("surveyChart").getContext("2d");
       new Chart(ctx1, {
-        type: "bar",
+        type: "line",
         data: {
           labels: textLabels,
           datasets: [{
@@ -48,6 +52,8 @@
           responsive: true,
           scales: {
             y: {
+              min: -100,
+              max: 100,
               beginAtZero: true,
               ticks: {
                 precision: 0
@@ -58,8 +64,8 @@
       });
 
       // Chart 2: eNPS breakdown
-      const enpsLabels = {{ enps_labels|default:"[\"Happy\", \"Neutral\", \"Sad\"]"|safe }};
-      const enpsData = {{ enps_data|default:"[3, 2, 1]"|safe }};
+      const enpsLabels = {{ answer_options|default:"[\"Happy\", \"Neutral\", \"Sad\"]"|safe }};
+      const enpsData = {{ distribution|default:"[3, 2, 1]"|safe }};
 
       const ctx2 = document.getElementById("enpsChart").getContext("2d");
       new Chart(ctx2, {
