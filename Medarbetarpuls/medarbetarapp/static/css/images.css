@@ -1,0 +1,74 @@
+/*
+ * images.css
+ * 
+ * This file contains styles specifically for images used throughout the project.
+ * It includes general styles to ensure images are responsive, maintain their 
+ * aspect ratios, and fit well within their containers. 
+ * Additionally, it may include styles for specific image types, such as 
+ * decorative images, thumbnails, and other image-related components.
+ */
+
+.logo {
+    width: 50%;
+    margin-bottom: 20px;
+}
+
+.icon-img {
+    max-width: 90%;
+    /* Ensure images are responsive */
+    height: auto;
+    /* Maintain aspect ratio */
+    display: block;
+    /* Ensure it's treated as a block element */
+}
+
+.icon-img:hover {
+    transform: scale(1.15);
+    /* Slightly enlarge on hover */
+}
+
+.icon-wrapper img {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.image-button {
+    position: absolute;
+    top: 82%;
+    left: 2%;
+    margin: 10px;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    outline: none;
+}
+
+.image-button:hover {
+    background-color: transparent;
+    /* Prevent blue background */
+    outline: none;
+    /* Remove focus outline */
+} 
+  
+.image-button:focus {
+    outline: none;
+    /* Prevent focus outline */
+}
+  
+.image-button:hover img {
+    filter: brightness(1.1);
+    /* Lighten on hover */
+}
+  
+.image-button.logout {
+    top: 80%;
+    left: 60%;
+    position: absolute;
+    width: 35%;
+}
+
+.trashcan-button:hover img {
+    filter: sepia(100%) saturate(500%) hue-rotate(-30deg);
+    /* Red hue */
+}

@@ -1,0 +1,508 @@
+/*
+ * base.css
+ * 
+ * This file contains base styles that apply globally to the project.
+ * It includes typography settings, color schemes, and other foundational
+ * styles that establish the overall look and feel of the website.
+ * Use this file to define styles for common elements like headings,
+ * paragraphs, links, and other text elements.
+ */
+
+ @import url('variables.css');
+
+.login-container {
+    width: 70%;
+    max-width: 500px;
+    text-align: center;
+    background: var(--white);
+    /* white; */
+    padding: 20px;
+    border-radius: 10px;
+}
+
+.input-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.input-form label {
+    color: var(--dark_blue);
+    /* #102b46 */
+    display: block;
+    margin-bottom: 1%;
+    margin-left: -50%;
+    text-align: left;
+}
+
+.input-form input {
+    width: 65%;
+    padding: 10px;
+    border: none;
+    border-radius: 10px;
+    background-color: var(--almost_white);
+    /* #eef5fe; */
+    margin-bottom: 3%;
+    font-size: 16px;
+}
+
+.account-help-links {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 5%;
+    gap: 10%;
+}
+
+.account-help-links:has(a:only-child) {
+    /* If only one link, center it */
+    justify-content: center;
+    margin-top: 8%;
+}
+
+.account-help-links a {
+    text-decoration: none;
+    color: var(--dark_blue);
+    /* #102b46; */
+    font-size: 14px;
+}
+
+.account-help-links a:hover {
+    /* In HTML, the <a> tag stands for “anchor”, and it’s used to create hyperlinks  */
+    text-decoration: underline;
+}
+
+.create-form {
+    /* For create org/acc */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.create-form label {
+    align-self: flex-start;
+    margin-left: 13%;
+    margin-bottom: 5px;
+    color: var(--dark_blue);
+    /* #102b46; */
+    font-size: 16px;
+}
+
+.create-form input {
+    width: 70%;
+    padding: 14px;
+    font-size: 16px;
+    border: none;
+    border-radius: 10px;
+    background-color: var(--almost_white);
+    /* #eef5fe; */
+    margin-bottom: 20px;
+    /* Larger space between inputs */
+}
+
+.view-results {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.title-background {
+    display: flex;
+    /* Enable flexbox */
+    justify-content: center;
+    /* Center the items in the flex container */
+    align-items: center;
+    /* Center items vertically */
+    position: relative;
+    /* Allow absolute positioning if needed */
+    width: 100%;
+    /* Make it full width */
+    background-color: #e8ebf1;
+    /* Optional: background color */
+    min-height: auto;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.title-background h2 {
+    flex: 1;
+    /* Allow the heading to take up available space */
+    text-align: center;
+    /* Center the text */
+    margin: 0;
+    /* Remove default margin */
+}
+
+.editable-title {
+    font-size: 32px;
+    font-weight: bold;
+    color: #102b46;
+    border: none;
+    background-color: transparent;
+    /* Remove input background */
+    outline: none;
+    /* Remove focus outline */
+    text-align: center;
+    width: 100%;
+    /* Full width to look like a title */
+    padding: 5px 0;
+}
+
+.editable-title:hover {
+    cursor: text;
+}
+
+.editable-question {
+    font-size: 16px;
+    font-weight: normal;
+    color: #102b46;
+    border: none;
+    background-color: transparent;
+    outline: none;
+    text-align: center;
+    width: 100%;
+    margin-top: 0%;
+    padding: 5px 0;
+}
+
+.editable-question:hover {
+    cursor: text;
+}
+
+.tooltip {
+    position: relative;
+    width: 24px;
+    height: 24px;
+    display: inline-block;
+}
+
+.tooltip::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 0px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #007bff;
+    color: #fff;
+    padding: 6px 10px;
+    font-size: 12px;
+    border-radius: 4px;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+    z-index: 100;
+}
+
+.tooltip:hover::after {
+    opacity: 1;
+}
+
+.icon-wrapper {
+    position: relative;
+    width: 30px;
+    height: 30px;
+}
+
+.question-title h1 {
+    margin: 0px;
+    /* Remove default margin */
+    padding: 0;
+    /* Remove any padding if needed */
+    font-size: 1.5em;
+    /* Adjust font size as needed */
+    text-align: center;
+    /* Center the text if desired */
+}
+  
+.question-result .question-icon {
+    width: 90%;
+    height: 50%;
+}
+
+.settings-container {
+    text-align: center;
+    padding: 30px;
+    border-radius: 10px;
+    background-color: white;
+    margin-top: 100px;
+}
+
+.settings-container h1 {
+    font-size: 32px;
+    color: #102b46;
+    margin-bottom: 20%;
+}
+
+.settings-container h2 {
+    font-size: 20px;
+    margin-bottom: 10%;
+    font-weight: normal;
+    color: #102b46;
+}
+
+.label {
+    color: #102b46;
+    font-weight: normal;
+}
+
+.value {
+    color: #4e8ce1;
+}
+
+.value a {
+    /* For links in table */
+    color: #4e8ce1;
+    text-decoration: none;
+}
+
+.value a:hover {
+    text-decoration: underline;
+}
+
+.tag,
+.reminder-tag {
+  display: inline-flex;
+  align-items: center;
+  background-color: #dce7f8;
+  color: #102b46;
+  padding: 5px 10px;
+  border-radius: 5px;
+}
+
+.tag .close,
+.reminder-tag .close {
+  margin-left: 5px;
+  cursor: pointer;
+  color: #555;
+}
+
+.date-group {
+  display: flex;
+  justify-content: space-between;
+}
+
+.date-input {
+    background-color: #eef5fe;
+    padding: 5px;
+    border: none;
+    border-radius: 10px;
+}
+  
+.back-icon {
+    width: 50px;
+    height: 50px;
+}
+  
+/* Use for popups */
+.popup-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    width: 500px;
+}
+  
+.popup-content input {
+    width: 90%;
+    padding: 14px;
+    margin: 10px 0;
+    border: none;
+    border-radius: 10px;
+    background-color: #eef5fe;
+}
+
+.checkbox-group {
+    display: flex;
+    justify-content: center;
+    gap: 50px;
+    margin-bottom: 20px;
+}
+
+.checkbox-group label {
+    font-size: 16px;
+    color: #102b46;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.checkbox-group input[type="checkbox"] {
+    margin-right: 5px;
+}
+
+.search-container {
+    margin: 15px auto;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 15%;
+}
+
+.search-container input {
+    padding: 8px;
+    border-radius: 20px;
+    border: 1px solid #ccc;
+    width: 300px;
+    height: 20px;
+}
+
+.icon {
+    width: 20px;
+    height: 20px;
+}
+
+.question-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.question-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #fff;
+    border-radius: 8px;
+    margin: 8px 0;
+    padding: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s;
+}
+
+.question-item:hover {
+    transform: translateY(-2px);
+}
+
+.question-icon {
+    width: 20% auto;
+    height: 40px;
+    margin-right: 10px;
+}
+
+.question-text {
+    flex: 1;
+    font-size: 16px;
+    color: #102b46;
+}
+
+.question-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.question-form label {
+    align-self: flex-start;
+    margin-left: 13%;
+    margin-bottom: 5px;
+    color: #102b46;
+    font-size: 16px;
+}
+
+.question-form input {
+    width: 70%;
+    height: 70px;
+    padding: 14px;
+    font-size: 16px;
+    border: none;
+    border-radius: 10px;
+    background-color: #eef5fe;
+    margin-bottom: 20px;
+    /* Larger space between inputs */
+}
+
+.analysis-container h2 {
+    margin-bottom: 12%;
+    font-weight: normal;
+    /* Heading automatically bold, wants normal */
+    font-size: 20px;
+    color: #102b46;
+}
+
+.topbar a {
+    /*color: var(--black);
+    background-color: var(--soft_blue);*/
+    padding: 14px 16px;
+    text-decoration: none;
+    font-size: 17px;
+    display: block;
+}
+
+.topbar a:hover {
+    color: var(--black);
+}
+
+.topbar-logo {
+    top: 1%;
+    left: 1%;
+    position: fixed;
+    width: 5%;
+}
+
+.pagetitle {
+    color: var(--dark_blue);
+    text-align: center;
+    background-color: transparent;
+    padding: 0;
+    margin-top: 0%;
+}
+
+.pagetitle h2 {
+    font-size: 20px;
+    margin-top: 0;
+}
+
+.sidepanel a {
+    padding: 8px 8px 8px 32px;
+    text-decoration: none;
+    font-size: 25px;
+    color: var(--white);
+    display: block;
+}
+
+.sidepanel a:hover {
+    color: var(--almost_white);
+    background-color: var(--blue);
+}
+
+.menu a {
+    color: var(--white);
+}
+  
+.menu a:hover {
+    color: var(--black);
+}
+
+.wrapper {
+    position: relative;
+}
+
+#error-box {
+    min-height: 1.5em;
+    color: red;
+    margin-bottom: 1em;
+}
+
+.create-container h1 {
+    /* h1 stands for main heading */
+    margin-bottom: 12%;
+    font-size: 28px;
+    color: var(--blue);
+    /* #4e8ce1; */
+}
+
+.create-container h2 {
+    /* h2 stands for first subheading after h1 */
+    margin-bottom: 12%;
+    font-weight: normal;
+    /* Heading automatically bold, wants normal */
+    font-size: 20px;
+    color: var(--dark_blue);
+    /* #102b46; */
+}

@@ -1,0 +1,17 @@
+/*
+ * main.css
+ * 
+ * This file acts as the primary stylesheet for the project, 
+ * serving as an entry point for all other CSS files. 
+ * It imports and combines styles from various 
+ * component, layout, base, and reset stylesheets to create 
+ * a cohesive design. 
+ */
+
+@import url('variables.css');
+@import url('reset.css');
+@import url('../styles.css');
+@import url('layout.css');
+@import url('base.css');
+@import url('components.css');
+@import url('images.css');
