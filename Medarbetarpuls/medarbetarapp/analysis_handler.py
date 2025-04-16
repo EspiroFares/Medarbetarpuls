@@ -26,9 +26,9 @@ class AnalysisHandler:
     Handles logic for survey analysis.
     """
 
-    def get_survey(self, survey_name: str) -> Survey:
-        """Retrieve a survey by its name."""
-        return Survey.objects.get(name=survey_name)
+    def get_survey(self, survey_id: int) -> Survey:
+        """Retrieve a survey by its id."""
+        return Survey.objects.get(id=survey_id)
 
     def get_survey_result(self, survey):
         """Retrieve a specific SurveyUserResult."""
@@ -79,7 +79,7 @@ class AnalysisHandler:
 
     def get_enps_summary(
         self,
-        survey_name: str,
+        survey_id: int,
     ):
         """
         Get all data needed to render ENPS analysis:
@@ -87,7 +87,7 @@ class AnalysisHandler:
 
         With survey_id set to None you get all the answers from an eNPS question.
         """
-        survey = self.get_survey(survey_name)
+        survey = self.get_survey(survey)
         question_txt = (
             "How likely are you to recommend this company as a place to work?"
         )
@@ -149,7 +149,7 @@ class AnalysisHandler:
     def get_slider_summary(
         self,
         question_txt: str,
-        survey_name: str,
+        survey_id: int,
     ):
         """
         Get all data needed to render slider analysis:
@@ -157,7 +157,7 @@ class AnalysisHandler:
 
         With survey_id set to None you get all the answers from the question.
         """
-        survey = self.get_survey(survey_name)
+        survey = self.get_survey(survey_id)
         question = self.get_question(question_txt)
         answers = self.get_answers(question, survey)
         distribution = self.get_response_distribution_slider(answers)
@@ -177,7 +177,6 @@ class AnalysisHandler:
         # it looks at all occurences of true at the corresponding index to answer option
 
         dist = [0] * len(answer_options)
-        print("HEJ: ", dist)
 
         for a in answers:
             selected_options = a.multiple_choice_answer
@@ -190,15 +189,13 @@ class AnalysisHandler:
     def get_multiple_choice_summary(
         self,
         question_txt: str,
-        survey_name: str,
+        survey_id: int,
     ):
-        survey = self.get_survey(survey_name)
+        survey = self.get_survey(survey_id)
         question = self.get_question(question_txt)
         answer_options = question.specific_question.options
         answers = self.get_answers(question, survey)
         distribution = self.get_response_distribution_mc(answers, answer_options)
-        print(answers.filter(multiple_choice_answer="A").count())
-        print(distribution)
         return {
             "question": question_txt,
             "answer_options": answer_options,
@@ -210,16 +207,15 @@ class AnalysisHandler:
         """Count how many respondents picked each answer."""
 
         yes_count = sum(1 for a in answers if a.yes_no_answer is True)
-        print(yes_count)
         no_count = sum(1 for a in answers if a.yes_no_answer is False)
         return [no_count, yes_count]
 
     def get_yes_no_summary(
         self,
         question_txt: str,
-        survey_name: str,
+        survey_id: int,
     ):
-        survey = self.get_survey(survey_name)
+        survey = self.get_survey(survey_id)
         question = self.get_question(question_txt)
         answer_options = [
             "YES",
@@ -232,6 +228,27 @@ class AnalysisHandler:
             "answer_options": answer_options,
             "distribution": distribution,
         }
+
+    def survey_result_summary(self, survey_id):
+        survey = Survey.objects.filter(id=survey_id).first()
+
+        summary = {}
+        questions = Question.objects.filter(connected_surveys__id=survey_id)
+
+        for question in questions:
+            if question.question_format == QuestionFormat.MULTIPLE_CHOICE:
+                question_summary = self.get_multiple_choice_summary(
+                    question.question, survey.id
+                )
+            elif question.question_format == QuestionFormat.YES_NO:
+                question_summary = self.get_yes_no_summary(question.question, survey.id)
+            elif question.question_format == QuestionFormat.TEXT:
+                pass
+            elif question.question_format == QuestionFormat.SLIDER:
+                question_summary = self.get_slider_summary(question.question, survey.id)
+            summary[question] = question_summary
+
+        return summary
 
     # ----------------------- HISTORY ----------------------
 
@@ -252,17 +269,16 @@ class AnalysisHandler:
             score = self.calculate_enps_score(promoters, passives, detractors)
             history.append(
                 {
-                    "survey_name": s.name,
+                    "survey_id": s.id,
                     "deadline": s.deadline.strftime("%Y-%m-%d"),
                     "score": score,
                 }
             )
-        survey_names = [item["survey_name"] for item in history]
+        # survey_ids = [item["survey_id"] for item in history]
         enps_scores = [item["score"] for item in history]
         survey_deadlines = [item["deadline"] for item in history]
 
         return {
             "deadlines": survey_deadlines,
-            "names": survey_names,
             "scores": enps_scores,
         }

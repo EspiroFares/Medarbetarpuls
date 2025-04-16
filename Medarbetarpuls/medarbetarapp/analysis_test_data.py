@@ -133,7 +133,10 @@ def createSurveyUserResult(amount: int, survey: Survey, user: CustomUser):
 
 
 def createQuestions(
-    amount: int, questionFormat: QuestionFormat, questionType: QuestionType
+    amount: int,
+    questionFormat: QuestionFormat,
+    questionType: QuestionType,
+    survey: Survey,
 ):
     result = []
     questions = []
@@ -246,14 +249,20 @@ survey_responders = createUsers(UserRole.SURVEY_RESPONDER, 4)
 
 surveys = createSurveys(6, survey_creator)  # max 12 surveys
 
-question_enps = createQuestions(1, QuestionFormat.SLIDER, QuestionType.ENPS)
+# question_enps = createQuestions(1, QuestionFormat.SLIDER, QuestionType.ENPS)
 question_mc = createQuestions(
-    1, QuestionFormat.MULTIPLE_CHOICE, QuestionType.REOCCURRING
+    1, QuestionFormat.MULTIPLE_CHOICE, QuestionType.REOCCURRING, surveys[0]
 )
-question_yn = createQuestions(1, QuestionFormat.YES_NO, QuestionType.REOCCURRING)
+# question_yn = createQuestions(1, QuestionFormat.YES_NO, QuestionType.REOCCURRING)
 
 for s in surveys:
+    for q in question_mc:
+        q.connected_surveys.add(
+            s
+        )  # establish the link between questions and this survey
+
     for r in survey_responders:
         survey_result = createSurveyUserResult(1, s, r)
         for sr in survey_result:
-            answers = createAnswers(1, sr, question_enps[0])
+            for q in question_mc:
+                createAnswers(1, sr, q)

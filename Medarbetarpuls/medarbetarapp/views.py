@@ -527,12 +527,11 @@ def unanswered_surveys_view(request):
 
 
 def chart_view(request):
-    SURVEY_NAME = "Weekly Pulse Check 1"  # Choose which survey to show here
+    SURVEY_ID = 3  # Choose which survey to show here
 
     analysisHandler = AnalysisHandler()
     question_txt = "Did you take enough breaks throughout the day?"
-    context = analysisHandler.enps_history_distribution()
-
+    context = analysisHandler.survey_result_summary(SURVEY_ID)
     return render(request, "analysis.html", context)
 
 

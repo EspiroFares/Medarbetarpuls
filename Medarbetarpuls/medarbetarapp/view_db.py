@@ -41,8 +41,9 @@ print("\n")
 
 answers = Answer.objects.all()
 for a in Answer.objects.all():
-    print(f"Answer: {a.yes_no_answer}")
-
+    print(f"Answer: {a}")
+for q in Question.objects.all():
+    print(f"Question: {q.question} Survey: {q.connected_surveys}")
 # print("HEJ: ", answers.filter(multiple_choice_answer=True))
 # survey = Survey.objects.get(id=1)
 # results = SurveyUserResult.objects.filter(published_survey=survey, id=1)
