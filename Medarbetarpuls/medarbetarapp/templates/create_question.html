@@ -12,55 +12,63 @@
     <div class="popup-overlay">
       <div class="popup-content">
         <h2>Välj typ av fråga</h2>
-        <ul class="question-list">
-          <!-- ul for unsorted list -->
+
+        <!-- Create new questions -->
+        <ul id="standard-questions" class="question-list">
+          {% for type in QuestionFormat %}
+          <li class="question-item">
+            <img
+              src="{% static 'images/' %}{{ type.value }}.png"
+              alt="{{ type.label }} image"
+              class="question-icon"
+            />
+            <a href="{% url 'edit_question_new' survey_temp.id type %}">
+              <button type="button">Välj</button>
+            </a>
+          </li>
+          {% endfor %}
+        </ul>
+
+        <!-- Predefined questions from question-bank-->
+        <ul
+          id="predefined-questions"
+          class="question-list"
+          style="display: none"
+        >
+          <!-- Replace this with loop when it is possible to save questions to a bank-->
           <li class="question-item">
             <img
               src="{% static 'images/q1.png' %}"
-              alt="Ikon 1"
+              alt="Predefined Question 1"
               class="question-icon"
             />
-
-            <div id="q1" class="question-text" style="display: none">
-              Vårt företag utvecklas i rätt riktning
-            </div>
-            <a href="{% url 'edit_question' %}">
-              <button type="button">Välj</button>
-            </a>
-          </li>
-
-          <li class="question-item">
-            <img
-              src="{% static 'images/q2.png' %}"
-              alt="Ikon 1"
-              class="question-icon"
-            />
-            <div id="q2" class="question-text" style="display: none">
-              Jag gillar mitt jobb
-            </div>
-            <a href="{% url 'edit_question' %}">
+            <p>Fördefinierad fråga 1</p>
+            <a
+              href="{% url 'edit_question_new' survey_temp.id 'predefined_format_1' %}"
+            >
               <button type="button">Välj</button>
             </a>
           </li>
           <li class="question-item">
             <img
-              src="{% static 'images/q2.png' %}"
-              alt="Ikon 1"
+              src="{% static 'images/q1.png' %}"
+              alt="Predefined Question 2"
               class="question-icon"
             />
-            <div id="q3" class="question-text" style="display: none">
-              Min stressnivå är
-            </div>
-            <a href="{% url 'edit_question' %}">
+            <p>Fördefinierad fråga 2</p>
+            <a
+              href="{% url 'edit_question_new' survey_temp.id 'predefined_format_2' %}"
+            >
               <button type="button">Välj</button>
             </a>
           </li>
+          <!--   ^^   -->
         </ul>
 
         <div class="popup-buttons">
           <button
             class="image-button"
-            onclick="window.location.href='{% url 'create_survey' %}'"
+            onclick="window.location.href='{% url 'create_survey_with_id' survey_temp.id %}'"
           >
             <img
               src="{% static 'images/go-back-btn.png' %}"
@@ -78,20 +86,21 @@
     <script>
       function openCloseSugg() {
         const suggestionsButton = document.getElementById("suggestions");
-        const q1 = document.getElementById("q1");
-        const q2 = document.getElementById("q2");
-        const q3 = document.getElementById("q3");
+        const standardQuestions = document.getElementById("standard-questions");
+        const predefinedQuestions = document.getElementById(
+          "predefined-questions"
+        );
 
-        if (q1.style.display === "none") {
-          q1.style.display = "flex";
-          q2.style.display = "flex";
-          q3.style.display = "flex";
-          suggestionsButton.innerHTML = "Ny fråga";
-        } else {
-          q1.style.display = "none";
-          q2.style.display = "none";
-          q3.style.display = "none";
+        if (standardQuestions.style.display === "none") {
+          // Show standard questions
+          standardQuestions.style.display = "block";
+          predefinedQuestions.style.display = "none";
           suggestionsButton.innerHTML = "Förslag på frågor";
+        } else {
+          // Show predefined questions
+          standardQuestions.style.display = "none";
+          predefinedQuestions.style.display = "block";
+          suggestionsButton.innerHTML = "Standard frågor";
         }
       }
     </script>

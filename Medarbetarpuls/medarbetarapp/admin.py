@@ -1,7 +1,23 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser, Organization  # Import your CustomUser model
+from .models import CustomUser, SurveyTemplate, Organization, SurveyResult, Answer  # Import your CustomUser model
 
+class SurveyResultAdmin(admin.ModelAdmin):
+    list_display = ("user", "published_survey", "is_answered", "get_answers")
+    
+    @admin.display(description="Answers")
+    def get_answers(self, obj):
+        return ", ".join([
+            f"{a.question.question[:30]}: {a.answer_format}"  # Show partial question text
+            for a in obj.answers.all()
+        ])
+
+class AnswerAdmin(admin.ModelAdmin):
+    list_display = ("survey", "question", "is_answered", "free_text_answer", "slider_answer")
+
+admin.site.register(Answer, AnswerAdmin)
+
+admin.site.register(SurveyResult, SurveyResultAdmin)
 
 class CustomUserAdmin(UserAdmin):
     model = CustomUser
@@ -11,14 +27,15 @@ class CustomUserAdmin(UserAdmin):
         "user_role",
         "is_staff",
         "is_superuser",
+        "display_employee_groups",
     )  # Customize displayed fields
     search_fields = ("email", "name")  # Add search functionality
-    list_filter = ("user_role", "is_staff", "is_superuser")  # Add filters
+    list_filter = ("user_role", "is_staff", "is_superuser", "employee_groups")  # Add filters
     ordering = ("email",)  # Default sorting order
     fieldsets = (
         (None, {"fields": ("email", "password")}),
         ("Personal Info", {"fields": ("name", "user_role")}),
-        ("Permissions", {"fields": ("is_active", "is_staff", "is_superuser")}),
+        ("Permissions", {"fields": ("is_active", "is_staff", "is_superuser","employee_groups")}),
     )
     add_fieldsets = (
         (
@@ -33,10 +50,15 @@ class CustomUserAdmin(UserAdmin):
                     "password2",
                     "is_staff",
                     "is_superuser",
+                    "employee_groups",
                 ),
             },
         ),
     )
+
+    def display_employee_groups(self, obj):
+        return ", ".join([group.name for group in obj.employee_groups.all()])
+    display_employee_groups.short_description = "Employee Groups"  # Set column header name
 
 
 # Register the CustomUser model
@@ -74,3 +96,12 @@ class OrganizationAdmin(admin.ModelAdmin):
     @admin.display(description="Organization Emails")
     def get_org_emails(self, obj):
         return ", ".join([template.email for template in obj.org_emails.all()])
+
+
+@admin.register(SurveyTemplate)
+class SurveyTemplateAdmin(admin.ModelAdmin):
+    list_display = ("name", "creator", "last_edited", "bank_survey")
+    search_fields = ("name", "creator__email")
+    filter_horizontal = ("employee_groups",)
+    autocomplete_fields = ("creator", "bank_survey")
+    ordering = ("-last_edited",)

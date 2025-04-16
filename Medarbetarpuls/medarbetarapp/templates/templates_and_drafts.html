@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="sv">
+  <head>
+    {% load static %}
+    <script src="https://unpkg.com/htmx.org@1.8.4"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Medarbetarpuls - Home</title>
+    <link rel="stylesheet" href="{% static 'styles.css' %}" />
+  </head>
+  <body>
+    {% include "topbar.html" with pagetitle=pagetitle%}
+
+    <div class="start-container">
+      <div class="title-background">
+        <h2>Mallar & Utkast</h2>
+      </div>
+      <div class="search-container">
+        <form hx-post="{% url 'templates_and_drafts' %}" hx-trigger="submit">
+          {% csrf_token %}
+          <input
+            type="text"
+            id="search-bar"
+            name="search-bar"
+            class="search-bar"
+            placeholder="Sök bland enkätmallar..."
+          />
+          <button type="submit" class="search-button">Sök</button>
+        </form>
+      </div>
+      <!-- Change name to variable -->
+      <!-- Dose not check if user logged in and have access-->
+      <div class="grid-container">
+        {% for survey_temp in survey_templates %}
+        <a
+          href="{% url 'create_survey_with_id' survey_temp.id %}"
+          class="grid-item blue"
+        >
+          <div class="question-title">
+            <h1>{{ survey_temp.name }}</h1>
+          </div>
+
+          <div class="question-background">
+            <p>{{ survey_temp.last_edited }}</p>
+          </div>
+          <div class="question-result">
+            <div class="grid-icon">
+              <img
+                src="{% static 'images/trashcan.png' %}"
+                class="icon-img"
+                onclick="event.stopPropagation(); event.preventDefault();"
+                hx-post="{% url 'delete_survey_template' survey_temp.id %}"
+                hx-confirm="Är du säker att du vill ta bort den här enkäten?"
+                hx-target=".grid-item"
+              />
+              <meta name="csrf-token" content="{{ csrf_token }}" />
+            </div>
+            <div class="grid-icon">
+              <img
+                src="{% static 'images/share-icon.png' %}"
+                class="icon-img"
+                onclick="event.stopPropagation(); event.preventDefault();"
+                hx-get="{% url 'create_survey_with_id' survey_temp.id %}"
+                hx-target="body"
+                hx-swap="outerHTML"
+              />
+            </div>
+          </div>
+        </a>
+        {% endfor %}
+
+        <a href="{% url 'create_survey' %}" class="add-button-link">
+          <div class="add-button">
+            <span>+</span>
+          </div>
+        </a>
+      </div>
+    </div>
+    <script>
+      document.body.addEventListener("htmx:configRequest", (event) => {
+        const csrfToken = document.querySelector(
+          'meta[name="csrf-token"]',
+        ).content;
+        event.detail.headers["X-CSRFToken"] = csrfToken;
+      });
+    </script>
+  </body>
+</html>
+
+{% comment %}
+<img
+  src="{% static 'images/trashcan.png' %}"
+  class="action-icon"
+  onclick="event.stopPropagation(); event.preventDefault();"
+  hx-post="{% url 'delete_survey_template' survey_temp.id %}"
+  hx-confirm="Är du säker att du vill ta bort den här enkäten?"
+  hx-target=".survey-item"
+/>
+<meta name="csrf-token" content="{{ csrf_token }}" />
+<img src="{% static 'images/edit-icon.png' %}" class="action-icon" />
+<a
+  href="{% url 'create_survey_with_id' survey_temp.id %}?trigger_popup=true"
+  onclick="event.stopPropagation();"
+>
+  <img src="{% static 'images/share-icon.png' %}" class="action-icon" />
+</a>
+{% endcomment %}

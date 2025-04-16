@@ -1,7 +1,11 @@
 from getpass import getuser
 from importlib.metadata import distribution
 from django.db import models
+<<<<<<< HEAD
 from django.db.models.query import QuerySet
+=======
+from django.core.mail import send_mail
+>>>>>>> origin/dev
 from django.db.models.manager import BaseManager
 from django.contrib.auth.models import (
     AbstractBaseUser,
@@ -183,6 +187,7 @@ class Survey(models.Model):
         null=True,
     )
     employee_groups = models.ManyToManyField(EmployeeGroup, related_name="+")
+<<<<<<< HEAD
     survey_results: OneToManyManager["SurveyUserResult"]
     deadline = (
         models.DateTimeField()
@@ -192,9 +197,46 @@ class Survey(models.Model):
     )  # stores both date and time (e.g., YYYY-MM-DD HH:MM:SS)
     collected_answer_count = models.IntegerField(default=0)  # pyright: ignore
     is_viewable = models.BooleanField(default=False)  # pyright: ignore
+=======
+    survey_results: OneToManyManager["SurveyResult"]
+    deadline = models.DateTimeField()  # stores both date and time (e.g., YYYY-MM-DD HH:MM:SS)
+    sending_date = models.DateTimeField()  # stores both date and time (e.g., YYYY-MM-DD HH:MM:SS)
+    collected_answer_count = models.IntegerField(default=0)  # pyright: ignore 
+    published_count = models.IntegerField(default=0)  # pyright: ignore 
+    is_viewable = models.BooleanField(default=True)  # pyright: ignore
+    is_anonymous = models.BooleanField(default=True)  # pyright: ignore
+>>>>>>> origin/dev
 
     def __str__(self) -> str:
         return f"{self.name} ({self.creator})"
+
+    def publish_survey(self): 
+        """
+        Publishes the survey to all employees in all
+        employee groups linked to this survey
+        """
+        seen_employees = set()
+        count: int = 0
+
+        for group in self.employee_groups.all():
+            for employee in group.employees.all():
+                if employee.id not in seen_employees:
+                    SurveyResult.objects.create(published_survey=self, user=employee)
+                    seen_employees.add(employee)
+                    count += 1
+
+        # Saves the amount of users this survey has been sent to  
+        self.published_count = count
+        self.save()
+
+        # Send email to notify 
+        send_mail(
+            subject="Ny obesvaradenkät",
+            message="Det finns en ny enkät att svara på i Medarbetarpuls",
+            from_email='medarbetarpuls@gmail.com',
+            recipient_list=[employee.email for employee in seen_employees],
+            fail_silently=False,
+        )
 
 
 # What this model does needs to be explained here
@@ -340,7 +382,7 @@ class Question(models.Model):
         return None
 
     def __str__(self) -> str:
-        return f"{self.question_format} ({self.question_type})"
+        return f"{self.question_format} ({self.question})"
 
 
 # What this model does needs to be explained here
@@ -351,6 +393,7 @@ class Answer(models.Model):
     )
     question = models.ForeignKey(
         Question, on_delete=models.CASCADE, related_name="answers", null=True
+<<<<<<< HEAD
     )
     comment = models.CharField(max_length=255, null=True, blank=True)
     free_text_answer = models.CharField(max_length=255, null=True, blank=True)
@@ -360,6 +403,15 @@ class Answer(models.Model):
     yes_no_answer = models.BooleanField(default=False, null=True, blank=True)  # pyright: ignore
     slider_answer = models.FloatField(null=True, blank=True)
 
+=======
+    ) 
+    comment = models.CharField(max_length=255)
+    free_text_answer = models.CharField(max_length=255) 
+    multiple_choice_answer = models.JSONField(default=list)  # Stores a list of booleans
+    yes_no_answer = models.BooleanField(default=False)  # pyright: ignore
+    slider_answer = models.FloatField(null=True)
+    
+>>>>>>> origin/dev
     @property
     def answer_format(self) -> QuestionFormat | None:
         """
@@ -398,7 +450,12 @@ class EmailList(models.Model):
         null=True,
         blank=True,
     )
+<<<<<<< HEAD
     objects: models.Manager
+=======
+    employee_groups = models.ManyToManyField(EmployeeGroup, related_name="group")
+    objects: models.Manager 
+>>>>>>> origin/dev
 
     def __str__(self) -> str:
         return f"{self.email}"

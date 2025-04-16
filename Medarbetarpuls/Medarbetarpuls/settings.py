@@ -189,3 +189,19 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # Gmail's SMTP server
+EMAIL_PORT = 587  # TLS port
+EMAIL_USE_TLS = True  # Use TLS encryption
+
+EMAIL_HOST_USER = 'medarbetarpuls@gmail.com'  # Your actual gmail
+EMAIL_HOST_PASSWORD = 'oejv vxry kwrn ezoe'   # Use app password if 2FA is on
+
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+# Celery settings/setup for async task scheduling
+CELERY_BROKER_URL = "redis://localhost:6379/0"
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'

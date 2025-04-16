@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="sv">
   <head>
     {% load static %}
@@ -24,14 +24,14 @@
           <h2>Se resultat</h2>
           <p>Se resultaten av dina tidigare svarade enkäter</p>
         </a>
-        <a href="{% url 'create_survey' %}" class="grid-item green">
+        <a href="{% url 'survey_status' %}" class="grid-item green">
           <div class="icon">📝</div>
-          <h2>Skapa enkäter</h2>
-          <p>Skapa nya enkäter</p>
+          <h2>Mina publicerade enkäter</h2>
+          <p>Se status och svar på dina publicerade enkäter</p>
         </a>
-        <a href="{% url 'my_surveys' %}" class="grid-item lightblue">
+        <a href="{% url 'templates_and_drafts' %}" class="grid-item lightblue">
           <div class="icon">📁</div>
-          <h2>Mina enkäter</h2>
+          <h2>Mallar & Utkast</h2>
           <p>Se dina tidigare skapade och utkast av enkäter</p>
         </a>
         <a href="{% url 'my_org' %}" class="grid-item pink">
