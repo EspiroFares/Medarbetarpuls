@@ -31,7 +31,7 @@ class AnalysisHandler:
         return Survey.objects.get(id=survey_id)
 
     def get_survey_result(self, survey):
-        """Retrieve a specific SurveyResult."""
+        """Retrieve a specific SurveyUserResult."""
         return SurveyResult.objects.filter(published_survey=survey)
 
     def get_question(self, question_txt: str) -> Question:
