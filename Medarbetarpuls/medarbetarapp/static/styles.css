@@ -249,7 +249,8 @@ button:hover {
   font-size: 16px;
   border: 1px solid #ccc;
   border-radius: 500px;
-} 
+}
+
 .start-container .search-button {
   padding: 10px 20px;
   font-size: 16px;
@@ -333,12 +334,13 @@ button:hover {
 
 .grid-container {
   display: flex;
-  width:100%;
-  max-width: 800px;
+  width: 100%;
+  max-width: 1000px;
   margin-top: 5%;
   flex-wrap: wrap;
   justify-content: center;
   gap: 20px;
+  max-height: 80vh; /* Limit height */
 }
 
 /* Items within the grid dose not scale at the moment */
@@ -346,7 +348,7 @@ button:hover {
   position: relative;
   width: calc((100% / 3) - 40px);
   min-width: 220px;
-  max-width: 250px;
+  max-width: 300px;
   aspect-ratio: 1 / 1;
   background-color: white;
   border: 1px solid #ddd;
@@ -369,24 +371,74 @@ button:hover {
 }
 
 .grid-icon {
-  display: flex; /* Use flexbox for centering */
-  justify-content: center; /* Center the icon */
-  align-items: center; /* Center vertically */
-  flex: 1; /* Allow icons to grow equally */
-  max-width: 50px; /* Set a max width for icons */
+  display: flex;
+  /* Use flexbox for centering */
+  justify-content: center;
+  /* Center the icon */
+  align-items: center;
+  /* Center vertically */
+  flex: 1;
+  /* Allow icons to grow equally */
+  max-width: 50px;
+  /* Set a max width for icons */
 }
 
 .icon-img {
-  max-width: 90%; /* Ensure images are responsive */
-  height: auto; /* Maintain aspect ratio */
-  display: block; /* Ensure it's treated as a block element */
+  max-width: 90%;
+  /* Ensure images are responsive */
+  height: auto;
+  /* Maintain aspect ratio */
+  display: block;
+  /* Ensure it's treated as a block element */
 }
 
 .icon-img:hover {
-  transform: scale(1.15); /* Slightly enlarge on hover */
+  transform: scale(1.15);
+  /* Slightly enlarge on hover */
 }
 
-.grid-item > * {
+.tooltip {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  display: inline-block;
+}
+
+.tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 0px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #007bff;
+  color: #fff;
+  padding: 6px 10px;
+  font-size: 12px;
+  border-radius: 4px;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.tooltip:hover::after {
+  opacity: 1;
+}
+
+.icon-wrapper {
+  position: relative;
+  width: 30px;
+  height: 30px;
+}
+
+.icon-wrapper img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.grid-item>* {
   overflow: hidden;
   /* Prevent overflow in child elements */
   flex-grow: 1;
@@ -429,6 +481,7 @@ button:hover {
 .grid-item.yellow::after {
   background-color: #ffc757;
 }
+
 .grid-item.orange::after {
   background-color: #ff8565;
 }
@@ -560,6 +613,7 @@ button:hover {
   padding: 10px;
   border-bottom: 1px solid #ddd;
 }
+
 .label {
   color: #102b46;
   font-weight: normal;
@@ -816,6 +870,7 @@ th {
   width: 20px;
   height: 20px;
 }
+
 .question-list {
   list-style-type: none;
   padding: 0;
