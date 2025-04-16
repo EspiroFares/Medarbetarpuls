@@ -127,17 +127,23 @@ def add_employee_view(request):
         editGroup = request.POST.get("edit_employee")
         editName = request.POST.get("new_employee_group")
         editUserMail = request.POST.get("employee")
-        if editGroup == "true":
-            org = user.admin
-            if models.EmployeeGroup.objects.filter(name=editName).exists():
-                group = models.EmployeeGroup.objects.get(name=editName)
-            else:
-                # create new employee group
-                group = models.EmployeeGroup(name=editName, organization=org)
-                group.save()
-            editUser = models.CustomUser.objects.get(email=editUserMail)
-            editUser.employee_groups.add(group)
-            user.survey_groups.add(group)
+        if(editGroup == "true"):
+            if models.EmailList.objects.filter(email=editUserMail).exists():
+                org = user.admin
+                if models.EmployeeGroup.objects.filter(name=editName).exists():
+                        group = models.EmployeeGroup.objects.get(name=editName)
+                else:
+                    #create new employee group
+                    group = models.EmployeeGroup(name=editName, organization=org)
+                    group.save()
+                editUser = models.CustomUser.objects.get(email=editUserMail)
+                editUser.employee_groups.add(group)
+                user.survey_groups.add(group)
+                return HttpResponse("Successful", status=200)
+
+            else: 
+                logger.warning("User does not exist")
+                return HttpResponse("Användaren finns inte", status=400)
         elif user.user_role == models.UserRole.ADMIN and hasattr(user, "admin"):
             org = user.admin
 
@@ -272,10 +278,9 @@ def authentication_acc_view(request):
         expected_code = cache.get(f"verify_code_{email}")
 
         if str(auth_code) == str(expected_code):
-            data = request.session.get("user_data")
-            name = data["name"]
-            password = data["password"]
-            from_settings = data["from_settings"]
+            data = request.session.get('user_data')
+            name=data['name']
+            password=data['password']
 
             # Delete everything saved in session and cache - data not needed anymore
             del request.session["user_data"]
@@ -283,9 +288,7 @@ def authentication_acc_view(request):
             cache.delete(f"verify_code_{email}")
 
             existing_user = models.CustomUser.objects.filter(email=email).first()
-            if (
-                existing_user and existing_user.is_active == False
-            ):  # and coming from settings page
+            if existing_user and existing_user.is_active == False:
                 # Should they be able to reset name and password???
                 org = find_organization_by_email(email)
                 if org is None:
@@ -804,6 +807,15 @@ def my_org_view(request):
             print("removing ", employee_to_remove)
             employee_to_remove.is_active = False
             employee_to_remove.save()
+            # Get all employee_groups for this employee
+            all_groups = employee_to_remove.employee_groups.all()
+            # Remove all other groups except "Alla"
+            group_to_keep = models.EmployeeGroup.objects.get(name="Alla")
+            for group in all_groups:
+                if group != group_to_keep:
+                    employee_to_remove.employee_groups.remove(group)
+                    
+            employee_to_remove.save()               
             models.EmailList.objects.filter(email=employee_to_remove.email).delete()
         return redirect("my_org")
     # Retrieve all employee groups associated with this organization

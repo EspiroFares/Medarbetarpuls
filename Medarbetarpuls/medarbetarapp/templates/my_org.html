@@ -123,9 +123,8 @@
         <form
           class="edit-pass-form"
           hx-post="/add-employee/"
-          hx-target="#content"
           hx-trigger="submit"
-          hx-swap="outerHTML"
+          hx-swap="none"
         >
           <span class="close-button" onclick="closeEditUser()">&times;</span>
           {% csrf_token %}
@@ -153,10 +152,9 @@
             id="edit_employee"
             value="true"
           />
-
+          <div id="popup-error" style="color: red; margin-top: 10px;"></div>
           <button
             type="submit"
-            onclick="setTimeout(() => location.reload(), 500);"
             class="delete-button"
           >
             Lägg till
@@ -181,5 +179,25 @@
     function closeConfirmDelete() {
       document.getElementById("delete-employee-popup").style.display = "none";
     }
+    // ERROR HANDLING
+    document.body.addEventListener("htmx:afterRequest", function (event) {
+    const popup = document.getElementById("edit-user-popup");
+    const errorBox = document.getElementById("popup-error");
+
+    //if (!popup || !errorBox) return;
+
+    if (event.detail.xhr.status === 200) {
+      // if success reload the page after a short delay
+      setTimeout(function() {
+        location.reload();
+      }, 200);
+    }else if (!event.detail.xhr.ok) {
+      // if error show returned message or "Fel"
+      const message = event.detail.xhr.responseText || "Fel";
+      popup.classList.remove("hidden");
+      errorBox.textContent = message;
+      errorBox.style.display = "block";
+    } 
+    });
   </script>
 </html>
