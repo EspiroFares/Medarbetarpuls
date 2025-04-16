@@ -1,0 +1,98 @@
+<html lang="sv">
+  <head>
+    {% load static %}
+    <script src="https://unpkg.com/htmx.org@1.8.4"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Medarbetarpuls - Surveys</title>
+    <link rel="stylesheet" href="{% static 'styles.css' %}" />
+  </head>
+  <body>
+    {% include "topbar.html" with pagetitle=pagetitle %}
+    <div class="start-container">
+      <div class="pagetitle">
+        <h2>Du har publicerat {{ published_count }} enkäter</h2>
+      </div>
+      <div class="grid-container">
+            {% for survey in published_surveys.all %}
+                <!-- prettier-ignore -->
+                {% if survey.deadline > current_time %}
+                    <a href="{% url 'survey_result' survey.id %}" class="grid-item yellow">
+                {% else %}
+                    <a href="{% url 'survey_result' survey.id %}" class="grid-item green">
+                {% endif %}
+                        <!-- Date -->
+                        <div>
+                            Pågår till: {{ survey.deadline }}
+                        </div>
+                        <!-- Anonymous and results present -->
+                        <div>
+                        {% if survey.is_viewable %}
+                            <span class="tooltip" data-tooltip="Svar preseneras till medarbetare efter att enkäten är avslutad">
+                                <div class="icon-wrapper">
+                                <img src="{% static 'images/is-viewable.png' %}" />
+                                </div>
+                            </span>
+                        {% else %}
+                            <span class="tooltip" data-tooltip="Svar presenteras inte till medarbetare efter att enkäten är avslutad">
+                                <div class="icon-wrapper">
+                                <img src="{% static 'images/is-not-viewable.png' %}" />
+                                </div>
+                            </span>
+                        {% endif %}
+
+                        {% if survey.is_anonymous %}
+                            <span class="tooltip" data-tooltip="Samtliga svar är anonymiserade">
+                                <div class="icon-wrapper">
+                                <img src="{% static 'images/is-anonymous.png' %}" />
+                                </div>
+                            </span>
+                        {% else %}
+                            <span class="tooltip" data-tooltip="Svar är inte anonymiserade">
+                                <div class="icon-wrapper">
+                                <img src="{% static 'images/is-not-anonymous.png' %}" />
+                                </div>
+                            </span>
+                        {% endif %}
+                        </div>
+                        <!-- Title -->
+                        <div>
+                            {{ survey.name }}
+                        </div>
+                        <!-- Responders -->
+                        <div>
+                            <p>
+                                Skickad till: 
+                                {% for employee_group in survey.employee_groups.all %}
+                                <!-- prettier-ignore -->
+                                {{ employee_group.name }} 
+                                {% endfor %}
+                            </p>
+                            {% if survey.deadline > current_time %}
+                              {{survey.collected_answer_count}}/{{ survey.published_count }} har
+                              svarat hittils
+                                
+                            {% else %}
+                              {{survey.collected_answer_count}}/{{ survey.published_count }} svarade
+                            {% endif %}
+                        </div>
+                        <!-- See result -->
+                        <div>
+                            {% if survey.deadline > current_time %}
+                                
+                            {% else %}
+                                <button
+                                class="view-survey-button"
+                                onclick="window.location.href='{% url 'survey_result' 
+                                        survey.id %}'">
+                                Se resultat
+                                </button>
+                            {% endif %}
+                        </div>
+                    </a>
+            {% endfor %}
+      </div>
+    </div>
+  </body>
+</html>
+

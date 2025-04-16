@@ -178,8 +178,10 @@ class Survey(models.Model):
     deadline = models.DateTimeField()  # stores both date and time (e.g., YYYY-MM-DD HH:MM:SS)
     sending_date = models.DateTimeField()  # stores both date and time (e.g., YYYY-MM-DD HH:MM:SS)
     collected_answer_count = models.IntegerField(default=0)  # pyright: ignore 
-    is_viewable = models.BooleanField(default=False)  # pyright: ignore
-    
+    published_count = models.IntegerField(default=0)  # pyright: ignore 
+    is_viewable = models.BooleanField(default=True)  # pyright: ignore
+    is_anonymous = models.BooleanField(default=True)  # pyright: ignore
+
     def __str__(self) -> str:
         return f"{self.name} ({self.creator})"
 
@@ -189,12 +191,18 @@ class Survey(models.Model):
         employee groups linked to this survey
         """
         seen_employees = set()
+        count: int = 0
 
         for group in self.employee_groups.all():
             for employee in group.employees.all():
                 if employee.id not in seen_employees:
                     SurveyResult.objects.create(published_survey=self, user=employee)
                     seen_employees.add(employee)
+                    count += 1
+
+        # Saves the amount of users this survey has been sent to  
+        self.published_count = count
+        self.save()
 
         # Send email to notify 
         send_mail(

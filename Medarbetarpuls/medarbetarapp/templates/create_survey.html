@@ -91,11 +91,17 @@
           <!-- Checkbox Options -->
           <div class="checkbox-group">
             <label>
-              <input type="checkbox" name="privacy" value="anonymous" />
+              <input
+                type="checkbox"
+                name="privacy"
+                value="anonymous"
+                checked
+                disabled
+              />
               Anonyma svar
             </label>
             <label>
-              <input type="checkbox" name="privacy" value="public" />
+              <input type="checkbox" name="privacy" value="public" checked />
               Publicera resultat för svarande
             </label>
           </div>
@@ -137,12 +143,19 @@
                 type="date"
                 class="date-input"
                 name="publish-date"
+                id="publish-date"
                 required
               />
             </div>
             <div>
               <label>Sista svarsdatum:</label>
-              <input type="date" class="date-input" name="end-date" required />
+              <input
+                type="date"
+                class="date-input"
+                id="end-date"
+                name="end-date"
+                required
+              />
             </div>
           </div>
 
@@ -203,6 +216,21 @@
           openPopup();
         }
       });
+
+      // Get today's date
+      const today = new Date();
+
+      // Set default date to publish to today
+      const today_date = today.toISOString().split("T")[0];
+      document.getElementById("publish-date").value = today_date;
+
+      // Add 14 days
+      const twoWeeksFromNow = new Date();
+      twoWeeksFromNow.setDate(today.getDate() + 14);
+
+      // Set default end date to 2 weeks from today
+      const formatted = twoWeeksFromNow.toISOString().split("T")[0];
+      document.getElementById("end-date").value = formatted;
     </script>
   </body>
 </html>
