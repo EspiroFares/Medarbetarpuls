@@ -580,7 +580,8 @@ def publish_survey(request, survey_id: int) -> HttpResponse:
 
             # Privacy checkboxes (can have multiple selected)
             privacy_choices = request.POST.getlist('privacy')  # returns list like ['anonymous', 'public']
-            is_anonymous: bool = 'anonymous' in privacy_choices  
+            # is_anonymous: bool = 'anonymous' in privacy_choices  
+            is_anonymous: bool = True
             is_public: bool = 'public' in privacy_choices       
 
             # Survey name
@@ -635,7 +636,7 @@ def publish_survey(request, survey_id: int) -> HttpResponse:
                 )
 
             # Create a Survey to be send to employess
-            survey: models.Survey = models.Survey(name=survey_name, creator=user, deadline=deadline, sending_date=sending_date, is_viewable=is_public) 
+            survey: models.Survey = models.Survey(name=survey_name, creator=user, deadline=deadline, sending_date=sending_date, is_viewable=is_public, is_anonymous=is_anonymous) 
             survey.save()
             survey.employee_groups.add(employee_group)
             survey.save()
@@ -1038,7 +1039,13 @@ def survey_result_view(request, survey_id):
 
 @login_required
 def survey_status_view(request):
-    return render(request, "survey_status.html")
+    user = request.user
+    published_count = user.published_surveys.count()
+
+    # Order the surveys by deadline date (old before young)
+    published_surveys_ordered = user.published_surveys.all().order_by('-deadline')
+
+    return render(request, "survey_status.html", {"published_surveys": published_surveys_ordered, "current_time": timezone.now(), "published_count": published_count})
 
 
 @login_required
