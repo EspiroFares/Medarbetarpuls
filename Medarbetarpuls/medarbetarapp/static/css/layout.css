@@ -1,0 +1,337 @@
+/*
+ * layout.css
+ * 
+ * This file contains layout styles that manage the overall structure
+ * and positioning of elements within the project. It includes styles
+ * for grid systems, flexbox layouts, and any other layout-related
+ * rules. 
+ */
+
+@import url('variables.css');
+
+.create-container {
+    background-color: var(--white);
+    /* white; */
+    width: 100%;
+    max-width: 550px;
+    padding: 30px;
+    border-radius: 10px;
+    text-align: center;
+    margin-top: 100px;
+}
+
+.unanswered-survey-container {
+    max-width: 1200px;
+    justify-content: center;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.start-container {
+    max-width: 1000px;
+    width: 100%;
+    height: auto;
+    justify-content: center;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    top: 200px;
+    margin-top: 200px;
+}
+
+.start-container .search-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 0px;
+    gap: 0px;
+    margin-bottom: -20px;
+    width: 500px;
+}
+
+.start-container .search-bar {
+    width: 50%;
+    padding: 10px 20px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 500px;
+}
+
+.start-container .search-button {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.grid-container {
+    display: flex;
+    width: 100%;
+    max-width: 1000px;
+    margin-top: 5%;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+    padding: 20px;
+    max-height: 80vh; 
+}
+
+/* Items within the grid dose not scale at the moment */
+.grid-item {
+    position: relative;
+    width: calc((100% / 3) - 40px);
+    min-width: 220px;
+    max-width: 300px;
+    aspect-ratio: 1 / 1;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+    text-decoration: none;
+    color: #333;
+    transition: transform 0.2s;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: center;
+    /* Limit the height */
+    overflow-y: auto;
+    /* Enable vertical scrolling */
+    overflow-x: hidden;
+    /* Prevent horizontal scrolling */
+}
+
+.grid-item::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 4px;
+    background-color: #ffffff;
+    z-index: 1;
+}
+  
+.grid-item.result {
+    min-width: 250px;
+}
+
+/* Add specific classes for different colors */
+.grid-item.pink::after {
+    background-color: #ff77a1;
+}
+
+.grid-item.lightblue::after {
+    background-color: #8bbdf8;
+}
+
+.grid-item.blue::after {
+    background-color: #3e82d8;
+}
+
+.grid-item.green::after {
+    background-color: #7ed23e;
+}
+
+.grid-item.yellow::after {
+    background-color: #ffc757;
+}
+
+.grid-item.orange::after {
+    background-color: #ff8565;
+}
+
+.grid-item:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.grid-icon {
+    display: flex;
+    /* Use flexbox for centering */
+    justify-content: center;
+    /* Center the icon */
+    align-items: center;
+    /* Center vertically */
+    flex: 1;
+    /* Allow icons to grow equally */
+    max-width: 50px;
+    /* Set a max width for icons */
+}
+
+.question-title {
+    display: flex;
+    /* Enable flexbox */
+    justify-content: center;
+    /* Center the items in the flex container */
+    align-items: center;
+    position: relative;
+    top: -5px;
+    /* Compensate for padding */
+    height: 50px;
+    width: 100%;
+    /* Make it full width */
+    text-align: center;
+    /* Center the text */
+}
+
+.question-background {
+    position: flex;
+    min-height: 70px;
+    background-color: #eef5fe;
+    /* Change this to your desired blue color */
+    width: 100%;
+    /* Make it full width */
+    text-align: center;
+    /* Center the text */
+    padding: 10px;
+}
+
+.question-result {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 5px;
+    font-weight: bold;
+    gap: 20px;
+}
+
+.settings-container {
+    text-align: center;
+    padding: 30px;
+    border-radius: 10px;
+    background-color: white;
+    margin-top: 100px;
+}
+
+.info-table {
+    width: 300px;
+    margin: 0 auto;
+    border-radius: 5px;
+    border: 1px solid #e8ebf1;
+    background-color: white;
+    margin-bottom: 20px;
+} 
+
+.table-header {
+    background-color: #e8ebf1;
+    padding: 10px;
+    font-weight: bold;
+    text-align: left;
+}
+
+.table-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+.popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    /* Alpha: 0.4 = 40% opacity */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    /* Sets the stacking order, higher numbers mean closer to the user */
+}
+
+.popup-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    width: 400px;
+    position: relative;
+    /* So the close button can be positioned relative to this */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.popup-content.messages {
+    width: 300px; /* Make this smaller than for example publish survey popup */
+    padding: 25px;
+}
+
+.tag-container,
+.reminder-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 10px 0;
+}
+
+.table-container {
+    max-width: 600px;
+    margin: 0 auto;
+    border-radius: 10px;
+    overflow-y: auto;
+    max-height: 300px;
+    border: 1px solid #ddd;
+}
+
+.analysis-container {
+    background-color: #eeeeee;
+    width: 100%;
+    max-width: 800px;
+    padding: 30px;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.graph-container {
+    width: 25%;
+    height: 25%;
+}
+
+.topbar {
+    overflow: hidden;
+    background-color: var(--white);
+    position: fixed;
+    top: 40px;
+    display: flex;
+    height: 60;
+    z-index: 2;
+    justify-content: space-between;
+}
+
+.sidepanel {
+    width: 30%;
+    position: fixed;
+    z-index: 2;
+    height: 55%;
+    top: 0;
+    right: 0;
+    border-radius: 30px;
+    background-color: var(--soft_blue);
+    padding-top: 5%;
+    padding-bottom: 5%;
+    overflow-x: hidden;
+    transition: 0.5s;
+    visibility: hidden;
+    transform: translateX(100%);
+    display: block;
+}
+
+.menu {
+    background: var(--blue);
+    color: var(--white);
+    display: block;
+    position: fixed;
+    right: 1%;
+    top: 1%;
+    border-radius: 50%;
+    z-index: 3;
+}

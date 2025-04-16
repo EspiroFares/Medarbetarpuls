@@ -1,0 +1,144 @@
+/*
+ * components.css
+ * 
+ * This file contains styles for reusable UI components within the project,
+ * such as buttons, cards, modals, and navigation elements.
+ */
+
+.create-form button {
+    background-color: var(--blue);
+    /* #4e8ce1; */
+    color: var(--white);
+    /* white; */
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 5%;
+}
+
+.create-form button:hover {
+    background-color: var(--soft_blue);
+    /* #a3cbff; */
+}
+
+.title-background .title-back-button {
+    position: absolute;
+    /* Position button absolutely */
+    left: 10px;
+    /* Adjust as needed for spacing from the left */
+    margin-top: 0;
+}
+
+.question-title .question-remove-button {
+    position: absolute;
+    /* Position button absolutely */
+    right: 5px;
+    /* Adjust as needed for spacing from the left */
+    background-color: #f95e5e;
+    padding: 5px 10px;
+    border-radius: 10px;
+    font-size: 10px auto;
+    margin-top: 0;
+}
+
+.question-title .question-remove-button:hover {
+    scale: 1.07;
+    background-color: #ff2828;
+}
+
+.delete-button {
+    margin-top: 5%;
+    background-color: #f95e5e;
+}
+
+.delete-button:hover {
+    background-color: #f98b8b;
+}
+
+.popup-buttons {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.close-button {
+    /* Can be used as X-button to close popups */
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    font-size: 20px;
+    cursor: pointer;
+    color: #102b46;
+}
+  
+.close-button:hover {
+    color: #ff4b4b;
+}
+
+.trashcan-button {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+}
+
+.trashcan-button:hover {
+    background-color: transparent;
+    /* Prevent blue background */
+    outline: none;
+    /* Remove focus outline */
+}
+
+.trashcan-button:focus {
+    outline: none;
+    /* Prevent focus outline */
+}
+
+.search-container button {
+    padding: 8px 12px;
+    border-radius: 20px;
+    margin-top: 0;
+}
+
+.add-button {
+    /* big + button when creating a survey */
+    width: 60px;
+    height: 120px;
+    background-color: #f0f0f0;
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: -20%;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    /* Subtle shadow */
+}
+
+.add-button-link {
+    margin-top: 10%;
+    text-decoration: none;
+    /* Remove underline */
+    display: inline-block;
+    /* Make it behave like a block element */
+}
+
+.add-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.add-button span {
+    font-size: 32px;
+    color: #7a7a7a;
+    /* Grey color for the plus symbol */
+}
+
+.logout-button {
+    top: 85%;
+    right: 2%;
+    position: fixed;
+    width: 5%;
+}
