@@ -31,8 +31,8 @@ class AnalysisHandler:
         return Survey.objects.get(id=survey_id)
 
     def get_survey_result(self, survey):
-        """Retrieve a specific SurveyUserResult."""
-        return SurveyUserResult.objects.filter(published_survey=survey)
+        """Retrieve a specific SurveyResult."""
+        return SurveyResult.objects.filter(published_survey=survey)
 
     def get_question(self, question_txt: str) -> Question:
         """Fetch the question object by text. Assumes there is only one question phrased the same way."""
