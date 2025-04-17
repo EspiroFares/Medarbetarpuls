@@ -53,9 +53,26 @@
     width: 100%;
     max-width: 550px;
     padding: 30px;
+    flex-direction: column;
     border-radius: 10px;
     text-align: center;
     margin-top: 100px;
+}
+
+.my-org-container {
+    background-color: var(--white);
+    /* white; */
+    width: 100%;
+    max-width: 550px;
+    padding: 30px;
+    flex-direction: column;
+    border-radius: 10px;
+    text-align: center;
+    margin-top: 10px;
+}
+
+.my-org-container .search-container {
+    margin-bottom: 10px;
 }
 
 .login-container {
@@ -67,7 +84,6 @@
     padding: 20px;
     border-radius: 10px;
 }
-
 
 .title-background {
     display: flex;
@@ -102,8 +118,8 @@
 .grid-item {
     position: relative;
     width: calc((100% / 3) - 40px);
-    min-width: 220px;
-    max-width: 300px;
+    min-height: 220px;
+    max-height: 300px;
     aspect-ratio: 1 / 1;
     background-color: white;
     border: 1px solid #ddd;
@@ -287,6 +303,7 @@
 }
 
 .table-container {
+    display: flex;
     max-width: 600px;
     margin: 0 auto;
     border-radius: 10px;
@@ -311,9 +328,9 @@
 
 .topbar {
     display: flex;  
+    justify-content: center;
     height: 100px;
     z-index: 2;
-    justify-content: space-between;
 }
 
 .sidepanel {

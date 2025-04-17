@@ -11,111 +11,114 @@
   </head>
   <body>
     <div class="main-container">
-      {% include "topbar.html" with pagetitle=pagetitle %}
-      <h1>{{ organization.name }}</h1>
+      {% include "topbar.html" with pagetitle="Min organisation" %}
+      <div class="my-org-container">
+        <h1>{{ organization.name }}</h1>
 
-      <!-- Form för att trigga sökning via HTMX -->
-      <form
-        id="searchForm"
-        hx-get="{% url 'my_org' %}"
-        hx-target="#employeeTable"
-        hx-trigger="keyup changed delay:500ms"
-        class="search-container"
-      >
-        {% csrf_token %}
-        <input
-          type="text"
-          name="search"
-          placeholder="Sök..."
-          value="{{ search_query }}"
-        />
-        <button type="submit">Sök</button>
-      </form>
+        <div class="search-container">
+        <!-- Form för att trigga sökning via HTMX -->
+          <form
+            id="searchForm"
+            hx-get="{% url 'my_org' %}"
+            hx-target="#employeeTable"
+            hx-trigger="keyup changed delay:500ms"
+            class="search-container"
+          >
+            {% csrf_token %}
+            <input
+              type="text"
+              name="search"
+              placeholder="Sök..."
+              value="{{ search_query }}"
+            />
+            <button type="submit">Sök</button>
+          </form>
+        </div>
+        <!-- Employee table -->
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Namn</th>
+                <th>Mejladress</th>
+                <th>Grupp</th>
+                <th></th>
+                <th></th>
+                <!-- Empty column for removal symbol -->
+              </tr>
+            </thead>
+            <tbody id="employeeTable">
+              {% for employee in employees %} {% if employee.is_active %}
+              <tr>
+                <td>{{ employee.name }}</td>
+                <td>{{ employee.email }}</td>
+                <td>
+                  {% for group in employee.employee_groups.all %} {{ group.name}}{% if not forloop.last %}, {% endif %} {% endfor %}
+                </td>
 
-      <!-- Employee table -->
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>Namn</th>
-              <th>Mejladress</th>
-              <th>Grupp</th>
-              <th></th>
-              <th></th>
-              <!-- Empty column for removal symbol -->
-            </tr>
-          </thead>
-          <tbody id="employeeTable">
-            {% for employee in employees %} {% if employee.is_active %}
-            <tr>
-              <td>{{ employee.name }}</td>
-              <td>{{ employee.email }}</td>
-              <td>
-                {% for group in employee.employee_groups.all %} {{ group.name}}{% if not forloop.last %}, {% endif %} {% endfor %}
-              </td>
-
-              <td>
-                <!-- Delete employee popup -->
-                <div
-                  id="delete-employee-popup"
-                  class="popup-overlay"
-                  style="display: none"
-                >
-                  <div id="content" class="popup-content messages">
-                    <h3>
-                      Är du säker på att du vill ta bort den här medarbetaren?
-                    </h3>
-                    <p>
-                      Kontot kommer att raderas, och om personen vill återvända
-                      till organisationen måste du bjuda in hen på nytt.
-                    </p>
-                    <button type="button" onclick="closeConfirmDelete()">
-                      Avbryt
-                    </button>
-                    <form
-                      action="{% url 'my_org' %}"
-                      method="POST"
-                      style="display: inline"
-                    >
-                      {% csrf_token %}
-                      <input
-                        type="hidden"
-                        name="user_id"
-                        value="{{ employee.id }}"
-                      />
-                      <button type="submit" class="delete-button">
-                        Ta bort medarbetaren
-                      </button>
-                    </form>
-                  </div>
-                </div>
-                <button onclick="openConfirmDelete()" class="trashcan-button">
-                  <img
-                    src="{% static 'images/trashcan.png' %}"
-                    alt="Delete"
-                    class="icon"
-                  />
-                </button>
-              </td>
-              <td>
-                <div class="value">
-                  <a href="#" onclick="openEditUser()">
-                    <span class="edit-icon">✏️</span></a
+                <td>
+                  <!-- Delete employee popup -->
+                  <div
+                    id="delete-employee-popup"
+                    class="popup-overlay"
+                    style="display: none"
                   >
-                </div>
-              </td>
-                
+                    <div id="content" class="popup-content messages">
+                      <h3>
+                        Är du säker på att du vill ta bort den här medarbetaren?
+                      </h3>
+                      <p>
+                        Kontot kommer att raderas, och om personen vill återvända
+                        till organisationen måste du bjuda in hen på nytt.
+                      </p>
+                      <button type="button" onclick="closeConfirmDelete()">
+                        Avbryt
+                      </button>
+                      <form
+                        action="{% url 'my_org' %}"
+                        method="POST"
+                        style="display: inline"
+                      >
+                        {% csrf_token %}
+                        <input
+                          type="hidden"
+                          name="user_id"
+                          value="{{ employee.id }}"
+                        />
+                        <button type="submit" class="delete-button">
+                          Ta bort medarbetaren
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                  <button onclick="openConfirmDelete()" class="trashcan-button">
+                    <img
+                      src="{% static 'images/trashcan.png' %}"
+                      alt="Delete"
+                      class="icon"
+                    />
+                  </button>
+                </td>
+                <td>
+                  <div class="value">
+                    <a href="#" onclick="openEditUser()">
+                      <span class="edit-icon">✏️</span></a
+                    >
+                  </div>
+                </td>
+                  
 
-                {% endif %}
-              
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+                  {% endif %}
+                
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <a href="{% url 'add_employee' %}">
+          <button class="button">Lägg till medarbetare</button>
+        </a>
       </div>
-      <a href="{% url 'add_employee' %}">
-        <button class="button">Lägg till medarbetare</button>
-      </a>
     </div>
     <!-- Edit user Popup -->
     <div id="edit-user-popup" class="popup-overlay" style="display: none">
