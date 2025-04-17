@@ -3,7 +3,6 @@ import platform
 from . import models
 from django.db.models import Q
 from collections import Counter
-from .models import SurveyResult
 from django.utils import timezone
 from django.db.models import Count
 from django.core.cache import cache
@@ -185,7 +184,7 @@ def answer_survey_view(request, survey_result_id, question_index=0):
     Returns:
         HttpResponse: Renders the current question or redirects after completion.
     """
-    survey_result = get_object_or_404(SurveyResult, pk=survey_result_id, user=request.user)
+    survey_result = get_object_or_404(SurveyUserResult, pk=survey_result_id, user=request.user)
     questions = survey_result.published_survey.questions.all()
 
     if question_index >= len(questions):
