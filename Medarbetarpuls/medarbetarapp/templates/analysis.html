@@ -12,73 +12,36 @@
   <body>
     <div class="main-container">
       {% include "topbar.html" with pagetitle="Analys"%}
-      <div class="grid-container">
-        <div class="grid-item">
+      <div class="analysis-title">
+        <div class="filter-container">
+          Filter:
+        </div>
+        <div class="time-period-container">
+          Time period
+        </div>
+      </div>
+
+      <div class="analysis-container">
+        <div class="analysis-item ratio-3-1">
+          <h2>eNPS-värde</h2>
           <div class="graph-container">
-            <canvas id="surveyChart"></canvas>
+            <canvas id="enpsChart"></canvas>
           </div>
         </div>
 
-        <div class="grid-item">
+        <div class="analysis-item ratio-1-1">
+          <p>eNPS-värde</p>
+          <div class="graph-container">
+            <canvas id="enpsChart"></canvas>
+          </div>
+        </div>
+        <div class="analysis-item ratio-2-1">
           <h2>eNPS-värde</h2>
           <div class="graph-container">
             <canvas id="enpsChart"></canvas>
           </div>
         </div>
-        <div class="grid-item">
-          <h2>eNPS-värde</h2>
-          <div class="graph-container">
-            <canvas id="enpsChart"></canvas>
-          </div>
-        </div>
-        <div class="grid-item">
-          <h2>eNPS-värde</h2>
-          <div class="graph-container">
-            <canvas id="enpsChart"></canvas>
-          </div>
-        </div>
-        <div class="grid-item">
-          <h2>eNPS-värde</h2>
-          <div class="graph-container">
-            <canvas id="enpsChart"></canvas>
-          </div>
-        </div>
-        <div class="grid-item">
-          <h2>eNPS-värde</h2>
-          <div class="graph-container">
-            <canvas id="enpsChart"></canvas>
-          </div>
-        </div>
-        <div class="grid-item">
-          <h2>eNPS-värde</h2>
-          <div class="graph-container">
-            <canvas id="enpsChart"></canvas>
-          </div>
-        </div>
-        <div class="grid-item">
-          <h2>eNPS-värde</h2>
-          <div class="graph-container">
-            <canvas id="enpsChart"></canvas>
-          </div>
-        </div>
-        <div class="grid-item">
-          <h2>eNPS-värde</h2>
-          <div class="graph-container">
-            <canvas id="enpsChart"></canvas>
-          </div>
-        </div>
-        <div class="grid-item">
-          <h2>eNPS-värde</h2>
-          <div class="graph-container">
-            <canvas id="enpsChart"></canvas>
-          </div>
-        </div>
-        <div class="grid-item">
-          <h2>eNPS-värde</h2>
-          <div class="graph-container">
-            <canvas id="enpsChart"></canvas>
-          </div>
-        </div>
+      </div>
 
     </div>
 

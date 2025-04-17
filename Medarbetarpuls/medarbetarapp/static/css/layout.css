@@ -312,18 +312,94 @@
     border: 1px solid #ddd;
 }
 
-.analysis-container {
-    background-color: #eeeeee;
+.analysis-title {
+    display: flex;
+    /* Enable flexbox */
+    justify-content: space-evenly;
+    /* Center the items in the flex container */
+    align-items: center;
+    /* Center items vertically */
+    position: relative;
+    /* Allow absolute positioning if needed */
     width: 100%;
-    max-width: 800px;
-    padding: 30px;
-    border-radius: 10px;
+    max-width: 960px;
+    padding: 10px;
+    /* Make it full width */
+    background-color: #e8ebf1;
+    /* Optional: background color */
+}
+
+.analysis-title .filter-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.analysis-title .period-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.analysis-container {
+    display: flex;
+    width: 100%;
+    max-width: 1000px;
+    min-width: 760px;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    padding: 10px;
+    margin-top: 10px;
+}
+
+.analysis-item {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    max-height: 300px;
+    min-height: 220px;
+    aspect-ratio: 1 / 1;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px;
     text-align: center;
+    text-decoration: none;
+    color: #333;
+    transition: transform 0.2s;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+.analysis-item.ratio-1-1 {
+    width: calc((100% / 3) - 40px);
+    aspect-ratio: 1 / 1;
+    min-width: 220px;
+    background-color: #7ed23e;
+}
+
+.analysis-item.ratio-2-1 {
+    width: calc((100% / 3)*2 - 40px);
+    aspect-ratio: 2 / 1;
+    min-width: 470px;
+    background-color: #ffc757;
+}
+
+.analysis-item.ratio-3-1 {
+    width: calc(100% - 50px);
+    aspect-ratio: 3 / 1;
+    min-width: 0px;
+    background-color: aqua;
 }
 
 .graph-container {
-    width: 25%;
-    height: 25%;
+    width: 90%;
+    height: 90%;
 }
 
 .topbar {
