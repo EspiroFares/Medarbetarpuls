@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="{% static 'css/main.css' %}" />
   </head>
   <body>
-    <div class="create-container">
+    <div class="main-container">
       <form method="POST">
         {% csrf_token %}
         <h2>{{ question.question }}</h2>

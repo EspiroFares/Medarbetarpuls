@@ -8,9 +8,9 @@
     <link rel="stylesheet" href="{% static 'css/main.css' %}" />
   </head>
   <body>
-    {% include "topbar.html"%}
     {% if request.path == '/survey-result/420/' %}
-    <div class="start-container">
+    <div class="main-container">
+        {% include "topbar.html" %}
 
         <h1><center><i>This is a testing page</i></center></h1>
         <p></p>
@@ -61,7 +61,7 @@
     {% else %}
 
         {% if survey_result %}
-            <div class="start-container">
+            <div class="main-container">
 
                 <h1><center><i>This is a testing page</i></center></h1>
                 <p></p>
