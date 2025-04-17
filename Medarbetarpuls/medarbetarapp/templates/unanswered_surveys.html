@@ -8,8 +8,8 @@
     <link rel="stylesheet" href="{% static 'css/main.css' %}" />
   </head>
   <body>
-    {% include "topbar.html" with pagetitle=pagetitle %}
-    <div class="start-container">
+    <div class="main-container">
+      {% include "topbar.html" with pagetitle=pagetitle %}
       <div class="pagetitle">
         <h2>Du har {{ unanswered_count }} obesvarade enkäter</h2>
       </div>

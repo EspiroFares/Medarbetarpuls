@@ -9,28 +9,7 @@
 
 @import url('variables.css');
 
-.create-container {
-    background-color: var(--white);
-    /* white; */
-    width: 100%;
-    max-width: 550px;
-    padding: 30px;
-    border-radius: 10px;
-    text-align: center;
-    margin-top: 100px;
-}
-
-.unanswered-survey-container {
-    max-width: 1200px;
-    justify-content: center;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.start-container {
-    max-width: 1000px;
+.main-container {
     width: 100%;
     height: auto;
     justify-content: center;
@@ -38,11 +17,10 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    top: 200px;
-    margin-top: 200px;
+    overflow-y: auto;
 }
 
-.start-container .search-container {
+.main-container .search-container {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -52,7 +30,7 @@
     width: 500px;
 }
 
-.start-container .search-bar {
+.main-container .search-bar {
     width: 50%;
     padding: 10px 20px;
     font-size: 16px;
@@ -60,26 +38,42 @@
     border-radius: 500px;
 }
 
-.start-container .search-button {
+.main-container .search-button {
     padding: 10px 20px;
     font-size: 16px;
-    background-color: #007bff;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
 }
 
+.title-background {
+    display: flex;
+    /* Enable flexbox */
+    justify-content: center;
+    /* Center the items in the flex container */
+    align-items: center;
+    /* Center items vertically */
+    position: relative;
+    /* Allow absolute positioning if needed */
+    width: 85%;
+    max-width: 1000px;
+    /* Make it full width */
+    background-color: #e8ebf1;
+    /* Optional: background color */
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
 .grid-container {
     display: flex;
-    width: 100%;
+    width: 90%;
     max-width: 1000px;
-    margin-top: 5%;
     flex-wrap: wrap;
     justify-content: center;
     gap: 20px;
     padding: 20px;
-    max-height: 80vh; 
+    margin-top: 10px;
 }
 
 /* Items within the grid dose not scale at the moment */
@@ -102,10 +96,7 @@
     justify-content: space-evenly;
     align-items: center;
     /* Limit the height */
-    overflow-y: auto;
-    /* Enable vertical scrolling */
-    overflow-x: hidden;
-    /* Prevent horizontal scrolling */
+    overflow: hidden;
 }
 
 .grid-item::after {
@@ -297,12 +288,8 @@
 }
 
 .topbar {
-    overflow: hidden;
-    background-color: var(--white);
-    position: fixed;
-    top: 40px;
-    display: flex;
-    height: 60;
+    display: flex;  
+    height: 100px;
     z-index: 2;
     justify-content: space-between;
 }

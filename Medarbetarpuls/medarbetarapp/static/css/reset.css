@@ -17,7 +17,7 @@ body {
     /* change later to PK font */
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: start;
     height: 100vh;
     /* Ensure the body takes full height */
     overflow: auto;

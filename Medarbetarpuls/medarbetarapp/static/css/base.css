@@ -110,24 +110,6 @@
     cursor: pointer;
 }
 
-.title-background {
-    display: flex;
-    /* Enable flexbox */
-    justify-content: center;
-    /* Center the items in the flex container */
-    align-items: center;
-    /* Center items vertically */
-    position: relative;
-    /* Allow absolute positioning if needed */
-    width: 100%;
-    /* Make it full width */
-    background-color: #e8ebf1;
-    /* Optional: background color */
-    min-height: auto;
-    padding: 15px;
-    margin-bottom: 20px;
-}
-
 .title-background h2 {
     flex: 1;
     /* Allow the heading to take up available space */
@@ -489,20 +471,10 @@
     margin-bottom: 1em;
 }
 
-.create-container h1 {
+.main-container h1 {
     /* h1 stands for main heading */
     margin-bottom: 12%;
     font-size: 28px;
     color: var(--blue);
     /* #4e8ce1; */
-}
-
-.create-container h2 {
-    /* h2 stands for first subheading after h1 */
-    margin-bottom: 12%;
-    font-weight: normal;
-    /* Heading automatically bold, wants normal */
-    font-size: 20px;
-    color: var(--dark_blue);
-    /* #102b46; */
 }
