@@ -321,7 +321,7 @@ def authentication_acc_view(request):
         else:
             logger.error("Wrong authentication code")
             return HttpResponse(status=400)
-
+    
     return render(request, "authentication_acc.html")
 
 
@@ -777,12 +777,17 @@ def login_view(request):
                 login(request, user)
                 if user.user_role == models.UserRole.ADMIN:
                     response = HttpResponse()
-                    response["HX-Redirect"] = "/start-creator/"
+                    response["HX-Redirect"] = "/start-admin/"
                     logger.debug("Admin %e successfully logged in.", email)
                     return response
-                else:  # implement check if user is creator or responder?
+                elif user.user_role == models.UserRole.SURVEY_RESPONDER: 
                     response = HttpResponse()
                     response["HX-Redirect"] = "/start-user/"
+                    logger.debug("User %e successfully logged in.", email)
+                    return response
+                else:
+                    response = HttpResponse()
+                    response["HX-Redirect"] = "/start-creator/"
                     logger.debug("User %e successfully logged in.", email)
                     return response
             else:
@@ -1193,6 +1198,12 @@ def settings_change_pass(request):
 def start_user_view(request):
     return render(
         request, "start_user.html", {"pagetitle": f"Välkommen<br>{request.user.name}"}
+    )
+
+@login_required
+def start_admin_view(request):
+    return render(
+        request, "start_admin.html", {"pagetitle": f"Välkommen<br>{request.user.name}"}
     )
 
 
