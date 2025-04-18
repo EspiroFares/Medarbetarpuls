@@ -15,7 +15,7 @@
         </div>
         <div class="grid-container">
             {% for survey in answered_surveys %}
-                {% if survey.published_survey.deadline <= current_time %} <!-- Check if sending_date exists -->
+                {% if survey.published_survey.deadline >= current_time %} <!-- Check if sending_date exists -->
                     <div class="grid-item green">
                     <p>Genomfördes: {{ survey.published_survey.sending_date }} 
                     - {{ survey.published_survey.deadline }}</p>

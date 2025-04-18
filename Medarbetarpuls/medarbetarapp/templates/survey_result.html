@@ -1,122 +1,73 @@
+{% load static %}
+<!DOCTYPE html>
 <html lang="sv">
   <head>
-    {% load static %}
-    <script src="https://unpkg.com/htmx.org@1.8.4"></script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://unpkg.com/htmx.org@1.8.4"></script>
     <title>Medarbetarpuls - Surveys</title>
     <link rel="stylesheet" href="{% static 'styles.css' %}" />
   </head>
   <body>
-    {% include "topbar.html"%} {% if request.path == '/survey-result/420/' %}
+    {% include "topbar.html" %}
+    
+    {% if request.path == '/survey-result/420/' %}
+    <!-- Static test version -->
     <div class="start-container">
-      <h1>
-        <center><i>This is a testing page</i></center>
-      </h1>
-      <p></p>
-
+    
       <h1>*Titel på enkät*</h1>
       <div class="title-background">
-        <button
-          class="title-back-button"
-          onclick="window.location.href='{% url 'my_results'%}'"
-        >
-          Tillbaka
-        </button>
+        <button class="title-back-button" onclick="window.location.href='{% url 'my_results' %}'">Tillbaka</button>
         <h2>Resultat</h2>
       </div>
-      <div class="grid-container">
-        <div class="grid-item result green">
-          <div class="question-title">
-            <h1>Fråga 1</h1>
-          </div>
-          <div class="question-background">
-            <p>
-              Här skriver vi en väldigt lång fråga som går över flera flera
-              rader
-            </p>
-          </div>
-          <div class="question-result">RESULTAT</div>
-        </div>
-        <div class="grid-item result green">
-          <div class="question-title">
-            <h1>Fråga 2</h1>
-          </div>
-          <div class="question-background">
-            <p>Kort fråga</p>
-          </div>
-          <div class="question-result">RESULTAT</div>
-        </div>
-        <div class="grid-item result green">
-          <div class="question-title">
-            <h1>Fråga 3</h1>
-          </div>
-          <div class="question-background">
-            <p>
-              Här skriver vi en väldigt lång fråga som går över flera flera
-              rader
-            </p>
-          </div>
-          <div class="question-result">RESULTAT</div>
-        </div>
-      </div>
-    </div>
 
-    {% else %} {% if survey %}
+ 
+
+    {% elif survey %}
+    <!-- Dynamic survey result view -->
     <div class="start-container">
-      <h1>
-        <center><i>This is a testing page</i></center>
-      </h1>
-      <p></p>
-
+   
       <h1>{{ survey.published_survey.name }}</h1>
       <div class="title-background">
-        <button
-          class="title-back-button"
-          onclick="window.location.href='{% url 'my_results'%}'"
-        >
-          Tillbaka
-        </button>
+        <button class="title-back-button" onclick="window.location.href='{% url 'my_results' %}'">Tillbaka</button>
         <h2>Resultat</h2>
       </div>
 
-      <!--Test-->
       <div class="grid-container">
         {% for summary in summaries %}
-        <!-- Check if sending_date exists -->
-        <div class="grid-item green">
-          <p><strong>*{{ summary.question.question }}*</strong></p>
-          <p>(Resultat)</p>
+       
+        <div class="grid-item blue">
+          <div class="question-title">
+            <h1>Fråga {{ forloop.counter }}</h1>
+          </div>
+
+          <div class="question-background">
+            <p>{{ summary.question }}</p>
+          </div>
+
+          <div class="question-result">
+            <img
+              src="{% static 'images/' %}{{ summary.question_format}}.png"
+             
+              alt="{{ summary.question_format.label }}"
+              class="question-icon"
+            />
+          </div>
         </div>
         {% endfor %}
       </div>
-
-      <!--Test-->
-
-      {% comment %}
-      <div class="grid-container">
-        <!-- How do we get the final answers for questins? -->
-
-        <div class="grid-item result green">
-          <div class="question-title">
-            <h1>QUESTION NUMBER</h1>
-          </div>
-          <div class="question-background">
-            <p>QUESTION</p>
-          </div>
-        </div>
-      </div>
     </div>
-    {% endcomment %}
-    <!---->
+
     {% else %}
+    <!-- No access or no survey -->
     <div class="start-container">
+      <div class="title-background">
+        <button class="title-back-button" onclick="window.location.href='{% url 'my_results' %}'">Tillbaka</button>
+        <h2>Resultat</h2>
+      </div>
       <h1>No results available for this survey.</h1>
-      <h1>You may not have access to this survey result.</h1>
-      <button onclick="window.location.href='{% url 'my_results'%}'">
-        Tillbaka
-      </button>
+      <p>Du kanske inte har tillgång till denna enkät.</p>
     </div>
-    {% endif %} {% endif %}
+    {% endif %}
   </body>
 </html>
