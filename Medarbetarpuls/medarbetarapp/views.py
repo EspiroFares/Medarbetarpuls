@@ -1129,15 +1129,12 @@ def survey_result_view(request, survey_id):
     # Retrieve the survey result connected to the user
     survey_result = survey_results.filter(user=user).first()
 
-    if survey_result:
+    if survey_result:  # Lägg till "... and survey_result.is_answered"
         answers = survey_result.answers.all()
     else:
         answers = None
 
-    summary = analysis_handler.survey_result_summary(survey.id)
-
-    for question_summary in summary:
-        pass  # Tänkte koppla svar med summary
+    summary_context = analysis_handler.get_survey_summary(survey.id, answers)
 
     if survey_results is None:
         # This survey has no answers (should not even be displayed to the user then)
@@ -1147,11 +1144,7 @@ def survey_result_view(request, survey_id):
     return render(
         request,
         "survey_result.html",
-        {
-            "survey": survey,
-            "summary": summary,
-            "answers": answers,
-        },
+        summary_context,
     )
 
 
