@@ -6,6 +6,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
+    <script src="{% static 'js/charts.js' %}" defer></script>
     <title>Analys</title>
     <link rel="stylesheet" href="{% static 'css/main.css' %}" />
   </head>
@@ -14,25 +16,32 @@
       {% include "topbar.html" with pagetitle="Analys"%}
       <div class="analysis-title">
         <div class="filter-container">
+          <!-- Filter for work-group -->
           Filter:
         </div>
         <div class="time-period-container">
+          <!-- Filter for time period -->
           Time period
         </div>
       </div>
 
       <div class="analysis-container">
-        <div class="analysis-item ratio-3-1">
-          <h2>eNPS-värde</h2>
-          <div class="graph-container">
-            <canvas id="enpsChart"></canvas>
+        <div class="analysis-item ratio-5-1">
+          <div class="analysis-item-title">
+            <h2><b>eNPS</b></h2>
           </div>
+          <div class="gauge-container">
+            <canvas id="enpsGauge"></canvas>
+          </div>
+          <div class="graph-container">
+            <canvas id="enpsBar"></canvas>
+          </div>
+          
         </div>
 
         <div class="analysis-item ratio-1-1">
-          <p>eNPS-värde</p>
-          <div class="graph-container">
-            <canvas id="enpsChart"></canvas>
+          <div class="gauge-container">
+            <canvas id="enpsGauge"></canvas>
           </div>
         </div>
         <div class="analysis-item ratio-2-1">
@@ -41,80 +50,14 @@
             <canvas id="enpsChart"></canvas>
           </div>
         </div>
+  
       </div>
-
+      
     </div>
+    
 
     <script>
-      // Chart 1: Free text frequency
-      const textLabels = {{ deadlines|default:"[]"|safe }};
-      const textData = {{ scores|default:"[]"|safe }};
-
-      const ctx1 = document.getElementById("surveyChart").getContext("2d");
-      new Chart(ctx1, {
-        type: "line",
-        data: {
-          labels: textLabels,
-          datasets: [{
-            label: "Answer Count",
-            data: textData,
-            backgroundColor: "rgba(54, 162, 235, 0.5)",
-            borderColor: "rgba(54, 162, 235, 1)",
-            borderWidth: 1
-          }]
-        },
-        options: {
-          responsive: true,
-          scales: {
-            y: {
-              min: -100,
-              max: 100,
-              beginAtZero: true,
-              ticks: {
-                precision: 0
-              }
-            }
-          }
-        }
-      });
-
-      // Chart 2: eNPS breakdown
-      const enpsLabels = {{ answer_options|default:"[\"Happy\", \"Neutral\", \"Sad\"]"|safe }};
-      const enpsData = {{ distribution|default:"[3, 2, 1]"|safe }};
-
-      const ctx2 = document.getElementById("enpsChart").getContext("2d");
-      new Chart(ctx2, {
-        type: "pie",  // Change to "pie" or "doughnut" if you prefer
-        data: {
-          labels: enpsLabels,
-          datasets: [{
-            label: "eNPS Responses",
-            data: enpsData,
-            backgroundColor: [
-              "rgba(75, 192, 192, 0.5)",
-              "rgba(255, 206, 86, 0.5)",
-              "rgba(255, 99, 132, 0.5)"
-            ],
-            borderColor: [
-              "rgba(75, 192, 192, 1)",
-              "rgba(255, 206, 86, 1)",
-              "rgba(255, 99, 132, 1)"
-            ],
-            borderWidth: 1
-          }]
-        },
-        options: {
-          responsive: true,
-          scales: {
-            y: {
-              beginAtZero: true,
-              ticks: {
-                precision: 0
-              }
-            }
-          }
-        }
-      });
+      
     </script>
   </body>
 </html>

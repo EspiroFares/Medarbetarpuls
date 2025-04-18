@@ -344,6 +344,7 @@
 }
 
 .analysis-container {
+    flex: 1;
     display: flex;
     width: 100%;
     max-width: 1000px;
@@ -359,47 +360,74 @@
     position: relative;
     aspect-ratio: 1 / 1;
     max-height: 300px;
-    min-height: 220px;
+    min-height: 120px;
     aspect-ratio: 1 / 1;
     background-color: white;
     border: 1px solid #ddd;
     border-radius: 8px;
-    padding: 10px;
+    padding: 40px;
     text-align: center;
     text-decoration: none;
     color: #333;
     transition: transform 0.2s;
     display: flex;
     flex-direction: row;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
     overflow: hidden;
 }
 
 .analysis-item.ratio-1-1 {
-    width: calc((100% / 3) - 40px);
+    width: calc((100% / 3) - 95px);
     aspect-ratio: 1 / 1;
     min-width: 220px;
-    background-color: #7ed23e;
 }
 
 .analysis-item.ratio-2-1 {
-    width: calc((100% / 3)*2 - 40px);
+    width: calc((100% / 3)*2 - 95px);
     aspect-ratio: 2 / 1;
     min-width: 470px;
-    background-color: #ffc757;
 }
 
 .analysis-item.ratio-3-1 {
-    width: calc(100% - 50px);
+    width: calc(100% - 100px);
     aspect-ratio: 3 / 1;
-    min-width: 0px;
-    background-color: aqua;
+    min-width: 720px;
+}
+
+.analysis-item.ratio-5-1 {
+    width: calc(100% - 100px);
+    aspect-ratio: 6 / 1;
+    min-width: 720px;
+}
+
+.analysis-item-title {
+    position: absolute; /* Position the title absolutely */
+    top: 0px; /* Distance from the top */
+    left: 10px; /* Distance from the left */
+    background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent background */
+    padding: 10px; /* Padding around the title */
+    border-radius: 5px; /* Rounded corners for the title box */
+    font-weight: bold; /* Bold text */
+    color: #333; /* Text color */
+    z-index: 10; /* Ensure it appears above other content */
 }
 
 .graph-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
     width: 90%;
-    height: 90%;
+    height: 100%;
+}
+
+.gauge-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    height: 100%;
+    min-width: 33%;
+    overflow-x: hidden;
 }
 
 .topbar {
