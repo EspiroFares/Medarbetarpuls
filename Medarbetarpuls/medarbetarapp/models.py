@@ -9,6 +9,7 @@ from django.contrib.auth.models import (
 import logging
 from typing import cast
 
+# from .analysis_handler import AnalysisHandler
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +27,9 @@ class Organization(models.Model):
     question_bank: OneToManyManager["Question"]
     survey_template_bank: OneToManyManager["SurveyTemplate"]
     org_emails = OneToManyManager["EmailList"]
+    # analysis_handler = models.OneToOneField(
+    #    AnalysisHandler, related_name="organization", on_delete=models.CASCADE
+    # )
 
     def __str__(self) -> str:
         return f"{self.name} | Admins: {', '.join(str(admin) for admin in self.admins.all())}"

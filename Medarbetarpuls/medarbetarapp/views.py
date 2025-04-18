@@ -1135,10 +1135,9 @@ def survey_result_view(request, survey_id):
         answers = None
 
     summary = analysis_handler.survey_result_summary(survey.id)
-    result = {}
 
     for question_summary in summary:
-        
+        pass  # Tänkte koppla svar med summary
 
     if survey_results is None:
         # This survey has no answers (should not even be displayed to the user then)
@@ -1149,7 +1148,6 @@ def survey_result_view(request, survey_id):
         request,
         "survey_result.html",
         {
-            "survey_result": survey_result,
             "survey": survey,
             "summary": summary,
             "answers": answers,
