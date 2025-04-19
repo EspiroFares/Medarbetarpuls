@@ -160,6 +160,39 @@ function initEnpsBar(){
     }
 }
 
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+// Function to draw a gradient circle
+function drawGradientCircle(centerX, centerY, radiusA, radiusB) {
+    // Create a radial gradient
+    const gradient = ctx.createRadialGradient(centerX, centerY, radiusA, centerX, centerY, radiusB);
+    gradient.addColorStop(0, 'rgba(132, 204, 22, 1)'); // Full opacity at radius A (center)
+    gradient.addColorStop(1, 'rgba(132, 204, 22, 0)'); // Transparent at radius B
+
+    // Clear the canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Draw the circle with the gradient
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radiusB, 0, Math.PI * 2);
+    ctx.fillStyle = gradient;
+    ctx.fill();
+    ctx.closePath();
+    ctx.font = "15px sans-serif";
+    ctx.fillStyle = "black";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("↑ +13%", centerX, centerY - 20); 
+    ctx.font = "30px sans-serif";
+    ctx.fillText("84%", centerX, centerY + 10);
+}
+
+// Draw the gradient circle
+const centerX = canvas.width / 2;
+const centerY = canvas.height / 2;
+const radiusA = 60; // Radius where opacity is 100%
+const radiusB = 110; // Radius where opacity is 0%
 
 // Initialize charts
 document.addEventListener("DOMContentLoaded", function() {
@@ -167,4 +200,5 @@ document.addEventListener("DOMContentLoaded", function() {
     initEnpsChart();
     initEnpsGauge();
     initEnpsBar();
+    drawGradientCircle(centerX, centerY, radiusA, radiusB);
 });
