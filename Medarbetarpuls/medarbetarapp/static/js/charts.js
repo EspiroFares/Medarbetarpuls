@@ -63,28 +63,6 @@ function initEnpsChart() {
     }
 }
 
-function index(perc) {
-    return perc < 70 ? 0 : perc < 90 ? 1 : 2;
-  }
-
-const COLORS = ['rgb(140, 214, 16)', 'rgb(239, 198, 0)', 'rgb(231, 24, 49)'];
-
-
-  const data = {
-    datasets: [{
-      data: [33, 100 - 33],
-      backgroundColor(ctx) {
-        if (ctx.type !== 'data') {
-          return;
-        }
-        if (ctx.index === 1) {
-          return 'rgb(234, 234, 234)';
-        }
-        return 'rgb(140, 214, 16)';
-      }
-    }]
-  };
-
 function initEnpsGauge() {
     const enpsGaugeElement = document.getElementById("enpsGauge");
     if (enpsGaugeElement) { // Check if the canvas exists, else the script will crash
@@ -93,7 +71,7 @@ function initEnpsGauge() {
             type: 'doughnut',
             data: {
                 datasets: [{
-                    data: [70, 30], // Example data
+                    data: [-70, 100-70], // Example data
                     backgroundColor: ['rgb(140, 214, 16)', 'grey'],
                 }],
             },
@@ -128,31 +106,22 @@ function initEnpsGauge() {
     }
 }
 
-const labels = ['0', '1', '2', '3', '4', '5', '6'];
+const labels = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
+
 const barData = {
   labels: labels,
   datasets: [{
-    label: 'Survey Results',
-    data: [65, 59, 80, 120, 56, 55, 40],
-    backgroundColor: [
-      'rgba(255, 99, 132, 0.2)',
-      'rgba(255, 159, 64, 0.2)',
-      'rgba(255, 205, 86, 0.2)',
-      'rgba(75, 192, 192, 0.2)',
-      'rgba(54, 162, 235, 0.2)',
-      'rgba(153, 102, 255, 0.2)',
-      'rgba(201, 203, 207, 0.2)'
-    ],
-    borderColor: [
-      'rgb(255, 99, 132)',
-      'rgb(255, 159, 64)',
-      'rgb(255, 205, 86)',
-      'rgb(75, 192, 192)',
-      'rgb(54, 162, 235)',
-      'rgb(153, 102, 255)',
-      'rgb(201, 203, 207)'
-    ],
-    borderWidth: 2
+    label: 'Survey name',
+    data: [65, 59, 80, 30, 56, 55, 40, 20, 10, 5, 10], // Example data
+    backgroundColor: labels.map((_, index) => {
+      if (index < 2) {
+        return '#EF4444'; // Red
+      } else if (index < 9) {
+        return '#FFB95A'; // Orange
+      } else {
+        return '#84CC16'; // Green
+      }
+    }),
   }]
 };
 
@@ -165,13 +134,22 @@ function initEnpsBar(){
             data: barData,
             options: {
                 responsive: true,
+                borderRadius: 10,
                 plugins: { // Add this section to control the legend
                     legend: {
                         display: false, // This will hide the legend
                     }
                 },
                 scales: {
+                    x: {
+                        grid: {
+                            display: false // Disable vertical grid lines
+                        }
+                    },
                 y: {
+                    border: {
+                        dash: [5, 5] // Make vertical grid lines dashed
+                    },
                     beginAtZero: true
                 }
                 }
@@ -181,6 +159,7 @@ function initEnpsBar(){
         console.warn("enpsBar canvas not found.");
     }
 }
+
 
 // Initialize charts
 document.addEventListener("DOMContentLoaded", function() {
