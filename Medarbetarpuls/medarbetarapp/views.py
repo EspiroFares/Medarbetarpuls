@@ -1,107 +1,87 @@
-from unittest import result
-from . import models
+import logging
 import platform
+from . import models
 from django.db.models import Q
-from django.http import HttpResponse
-from django.shortcuts import redirect, render
-from django.views.decorators.csrf import csrf_exempt, csrf_protect
-from django.shortcuts import get_object_or_404
-from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
-from django.contrib.auth.decorators import login_required
+from collections import Counter
 from django.utils import timezone
-from .models import SurveyResult
-from django.core.mail import send_mail
+from django.db.models import Count
 from django.core.cache import cache
 from datetime import datetime, time
-from django.utils.timezone import make_aware
-from django.db.models import Count
-from django.db.models import Case, When, IntegerField, Value
+from django.http import HttpResponse
+from .models import SurveyUserResult
+from django.core.mail import send_mail
 from .tasks import publish_survey_async
+from django.utils.timezone import make_aware
 from .analysis_handler import AnalysisHandler
+from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.db.models import Case, When, IntegerField, Value
+from .models import Answer, Question, Survey, SurveyUserResult
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 
-import logging
 
 logger = logging.getLogger(__name__)
 
 
-def index_view(request):
-    logger.info("Testing")
-    logger.warning("Testing warning!")
-    logger.error("Testing error!!!")
-
-    return render(request, "index.html")
-
-
-def create_acc_redirect(request):
-    if request.headers.get("HX-Request"):
-        return HttpResponse(
-            headers={"HX-Redirect": "/create_acc_view/"}
-        )  # Redirects in HTMX
-
-    return redirect("/create_acc_view/")  # Normal Django redirect for non-HTMX requests
-
-
-def create_acc_view(request):
-    return render(
-        request, "create_acc.html"
-    )  # Normal Django redirect for non-HTMX requests
-
-
 @csrf_protect
-def create_acc(request) -> HttpResponse:
+def create_acc(request):
     """
-    Saves potential account information in django
-    session from fetched input, it sends an email
-    to the mail that has been fetched.
-    Then redirect to authentication-acc to
-    authenticate and potentially create account.
+    Initiates account creation by saving user data to session, sending a verification code via email,
+    and redirecting to the authentication page (supports both HTMX and standard requests).
 
     Args:
-        request: The input text from the name, email and password fields
+        request: The HTTP request containing name, email, password, and optional from_settings flag.
 
     Returns:
-        HttpResponse: Redirects to authentication page, otherwise error message 400
+        HttpResponse: For POST, sends an HX-Redirect header or standard redirect to "/authentication-acc/";
+        for GET, redirects or renders "create_acc.html"; or 400 on error.
     """
+
     if request.method == "POST":
+        name = request.POST.get("name")
+        email = request.POST.get("email")
+        password = request.POST.get("password")
+        from_settings = request.POST.get("from_settings") == "true"
+
+        org = find_organization_by_email(email=email)
+        if org is None:
+            logger.error("This email is not authorized for registration.")
+            return HttpResponse(status=400)
+
+        code = 123456  # make random later, just test now
+        cache.set(f"verify_code_{email}", code, timeout=300)
+
+        send_mail(
+            subject="Your Verification Code",
+            message=f"Your verification code is: {code}",
+            from_email="medarbetarpuls@gmail.com",
+            recipient_list=[email],
+            fail_silently=False,
+        )
+
+        # Save potential user account data in session
+        request.session["user_data"] = {
+            "name": name,
+            "password": password,
+            "from_settings": from_settings,
+        }
+        # Save the mail where the two factor code is sent
+        request.session["email_two_factor_code"] = email
+
+        # Redirect till autentiseringssidan
         if request.headers.get("HX-Request"):
-            name = request.POST.get("name")
-            email = request.POST.get("email")
-            password = request.POST.get("password")
-            from_settings = request.POST.get("from_settings") == "true"
-            org = find_organization_by_email(email=email)
-            if org is None:
-                logger.error("This email is not authorized for registration.")
-                return HttpResponse(status=400)
+            return HttpResponse(headers={"HX-Redirect": "/authentication-acc/"})
+        else:
+            return redirect("/authentication-acc/")
 
-            code = 123456  # make random later, just test now
-            cache.set(f"verify_code_{email}", code, timeout=300)
-            send_mail(
-                subject="Your Verification Code",
-                message=f"Your verification code is: {code}",
-                from_email="medarbetarpuls@gmail.com",
-                recipient_list=[email],
-                fail_silently=False,
-            )
-            # Save potential user account data in session
-            request.session["user_data"] = {
-                "name": name,
-                "password": password,
-                "from_settings": from_settings,
-            }
-
-            # Save the mail where the two factor code is sent
-            request.session["email_two_factor_code"] = email
-
-            return HttpResponse(
-                headers={"HX-Redirect": "/authentication-acc/"}
-            )  # Redirect to authentication account page
-
-    return HttpResponse(status=400)  # Bad request if no expression
-
-
-def find_organization_by_email(email: str) -> models.Organization | None:
-    email_entry = get_object_or_404(models.EmailList, email=email)
-    return email_entry.org  # Follow the ForeignKey to Organization
+    else:
+        # Handles GET-request: Renders create-acc page
+        if request.headers.get("HX-Request"):
+            return HttpResponse(headers={"HX-Redirect": "/create_acc/"})
+        else:
+            return render(request, "create_acc.html")
 
 
 @login_required
@@ -127,16 +107,22 @@ def add_employee_view(request):
         editName = request.POST.get("new_employee_group")
         editUserMail = request.POST.get("employee")
         if editGroup == "true":
-            org = user.admin
-            if models.EmployeeGroup.objects.filter(name=editName).exists():
-                group = models.EmployeeGroup.objects.get(name=editName)
+            if models.EmailList.objects.filter(email=editUserMail).exists():
+                org = user.admin
+                if models.EmployeeGroup.objects.filter(name=editName).exists():
+                    group = models.EmployeeGroup.objects.get(name=editName)
+                else:
+                    # create new employee group
+                    group = models.EmployeeGroup(name=editName, organization=org)
+                    group.save()
+                editUser = models.CustomUser.objects.get(email=editUserMail)
+                editUser.employee_groups.add(group)
+                user.survey_groups.add(group)
+                return HttpResponse("Successful", status=200)
+
             else:
-                # create new employee group
-                group = models.EmployeeGroup(name=editName, organization=org)
-                group.save()
-            editUser = models.CustomUser.objects.get(email=editUserMail)
-            editUser.employee_groups.add(group)
-            user.survey_groups.add(group)
+                logger.warning("User does not exist")
+                return HttpResponse("Användaren finns inte", status=400)
         elif user.user_role == models.UserRole.ADMIN and hasattr(user, "admin"):
             org = user.admin
 
@@ -185,8 +171,21 @@ def analysis_view(request):
 
 @login_required
 def answer_survey_view(request, survey_result_id, question_index=0):
+    """
+    Saves a survey answer and moves to the next question.
+    Retrieves the survey for the user, saves the answer based on the input type,
+    and redirects to the next question or finalizes the survey if all questions are answered.
+
+    Args:
+        request: The HTTP request containing the survey answer.
+        survey_result_id: The ID of the user's survey result.
+        question_index: The index of the current question to answer.
+
+    Returns:
+        HttpResponse: Renders the current question or redirects after completion.
+    """
     survey_result = get_object_or_404(
-        SurveyResult, pk=survey_result_id, user=request.user
+        SurveyUserResult, pk=survey_result_id, user=request.user
     )
     questions = survey_result.published_survey.questions.all()
 
@@ -274,7 +273,6 @@ def authentication_acc_view(request):
             data = request.session.get("user_data")
             name = data["name"]
             password = data["password"]
-            from_settings = data["from_settings"]
 
             # Delete everything saved in session and cache - data not needed anymore
             del request.session["user_data"]
@@ -282,9 +280,7 @@ def authentication_acc_view(request):
             cache.delete(f"verify_code_{email}")
 
             existing_user = models.CustomUser.objects.filter(email=email).first()
-            if (
-                existing_user and existing_user.is_active == False
-            ):  # and coming from settings page
+            if existing_user and existing_user.is_active == False:
                 # Should they be able to reset name and password???
                 org = find_organization_by_email(email)
                 if org is None:
@@ -391,10 +387,6 @@ def authentication_org_view(request):
     return render(request, "authentication_org.html")
 
 
-def create_org_view(request):
-    return render(request, "create_org.html")
-
-
 def create_question(request, survey_id: int) -> HttpResponse:
     """
     Makes it possible to create a question with predefined formats.
@@ -425,60 +417,63 @@ def create_question(request, survey_id: int) -> HttpResponse:
     )
 
 
-def create_org_redirect(request):
-    if request.headers.get("HX-Request"):
-        return HttpResponse(
-            headers={"HX-Redirect": "/create_org_view/"}
-        )  # Redirects in HTMX
-
-    return redirect("/create_org_view/")  # Normal Django redirect for non-HTMX requests
-
-
 @csrf_protect
 def create_org(request) -> HttpResponse:
     """
-    Saves potential account information in django
-    session from fetched input, it sends an email
-    to the mail that has been fetched.
-    Then redirect to authentication-org to
-    authenticate and potentially create admin account.
+    Initiates organization creation by generating
+    a verification code, sending it via email,
+    saving form data in the session, and redirecting
+    to the authentication page
+    (supports HTMX and standard requests).
 
     Args:
-        request: The input text from the org_name, name, email and password fields
+        request: The HTTP request containing org_name, name, email, and password.
 
     Returns:
-        HttpResponse: Redirects to authentication page, otherwise error message 400
+        HttpResponse: For POST, sends HX-Redirect header or standard redirect to "/authentication-org/";
+        for GET, sends HX-Redirect header or renders "create_org.html".
     """
+
     if request.method == "POST":
+        # Get data from the forum
+        org_name = request.POST.get("org_name")
+        name = request.POST.get("name")
+        email = request.POST.get("email")
+        password = request.POST.get("password")
+
+        code = 123456  # make random later, just test now
+        cache.set(f"verify_code_{email}", code, timeout=300)
+
+        # Send email with the code to the user
+        send_mail(
+            subject="Your Verification Code",
+            message=f"Your verification code is: {code}",
+            from_email="medarbetarpuls@gmail.com",
+            recipient_list=[email],
+            fail_silently=False,
+        )
+
+        # Save potential user account data in session
+        request.session["user_org_data"] = {
+            "org_name": org_name,
+            "name": name,
+            "password": password,
+        }
+        # Save the mail where the two factor code is sent
+        request.session["email_two_factor_code_org"] = email
+
+        # Redirect to authentication
         if request.headers.get("HX-Request"):
-            org_name = request.POST.get("org_name")
-            name = request.POST.get("name")
-            email = request.POST.get("email")
-            password = request.POST.get("password")
-            code = 123456  # make random later, just test now
-            cache.set(f"verify_code_{email}", code, timeout=300)
-            send_mail(
-                subject="Your Verification Code",
-                message=f"Your verification code is: {code}",
-                from_email="medarbetarpuls@gmail.com",
-                recipient_list=[email],
-                fail_silently=False,
-            )
-            # Save potential user account data in session
-            request.session["user_org_data"] = {
-                "org_name": org_name,
-                "name": name,
-                "password": password,
-            }
+            return HttpResponse(headers={"HX-Redirect": "/authentication-org/"})
+        return redirect("/authentication-org/")
 
-            # Save the mail where the two factor code is sent
-            request.session["email_two_factor_code_org"] = email
+    else:
+        # GET-request: render or redirect to create_org
+        if request.headers.get("HX-Request"):
+            return HttpResponse(headers={"HX-Redirect": "/create_org/"})
+        return render(request, "create_org.html")
 
-            return HttpResponse(
-                headers={"HX-Redirect": "/authentication-org/"}
-            )  # Redirect to authentication account page
-
-    return HttpResponse(status=400)  # Bad request if no expression
+    # maybe implement error 400??
 
 
 @csrf_protect
@@ -756,10 +751,23 @@ def publish_survey(request, survey_id: int) -> HttpResponse:
 
 
 def login_view(request):
+    """
+    Authenticates the user and logs them in.
+    If credentials are valid, redirects based on user role; otherwise, re-renders the login page.
+
+    Args:
+        request: The HTTP request with user login credentials.
+
+    Returns:
+        HttpResponse: Redirects to the appropriate page on success or renders the login page on failure.
+    """
+
     # maybe implement sesion timer so you dont get logged out??
-    if request.user.is_authenticated:
-        logger.debug("User %e is already logged in.", request.user)
-        # return redirect('start_user')
+    # if request.user.is_authenticated:
+    # logger.debug("User %e is already logged in.", request.user)
+    # logger.debug("User %e is already logged in.", request.user)
+    # return HttpResponse("Användaren %e är redan inloggad", status=400)
+    # return redirect('start_user')
 
     if request.method == "POST":
         email = request.POST.get("email")
@@ -770,17 +778,26 @@ def login_view(request):
             if user.is_active:
                 login(request, user)
                 if user.user_role == models.UserRole.ADMIN:
+                    response = HttpResponse()
+                    response["HX-Redirect"] = "/start-admin/"
                     logger.debug("Admin %e successfully logged in.", email)
-                    return redirect("start_admin")
-                else:  # implement check if user is creator or responder?
+                    return response
+                elif user.user_role == models.UserRole.SURVEY_RESPONDER:
+                    response = HttpResponse()
+                    response["HX-Redirect"] = "/start-user/"
                     logger.debug("User %e successfully logged in.", email)
-                    return redirect("start_user")
+                    return response
+                else:
+                    response = HttpResponse()
+                    response["HX-Redirect"] = "/start-creator/"
+                    logger.debug("User %e successfully logged in.", email)
+                    return response
             else:
                 logger.warning("Login attempt for inactive user %e", email)
-                return render(request, "login.html")
+                return HttpResponse("Användare %e är en inaktiv användare", status=400)
         else:
             logger.warning("Failed login attempt for %e", email)
-            return render(request, "login.html")
+            return HttpResponse("Felaktiga inloggningsuppgifter", status=400)
 
     return render(request, "login.html")
 
@@ -788,6 +805,17 @@ def login_view(request):
 @csrf_protect
 @login_required
 def my_org_view(request):
+    """
+    Displays the organization's employee list and processes employee removal.
+    For POST, deactivates a selected employee if the current user is admin.
+    Supports search and HTMX requests for table updates.
+
+    Args:
+        request: The HTTP request with employee removal or search parameters.
+
+    Returns:
+        HttpResponse: Renders the organization page or redirects after a removal.
+    """
     organization = request.user.admin
 
     if request.method == "POST":
@@ -796,6 +824,15 @@ def my_org_view(request):
             employee_to_remove = models.CustomUser.objects.get(pk=user_id)
             print("removing ", employee_to_remove)
             employee_to_remove.is_active = False
+            employee_to_remove.save()
+            # Get all employee_groups for this employee
+            all_groups = employee_to_remove.employee_groups.all()
+            # Remove all other groups except "Alla"
+            group_to_keep = models.EmployeeGroup.objects.get(name="Alla")
+            for group in all_groups:
+                if group != group_to_keep:
+                    employee_to_remove.employee_groups.remove(group)
+
             employee_to_remove.save()
             models.EmailList.objects.filter(email=employee_to_remove.email).delete()
         return redirect("my_org")
@@ -839,6 +876,18 @@ def my_org_view(request):
 
 @login_required
 def my_results_view(request):
+    """
+    Displays the logged-in user's survey results.
+    Retrieves the count of answered surveys, the list of surveys, and current UTC time,
+    then renders the "my_results.html" template.
+
+    Args:
+        request: The HTTP request with the authenticated user.
+
+    Returns:
+        HttpResponse: Renders the survey results page.
+    """
+
     user = request.user  # Assuming the user is authenticated
     answered_count = user.count_answered_surveys()
     answered_surveys = user.get_answered_surveys()
@@ -860,6 +909,17 @@ def my_results_view(request):
 
 @csrf_protect
 def delete_survey_template(request, survey_id: int) -> HttpResponse:
+    """
+    Deletes a survey template via HTMX.
+    If the request is a POST and an HTMX request, deletes the survey template for the logged-in user.
+
+    Args:
+        request: The HTTP request containing the survey deletion action.
+        survey_id (int): The ID of the survey template to delete.
+
+    Returns:
+        HttpResponse: Redirects to "/templates_and_drafts/" on success or returns status 400 on failure.
+    """
     if request.method == "POST":
         if request.headers.get("HX-Request"):
             survey_temp = get_object_or_404(
@@ -933,6 +993,17 @@ def my_surveys_view(request):
 
 
 def settings_admin_view(request):
+    """
+    Transfers admin rights to a new admin user.
+    On HTMX POST, validates the new admin's email, updates user roles, and logs out the current admin;
+    otherwise, renders the settings page.
+
+    Args:
+        request: The HTTP request containing the admin settings update.
+
+    Returns:
+        HttpResponse: Redirects to home on success or renders the settings page.
+    """
     # Leave over account to new admin function
     # if pressed leave over account
     if request.method == "POST":
@@ -971,7 +1042,9 @@ def settings_admin_view(request):
                 return HttpResponse(headers={"HX-Redirect": "/"})
             else:
                 logger.error(" The mail entered is not an available user ")
-                return HttpResponse(status=400)
+                return HttpResponse(
+                    "Den angivna mejladressen tillhör inget konto", status=400
+                )
 
     return render(
         request,
@@ -987,8 +1060,18 @@ def settings_admin_view(request):
 @login_required
 @csrf_protect
 def settings_user_view(request):
-    # FIX - needs to fix so when wrong password is written the popup doesnt dissappear and a message is sent
+    """
+    Deletes the user account after password verification.
+    deletes the account on success, and logs out the user.
 
+    Args:
+        request: The HTTP request with the password for account deletion.
+
+    Returns:
+        HttpResponse: Redirects to home on deletion or returns status 400 if authentication fails.
+    """
+
+    # FIX - needs to fix so when wrong password is written the popup doesnt dissappear and a message is sent
     # Delete user function
     # if pressed delete user
     if request.method == "POST":
@@ -1012,9 +1095,11 @@ def settings_user_view(request):
 
 
 @login_required
-def start_admin_view(request):
+def start_creator_view(request):
     return render(
-        request, "start_admin.html", {"pagetitle": f"Välkommen<br>{request.user.name}"}
+        request,
+        "start_creator.html",
+        {"pagetitle": f"Välkommen<br>{request.user.name}"},
     )  # Fix so only works if the user is actually an admin
 
 
@@ -1077,16 +1162,20 @@ def settings_change_pass(request):
     if request.headers.get("HX-Request"):
         old_password = request.POST.get("pass_old")
         new_password = request.POST.get("pass_new")
+        check_password = request.POST.get("pass_check")  # The repeated new password
         user = authenticate(request, username=request.user.email, password=old_password)
-        if user:
+        # Check that the old password is correct and that the new password is repeated
+        if user and check_password == new_password:
             user.set_password(new_password)
             user.save()
             # Use this to keep the session alive (avoid being logged out immediately)
             update_session_auth_hash(request, user)
             print("saved new password")
+        elif not user:
+            return HttpResponse("Fel lösenord", status=400)
         else:
-            # Did not find any user with this password
-            return HttpResponse(400)
+            # New passwords did not match
+            return HttpResponse("De nya lösenorden matchar inte", status=400)
 
     if request.user.admin:
         return render(
@@ -1113,6 +1202,13 @@ def settings_change_pass(request):
 def start_user_view(request):
     return render(
         request, "start_user.html", {"pagetitle": f"Välkommen<br>{request.user.name}"}
+    )
+
+
+@login_required
+def start_admin_view(request):
+    return render(
+        request, "start_admin.html", {"pagetitle": f"Välkommen<br>{request.user.name}"}
     )
 
 
@@ -1189,36 +1285,21 @@ def unanswered_surveys_view(request):
     )
 
 
-def chart_view1(request):
-    SURVEY_ID = 2  # Choose what survey you want to show here
-
-    # ---- ENPS SCORES ----
-    enps_question = Question.objects.filter(question_type="enps").first()
-
-    enps_answers = Answer.objects.filter(
-        is_answered=True,
-        question=enps_question,
-        slider_answer__isnull=False,
-        survey__published_survey__id=SURVEY_ID,
-    )
-
-    promoters = enps_answers.filter(slider_answer__gte=9).count()
-    passives = enps_answers.filter(slider_answer__gte=7, slider_answer__lt=9).count()
-    detractors = enps_answers.filter(slider_answer__lt=7).count()
-
-    enps_labels = ["Promoters", "Passives", "Detractors"]
-    enps_data = [promoters, passives, detractors]
-    # analysisHandler = AnalysisHandler()
-    # print(analysisHandler.calcENPS(promoters, passives, detractors))
-    context = {
-        "enps_labels": enps_labels,
-        "enps_data": enps_data,
-    }
-
-    return render(request, "index.html", context)
+def find_organization_by_email(email: str) -> models.Organization | None:
+    email_entry = get_object_or_404(models.EmailList, email=email)
+    return email_entry.org  # Follow the ForeignKey to Organization
 
 
 def chart_view(request):
+    SURVEY_ID = 3  # Choose which survey to show here
+
+    analysisHandler = AnalysisHandler()
+    question_txt = "Did you take enough breaks throughout the day?"
+    context = analysisHandler.survey_result_summary(SURVEY_ID)
+    return render(request, "analysis.html", context)
+
+
+def chart_view_test(request):
     # If no real data exists, show sample data
     labels = ["Happy", "Neutral", "Sad"]
     data = [3, 2, 1]

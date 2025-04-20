@@ -6,94 +6,94 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
+    <script src="{% static 'js/charts.js' %}" defer></script>
     <title>Analys</title>
-    <link rel="stylesheet" href="{% static 'styles.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/main.css' %}" />
   </head>
   <body>
-    {% include "topbar.html"%}
-    <div class="analysis-container">
-      <div class="pagetitle">
-        <h1>Analys</h1>
-      </div>
-      <h2>Fritext svarsfrekvens</h2>
-      <div class="graph-container">
-        <canvas id="surveyChart"></canvas>
+    <div class="main-container">
+      {% include "topbar.html" with pagetitle="Analys"%}
+      <div class="analysis-title">
+        <div class="filter-container">
+          <!-- Filter for work-group -->
+          Filter:
+        </div>
+        <div class="time-period-container">
+          <!-- Filter for time period -->
+          Time period
+        </div>
       </div>
 
-      <h2>eNPS-värde</h2>
-      <div class="graph-container">
-        <canvas id="enpsChart"></canvas>
+      <div class="analysis-container">
+        <div class="analysis-item ratio-5-1">
+          <div class="analysis-item-title">
+            <h2><b>eNPS</b></h2>
+          </div>
+          <div class="gauge-container">
+            <canvas id="enpsGauge"></canvas>
+          </div>
+          <div class="graph-container">
+            <canvas id="enpsBar"></canvas>
+          </div>
+          
+        </div>
+
+        <div class="analysis-item ratio-1-1">
+          <div class="analysis-item-title">
+            <h2><b>Svarsfrekvens</b></h2>
+          </div>  
+          <div class="graph-container">
+            <canvas id="canvas" width="400" height="400"></canvas>
+          </div>
+        </div>
+        
+        <div class="analysis-item ratio-2-1">
+          <div class="analysis-item-title">
+            <h2><b>Analysera fråga</b></h2>
+          </div>
+          <div class="graph-container" style="height: 90%;">
+            <canvas id="enpsChart"></canvas>
+          </div>
+        </div>
+  
       </div>
+      
     </div>
+    
 
     <script>
-      // Chart 1: Free text frequency
-      const textLabels = {{ labels|default:"[]"|safe }};
-      const textData = {{ data|default:"[]"|safe }};
 
-      const ctx1 = document.getElementById("surveyChart").getContext("2d");
-      new Chart(ctx1, {
-        type: "bar",
-        data: {
-          labels: textLabels,
-          datasets: [{
-            label: "Answer Count",
-            data: textData,
-            backgroundColor: "rgba(54, 162, 235, 0.5)",
-            borderColor: "rgba(54, 162, 235, 1)",
-            borderWidth: 1
-          }]
-        },
-        options: {
-          responsive: true,
-          scales: {
-            y: {
-              beginAtZero: true,
-              ticks: {
-                precision: 0
-              }
-            }
-          }
-        }
-      });
+      //Data for the enpsGauge, replace with data from database
+      const enpsGaugeData = 21
+      const enpsDataDataChange = -10
+      const enpsDate = "2023-10-01" // Replace with the most recent date that changed the eNPS score
 
-      // Chart 2: eNPS breakdown
-      const enpsLabels = {{ enps_labels|default:"[\"Happy\", \"Neutral\", \"Sad\"]"|safe }};
-      const enpsData = {{ enps_data|default:"[3, 2, 1]"|safe }};
+      //Data for the enpsBar, replace with data from database
+      const enpsBarLabels = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
+      const enpsBarData = [5, 2, 3, 30, 56, 55, 40, 20, 10, 5, 10]
 
-      const ctx2 = document.getElementById("enpsChart").getContext("2d");
-      new Chart(ctx2, {
-        type: "pie",  // Change to "pie" or "doughnut" if you prefer
-        data: {
-          labels: enpsLabels,
-          datasets: [{
-            label: "eNPS Responses",
-            data: enpsData,
-            backgroundColor: [
-              "rgba(75, 192, 192, 0.5)",
-              "rgba(255, 206, 86, 0.5)",
-              "rgba(255, 99, 132, 0.5)"
-            ],
-            borderColor: [
-              "rgba(75, 192, 192, 1)",
-              "rgba(255, 206, 86, 1)",
-              "rgba(255, 99, 132, 1)"
-            ],
-            borderWidth: 1
-          }]
-        },
-        options: {
-          responsive: true,
-          scales: {
-            y: {
-              beginAtZero: true,
-              ticks: {
-                precision: 0
-              }
-            }
-          }
-        }
-      });
+      //Data for the answer frequency, replace with data from database
+      const answerData = 51
+      const dataAnswerChange = 0
+
+      //Data for the pie chart, replace with data from database
+      const pieLabels = ['Promoters', 'Passives', 'Detractors']
+      const pieData = [70, 20, 10]
+      const pieColors = [
+        'rgb(140, 214, 16)',
+        'rgb(16, 23, 214)',
+        'rgb(16, 191, 214)'
+      ];
+
+      document.addEventListener("DOMContentLoaded", function() {
+
+        initEnpsGauge("enpsGauge", enpsGaugeData, enpsDataDataChange, enpsDate);
+        initEnpsBar("enpsBar", enpsBarLabels, enpsBarData);
+        initAnswerFrequency("canvas", answerData, dataAnswerChange);
+        //initPieChart("enpsChart", pieLabels, pieData, pieColors);
+        initBarChart("enpsChart", pieLabels, pieData, pieColors);
+    });
     </script>
   </body>
 </html>

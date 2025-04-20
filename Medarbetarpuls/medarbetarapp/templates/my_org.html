@@ -7,124 +7,196 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Inställningar</title>
-    <link rel="stylesheet" href="{% static 'styles.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/main.css' %}" />
   </head>
   <body>
-    {% include "topbar.html" with pagetitle=pagetitle %}
-    <div class="create-container">
-      <h1>{{ organization.name }}</h1>
+    <div class="main-container">
+      {% include "topbar.html" with pagetitle="Min organisation" %}
+      <div class="my-org-container">
+        <h1>{{ organization.name }}</h1>
 
-      <!-- Form för att trigga sökning via HTMX -->
-      <form
-        id="searchForm"
-        hx-get="{% url 'my_org' %}"
-        hx-target="#employeeTable"
-        hx-trigger="keyup changed delay:500ms"
-        class="search-container"
-      >
-        {% csrf_token %}
-        <input
-          type="text"
-          name="search"
-          placeholder="Sök..."
-          value="{{ search_query }}"
-        />
-        <button type="submit">Sök</button>
-      </form>
+        <div class="search-container">
+          <!-- Form för att trigga sökning via HTMX -->
+          <form
+            id="searchForm"
+            hx-get="{% url 'my_org' %}"
+            hx-target="#employeeTable"
+            hx-trigger="keyup changed delay:500ms"
+            class="search-container"
+          >
+            {% csrf_token %}
+            <input
+              type="text"
+              name="search"
+              placeholder="Sök..."
+              value="{{ search_query }}"
+            />
+            <button type="submit">Sök</button>
+          </form>
+        </div>
+        <!-- Employee table -->
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Namn</th>
+                <th>Mejladress</th>
+                <th>Grupp</th>
+                <th></th>
+                <th></th>
+                <!-- Empty column for removal symbol -->
+              </tr>
+            </thead>
+            <tbody id="employeeTable">
+              {% for employee in employees %} {% if employee.is_active %}
+              <tr>
+                <td>{{ employee.name }}</td>
+                <td>{{ employee.email }}</td>
+                <td>
+                  {% for group in employee.employee_groups.all %} {{
+                  group.name}}{% if not forloop.last %}, {% endif %} {% endfor
+                  %}
+                </td>
 
-      <!-- Employee table -->
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>Namn</th>
-              <th>Mejladress</th>
-              <th>Grupp</th>
-              <!-- Empty column for removal symbol -->
-            </tr>
-          </thead>
-          <tbody id="employeeTable">
-            {% for employee in employees %} {% if employee.is_active %}
-            <tr>
-              <td>{{ employee.name }}</td>
-              <td>{{ employee.email }}</td>
-              <td>
-                {% for group in employee.employee_groups.all %} {{ group.name}}
-                {% if not forloop.last %}, {% endif %} {% endfor %}
-              </td>
-
-              <td>
-                <form
-                  action="{% url 'my_org' %}"
-                  method="POST"
-                  style="display: inline"
-                >
-                  {% csrf_token %}
-                  <input
-                    type="hidden"
-                    name="user_id"
-                    value="{{ employee.id }}"
-                  />
-                  <div class="value"><a href="#" onclick="openEditUser()">
-                  <span class="edit-icon">✏️</span></a></div>
-
-                  <button type="submit" class="trashcan-button">
-                    <!-- Maybe confirm popup???-->
+                <td>
+                  <!-- Delete employee popup -->
+                  <div
+                    id="delete-employee-popup"
+                    class="popup-overlay"
+                    style="display: none"
+                  >
+                    <div id="content" class="popup-content messages">
+                      <h3>
+                        Är du säker på att du vill ta bort den här medarbetaren?
+                      </h3>
+                      <p>
+                        Kontot kommer att raderas, och om personen vill
+                        återvända till organisationen måste du bjuda in hen på
+                        nytt.
+                      </p>
+                      <button type="button" onclick="closeConfirmDelete()">
+                        Avbryt
+                      </button>
+                      <form
+                        action="{% url 'my_org' %}"
+                        method="POST"
+                        style="display: inline"
+                      >
+                        {% csrf_token %}
+                        <input
+                          type="hidden"
+                          name="user_id"
+                          value="{{ employee.id }}"
+                        />
+                        <button type="submit" class="delete-button">
+                          Ta bort medarbetaren
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                  <button onclick="openConfirmDelete()" class="trashcan-button">
                     <img
                       src="{% static 'images/trashcan.png' %}"
                       alt="Delete"
                       class="icon"
                     />
                   </button>
-                </form>
-                {% endif %}
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-      <a href="{% url 'add_employee' %}">
-        <button class="button">Lägg till medarbetare</button>
-      </a>
-    </div>
+                </td>
+                <td>
+                  <div class="value">
+                    <a href="#" onclick="openEditUser()">
+                      <span class="edit-icon">✏️</span></a
+                    >
+                  </div>
+                </td>
 
-    <!-- Edit password Popup -->
-    <div id="edit-user-popup" class="popup-overlay" style="display: none;">
-      <div id= "content" class="popup-content">
-        <form 
+                {% endif %}
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <a href="{% url 'add_employee' %}">
+          <button class="button">Lägg till medarbetare</button>
+        </a>
+      </div>
+    </div>
+    <!-- Edit user Popup -->
+    <div id="edit-user-popup" class="popup-overlay" style="display: none">
+      <div id="content" class="popup-content messages">
+        <form
           class="edit-pass-form"
           hx-post="/add-employee/"
-          hx-target="#content"
           hx-trigger="submit"
-          hx-swap="outerHTML"
-          >
+          hx-swap="none"
+        >
           <span class="close-button" onclick="closeEditUser()">&times;</span>
           {% csrf_token %}
-              <label for="medarbetare">Bekräfta mejl för medarbetare: </label> <!-- FIX username shows -->
-              <input type="medarbetare" id="employee" name="employee" placeholder="Mejl" required > 
-              <label for="medarbetargrupp">Lägg till ny medarbetargrupp: </label> <!-- FIX username shows -->
-              <input type="medarbetargrupp" id="new_employee_group" name="new_employee_group" placeholder="Medarbetargrupp" required > 
-              <input type="hidden" name="edit_employee" id="edit_employee" value="true">
-
-              <button type="submit" onclick="setTimeout(() => location.reload(), 500);" class="delete-button">Lägg till</button>
+          <label for="medarbetare">Bekräfta mejl för medarbetare: </label>
+          <!-- FIX username shows -->
+          <input
+            type="medarbetare"
+            id="employee"
+            name="employee"
+            placeholder="Mejl"
+            required
+          />
+          <label for="medarbetargrupp">Lägg till ny medarbetargrupp: </label>
+          <!-- FIX username shows -->
+          <input
+            type="medarbetargrupp"
+            id="new_employee_group"
+            name="new_employee_group"
+            placeholder="Medarbetargrupp"
+            required
+          />
+          <input
+            type="hidden"
+            name="edit_employee"
+            id="edit_employee"
+            value="true"
+          />
+          <div id="popup-error" style="color: red; margin-top: 10px"></div>
+          <button type="submit" class="delete-button">Lägg till</button>
         </form>
       </div>
     </div>
-
-    <!-- Script for filtering -->
-    <script>
-
-      function openEditUser() {
-          document.getElementById("edit-user-popup").style.display = "flex";
-      }
-
-      function closeEditUser() {
-          document.getElementById("edit-user-popup").style.display = "none";
-      }
-
-      function filterTable() {}
-
-    </script>
   </body>
+  <script>
+    function openEditUser() {
+      document.getElementById("edit-user-popup").style.display = "flex";
+    }
+
+    function closeEditUser() {
+      document.getElementById("edit-user-popup").style.display = "none";
+    }
+
+    function openConfirmDelete() {
+      document.getElementById("delete-employee-popup").style.display = "flex";
+    }
+
+    function closeConfirmDelete() {
+      document.getElementById("delete-employee-popup").style.display = "none";
+    }
+    // ERROR HANDLING
+    document.body.addEventListener("htmx:afterRequest", function (event) {
+      const popup = document.getElementById("edit-user-popup");
+      const errorBox = document.getElementById("popup-error");
+
+      //if (!popup || !errorBox) return;
+
+      if (event.detail.xhr.status === 200) {
+        // if success reload the page after a short delay
+        setTimeout(function () {
+          location.reload();
+        }, 200);
+      } else if (!event.detail.xhr.ok) {
+        // if error show returned message or "Fel"
+        const message = event.detail.xhr.responseText || "Fel";
+        popup.classList.remove("hidden");
+        errorBox.textContent = message;
+        errorBox.style.display = "block";
+      }
+    });
+  </script>
 </html>

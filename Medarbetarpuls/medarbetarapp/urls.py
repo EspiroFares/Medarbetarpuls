@@ -15,16 +15,12 @@ urlpatterns = [
     path(
         "authentication-org/", views.authentication_org_view, name="authentication_org"
     ),
-    path("create_acc_view/", views.create_acc_view, name="create_acc_view"),
     path(
         "create-question/<int:survey_id>/",
         views.create_question,
         name="create_question",
     ),
-    path("create_acc_redirect/", views.create_acc_redirect, name="create_acc_redirect"),
     path("create_acc/", views.create_acc, name="create_acc"),
-    path("create_org_view/", views.create_org_view, name="create_org_view"),
-    path("create_org_redirect/", views.create_org_redirect, name="create_org_redirect"),
     path("create_org/", views.create_org, name="create_org"),
     path(
         "delete_question/<int:question_id>/<int:survey_id>/",
@@ -55,7 +51,6 @@ urlpatterns = [
         views.delete_survey_template,
         name="delete_survey_template",
     ),
-    path("index/", views.index_view, name="index"),
     path("", views.login_view, name="login"),
     path("my-org/", views.my_org_view, name="my_org"),
     path("my-results/", views.my_results_view, name="my_results"),
@@ -72,8 +67,9 @@ urlpatterns = [
     path("settings-name/", views.settings_change_name, name="settings_name"),
     path("settings-pass/", views.settings_change_pass, name="settings_pass"),
     path("settings-user/", views.settings_user_view, name="settings_user"),
-    path("start-admin/", views.start_admin_view, name="start_admin"),
+    path("start-creator/", views.start_creator_view, name="start_creator"),
     path("start-user/", views.start_user_view, name="start_user"),
+    path("start-admin/", views.start_admin_view, name="start_admin"),
     path(
         "survey-result/<int:survey_id>/", views.survey_result_view, name="survey_result"
     ),

@@ -6,11 +6,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Inställningar</title>
-    <link rel="stylesheet" href="{% static 'styles.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/main.css' %}" />
   </head>
   <body>
-    {% include "topbar.html" with pagetitle=pagetitle %}
-    <div class="settings-container">
+    <div class="main-container">
+      {% include "topbar.html" with pagetitle=pagetitle %}
       <!-- Change later, if time, so user.profile_pic shows here (or default)  -->
       <div class=pagetitle>
         <h2>Administratör för<br>{{organization.name}}</h2>
@@ -19,7 +19,7 @@
         <div class="table-header">Inloggningsuppgifter</div>
         <div class="table-row">
             <div class="label">Namn</div>
-            <div class="value"> <!-- Test if username shows up -->
+            <div class="value"> 
               {{ user.name }} <a href="#" onclick="openEditName()"><span class="edit-icon">✏️</span></a>
             </div>
           </div>
@@ -32,22 +32,31 @@
         <div class="table-row">
             <div class="label">Mailadress</div>
             <div class="value">
-              {{ user.email }} <!-- Test if user email shows up -->
+              {{ user.email }}
             </div>
           </div>
         </div>
       <button class="delete-button"onclick="openTransfer()">Överlämna organisation</button>
 
 
-      <!-- Delete Confirmation Popup -->
+      <!-- Transfer Confirmation Popup -->
     <div id="transfer-popup" class="popup-overlay" style="display: none;">
         <div id="content" class="popup-content">
           <form 
             class="transfer-form"
             hx-post="/settings-admin/"
-            hx-target="#content"
+            hx-target="#transfer-error-box"
             hx-trigger="submit"
-            hx-swap="outerHTML">
+            hx-swap="innerHTML">
+
+            <!-- For showing error messages -->
+          <div
+            id="transfer-error-box"
+            class="error-msg"
+            style="color: red; font-weight: bold"
+            >
+            {{ message }}
+          </div>
 
             <span class="close-button" onclick="closeTransfer()">&times;</span> <!-- &times multiplication symbol -->
             <h2>OBS!</h2>
@@ -56,14 +65,14 @@
             {% csrf_token %}
             <label for="email">Överför till konto:</label>
             <input type="email" id="email" name="email" placeholder="Mejladress"> 
-            <button type="submit" class="delete-button">Överlämna organisation</button> <!-- TODO: Fix functionality when clicking on the button. Should check if the given mail address exists in the DB, if not tell user to try again, if exists transfer org to other account, give it admin rights and lastly remove this acc (logout). -->
+            <button type="submit" class="delete-button">Överlämna organisation</button> 
           </form>
         </div>
     </div>
     
     <!-- Edit name Popup -->
     <div id="edit-name-popup" class="popup-overlay" style="display: none;">
-      <div id= "content" class="popup-content">
+      <div id= "content" class="popup-content messages">
         <form 
           class="edit-name-form"
           hx-post="/settings-name/"
@@ -75,6 +84,7 @@
           {% csrf_token %}
               <label for="name">Ditt nya namn:</label>
               <input type="name" id="name" name="name" placeholder="Namn" required > 
+              <input type="hidden" name="from_settings" value="true">
               <!-- This line will reload the page after 100 ms (after the form is submitted) -->
               <button type="submit" onclick="setTimeout(() => location.reload(), 100);" class="delete-button">Byt namn</button>
         </form>
@@ -83,26 +93,59 @@
 
     <!-- Edit password Popup -->
     <div id="edit-pass-popup" class="popup-overlay" style="display: none;">
-      <div id= "content" class="popup-content">
-        <form 
-          class="edit-pass-form"
+      <div id= "content" class="popup-content messages">
+        <form class="edit-pass-form"
           hx-post="/settings-pass/"
-          hx-target="#content"
           hx-trigger="submit"
-          hx-swap="outerHTML"
+          hx-target="#pass-error-box"
+          hx-swap="innerHTML"
+        >
+          {% csrf_token %}
+          <!-- For showing error messages -->
+          <div
+            id="pass-error-box"
+            class="error-msg"
+            style="color: red; font-weight: bold"
           >
-          <span class="close-button" onclick="closeEditPass()">&times;</span>
+            {{ message }}
+          </div>
+          
+          <span class="close-button" onclick="closeEditPass();">&times;</span>
           {% csrf_token %}
               <label for="password">Ditt nuvarande lösenord:</label>
               <input type="password" id="pass_old" name="pass_old" placeholder="Nuvarande lösenord" required > 
               <label for="password">Ditt nya lösenord:</label>
               <input type="password" id="pass_new" name="pass_new" placeholder="Nytt lösenord" required >
+              <label for="password">Repetera ditt nya lösenord:</label>
+              <input type="password" id="pass_check" name="pass_check" placeholder="Repetera lösenord" required >
               <!-- Must reload after 500ms in order for this form to submit (slower) --> 
-              <button type="submit" onclick="setTimeout(() => location.reload(), 500);" class="delete-button">Byt lösenord</button>
+              <button type="submit"  class="delete-button">Byt lösenord</button>
         </form>
       </div>
-    </div>
+    </div> 
     <script>
+      // Error handling
+      document.body.addEventListener("htmx:afterRequest", function (event) {
+        const form = event.target;
+
+        // Find the nearest error box *inside that form*
+        const errorBox = form.querySelector(".error-msg");
+
+        // Safety check
+        if (!errorBox) return;
+
+        if (event.detail.successful) {
+        errorBox.innerHTML = "Ändringen lyckades";
+        errorBox.style.color = "green";
+        errorBox.style.display = "block";
+        // Close the popup for the user
+        setTimeout(() => location.reload(), 1000);
+      } else {
+        errorBox.innerHTML = event.detail.xhr.responseText || "Något gick fel";
+        errorBox.style.color = "red";
+        errorBox.style.display = "block";
+      }
+      });
       function openTransfer() {
           document.getElementById("transfer-popup").style.display = "flex";
       }

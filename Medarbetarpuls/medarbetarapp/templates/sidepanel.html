@@ -9,16 +9,21 @@ This template is designed to be used by including it and was specifically design
 <div class="sidepanel" id="panel">
   {% if user.admin %}
   <a href={% url 'start_admin' %}>Startsida</a>
+  <a href={% url 'my_org' %}>Min organisation</a>
+  <a href={% url 'analysis' %}>Analys</a>
+  <a href={% url 'settings_admin' %}>Inställningar</a>
+  {% elif user.user_role == "surveyresponder" %}
+  <a href={% url 'start_user' %}>Startsida</a>
+  <a href={% url 'unanswered_surveys' %}>Obesvarade enkäter</a>
+  <a href={% url 'my_results' %}>Se resultat</a>
+  <a href={% url 'settings_user' %}>Inställningar</a>
+  {% else %}
+  <a href={% url 'start_creator' %}>Startsida</a>
   <a href={% url 'unanswered_surveys' %}>Obesvarade enkäter</a>
   <a href={% url 'templates_and_drafts' %}>Mallar & Utkast</a>
   <a href={% url 'create_survey' %}>Skapa enkät</a>
   <a href={% url 'my_results' %}>Se resultat</a>
-  <a href={% url 'my_org' %}>Min organisation</a>
-  <a href={% url 'settings_admin' %}>Inställningar</a>
-  {% else %}
-  <a href={% url 'start_user' %}>Startsida</a>
-  <a href={% url 'unanswered_surveys' %}>Obesvarade enkäter</a>
-  <a href={% url 'my_results' %}>Se resultat</a>
+  <a href={% url 'analysis' %}>Analys</a>
   <a href={% url 'settings_user' %}>Inställningar</a>
   {% endif %}
   <button class="image-button logout" onclick="window.location.href='{% url 'login' %}'"

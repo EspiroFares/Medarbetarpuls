@@ -6,15 +6,29 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Medarbetarpuls - Logga in</title>
-    <link rel="stylesheet" href="{% static 'styles.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/main.css' %}" />
   </head>
   <body>
     <!-- To test this, switch to login.html in views.py -->
     <div class="login-container">
       <img src="{% static 'logo.png' %}" alt="Medarbetarpuls" class="logo" />
 
-      <form class="input-form" method="POST" action="{% url 'login' %}">
+      <form
+        class="input-form"
+        hx-post="{% url 'login' %}"
+        hx-target="#error-box"
+        hx-swap="innerHTML"
+      >
         {% csrf_token %}
+        <!-- For showing error messages -->
+        <div
+          id="error-box"
+          class="error-msg"
+          style="color: red; font-weight: bold"
+        >
+          {{ message }}
+        </div>
+
         <label for="email">Mejladress:</label>
         <input
           type="email"
@@ -38,13 +52,41 @@
 
       <div class="account-help-links">
         <!-- Replace # later with actual path to create_org and create_acc. -->
-        <a href="#" hx-get="{% url 'create_org_redirect' %}" hx-trigger="click">
+        <a href="#" hx-get="{% url 'create_org' %}" hx-trigger="click">
           Registrera ny organisation
         </a>
-        <a href="#" hx-get="{% url 'create_acc_redirect' %}" hx-trigger="click">
+        <a
+          href="#"
+          hx-get="{% url 'create_acc' %}"
+          hx-trigger="click"
+          hx-swap="none"
+        >
           Skapa nytt konto
         </a>
       </div>
     </div>
   </body>
+  <script>
+    // Error handling
+    document.body.addEventListener("htmx:afterRequest", function (event) {
+      const errorBox = document.getElementById("error-box");
+
+      if (!event.detail.successful) {
+        errorBox.innerHTML =
+          event.detail.xhr.responseText || "Fel inloggningsuppgifter";
+        errorBox.style.color = "red";
+        errorBox.style.display = "block";
+      }
+    });
+
+    // Hide error box when user focuses on any input field
+    document.querySelectorAll("input").forEach((input) => {
+      input.addEventListener("focus", () => {
+        const errorBox = document.getElementById("error-box");
+        if (errorBox) {
+          errorBox.style.display = "none";
+        }
+      });
+    });
+  </script>
 </html>

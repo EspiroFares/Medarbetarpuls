@@ -1,3 +1,5 @@
+from getpass import getuser
+from importlib.metadata import distribution
 from django.db import models
 from django.core.mail import send_mail
 from django.db.models.manager import BaseManager
@@ -7,7 +9,9 @@ from django.contrib.auth.models import (
     PermissionsMixin,
 )
 import logging
+import math
 from typing import cast
+import time
 
 # from .analysis_handler import AnalysisHandler
 
@@ -27,9 +31,6 @@ class Organization(models.Model):
     question_bank: OneToManyManager["Question"]
     survey_template_bank: OneToManyManager["SurveyTemplate"]
     org_emails = OneToManyManager["EmailList"]
-    # analysis_handler = models.OneToOneField(
-    #    AnalysisHandler, related_name="organization", on_delete=models.CASCADE
-    # )
 
     def __str__(self) -> str:
         return f"{self.name} | Admins: {', '.join(str(admin) for admin in self.admins.all())}"
@@ -104,7 +105,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):  # pyright: ignore
     # We deafult to 0 as the lowest level of authority
     authorization_level = models.IntegerField(default=0)  # pyright: ignore
     employee_groups = models.ManyToManyField(EmployeeGroup, related_name="employees")
-    survey_results = OneToManyManager["SurveyResult"]
+    survey_results = OneToManyManager["SurveyUserResult"]
     survey_groups = models.ManyToManyField(EmployeeGroup, related_name="managers")
     survey_templates = OneToManyManager["SurveyTemplate"]
     published_surveys = OneToManyManager["Survey"]
@@ -183,7 +184,7 @@ class Survey(models.Model):
         null=True,
     )
     employee_groups = models.ManyToManyField(EmployeeGroup, related_name="+")
-    survey_results: OneToManyManager["SurveyResult"]
+    survey_results: OneToManyManager["SurveyUserResult"]
     deadline = (
         models.DateTimeField()
     )  # stores both date and time (e.g., YYYY-MM-DD HH:MM:SS)
@@ -209,7 +210,9 @@ class Survey(models.Model):
         for group in self.employee_groups.all():
             for employee in group.employees.all():
                 if employee.id not in seen_employees:
-                    SurveyResult.objects.create(published_survey=self, user=employee)
+                    SurveyUserResult.objects.create(
+                        published_survey=self, user=employee
+                    )
                     seen_employees.add(employee)
                     count += 1
 
@@ -252,7 +255,7 @@ class SurveyTemplate(models.Model):
 
 
 # What this model does needs to be explained here
-class SurveyResult(models.Model):
+class SurveyUserResult(models.Model):
     published_survey = models.ForeignKey(
         Survey, on_delete=models.CASCADE, related_name="survey_results", null=True
     )
@@ -377,16 +380,18 @@ class Question(models.Model):
 class Answer(models.Model):
     is_answered = models.BooleanField(default=False)  # pyright: ignore
     survey = models.ForeignKey(
-        SurveyResult, on_delete=models.CASCADE, related_name="answers", null=True
+        SurveyUserResult, on_delete=models.CASCADE, related_name="answers", null=True
     )
     question = models.ForeignKey(
         Question, on_delete=models.CASCADE, related_name="answers", null=True
     )
-    comment = models.CharField(max_length=255)
-    free_text_answer = models.CharField(max_length=255)
-    multiple_choice_answer = models.JSONField(default=list)  # Stores a list of booleans
-    yes_no_answer = models.BooleanField(default=False)  # pyright: ignore
-    slider_answer = models.FloatField(null=True)
+    comment = models.CharField(max_length=255, null=True, blank=True)
+    free_text_answer = models.CharField(max_length=255, null=True, blank=True)
+    multiple_choice_answer = models.JSONField(
+        default=list, null=True, blank=True
+    )  # Stores a list of booleans
+    yes_no_answer = models.BooleanField(default=False, null=True, blank=True)  # pyright: ignore
+    slider_answer = models.FloatField(null=True, blank=True)
 
     @property
     def answer_format(self) -> QuestionFormat | None:

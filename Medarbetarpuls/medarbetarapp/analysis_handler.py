@@ -31,12 +31,14 @@ class AnalysisHandler:
         return Survey.objects.get(id=survey_id)
 
     def get_survey_result(self, survey):
-        """Retrieve a specific SurveyResult."""
-        return SurveyResult.objects.filter(published_survey=survey)
+        """Retrieve a specific SurveyUserResult."""
+        return SurveyUserResult.objects.filter(published_survey=survey)
 
-    def get_question(self, question_id: int) -> Question:
-        """Fetch the question object by id."""
-        return Question.objects.filter(id=question_id).first()
+    def get_question(self, question_txt: str) -> Question:
+        """Fetch the question object by text. Assumes there is only one question phrased the same way."""
+        # Right now the question is fetched by an exact match,
+        # use question__icontains= instead of question= for a more flexible match.
+        return Question.objects.filter(question__icontains=question_txt).first()
 
     def get_answers(
         self,
