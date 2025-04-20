@@ -1,31 +1,43 @@
 // Initialize the surveyChart
-function initSurveyChart(chartID, chartLabels, chartData) {
-    const surveyChartElement = document.getElementById(chartID);
-    if (surveyChartElement) { // Check if the canvas exists, else the script will crash
-        const ctx1 = surveyChartElement.getContext("2d");
+function initBarChart(chartID, chartLabels, chartData, chartColors) {
+    const barElement = document.getElementById(chartID);
+    if (barElement) { // Check if the canvas exists, else the script will crash
+        const ctx1 = barElement.getContext("2d");
         new Chart(ctx1, {
-            type: "line",
+            type: 'bar',
             data: {
                 labels: chartLabels,
-                datasets: [{
-                    label: "Answer Count",
-                    data: chartData, // Example data
-                    backgroundColor: "rgba(54, 162, 235, 0.5)",
-                    borderColor: "rgba(54, 162, 235, 1)",
-                    borderWidth: 1
-                }]
+                    datasets: [{
+                        label: "Survey Responses",
+                        data: chartData, 
+                        backgroundColor: chartColors,
+                    }]
             },
             options: {
                 responsive: true,
+                borderRadius: 10,
                 scales: {
+                    x: {
+                        grid: {
+                            display: false // Disable vertical grid lines
+                        },
+                    },
                     y: {
+                        border: {
+                            dash: [5, 5] // Make vertical grid lines dashed
+                        },
                         beginAtZero: true
                     }
-                }
-            }
+                },
+                //plugins: { // Add this section to control the legend
+                //    legend: {
+                //        display: false, // This will hide the legend
+                //    }
+                //}
+            },
         });
     } else {
-        console.warn("surveyChart canvas not found.");
+        console.warn("enpsBar canvas not found.");
     }
 }
 
@@ -37,10 +49,10 @@ function initPieChart(chartID, chartLabels, chartData, chartColors) {
         new Chart(ctx2, {
             type: "pie",
             data: {
-                labels: chartLabels, // Example labels
+                labels: chartLabels, 
                 datasets: [{
                     label: "eNPS Responses",
-                    data: chartData, // Example data
+                    data: chartData, 
                     backgroundColor: chartColors,
                 }]
             },
@@ -197,12 +209,12 @@ function initEnpsBar(chartID, chartLabels, chartData){
                             display: false // Disable vertical grid lines
                         },
                     },
-                y: {
-                    border: {
-                        dash: [5, 5] // Make vertical grid lines dashed
-                    },
-                    beginAtZero: true
-                }
+                    y: {
+                        border: {
+                            dash: [5, 5] // Make vertical grid lines dashed
+                        },
+                        beginAtZero: true
+                    }
                 }
             },
         });

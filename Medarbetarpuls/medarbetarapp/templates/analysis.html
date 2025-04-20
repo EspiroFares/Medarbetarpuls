@@ -52,7 +52,7 @@
           <div class="analysis-item-title">
             <h2><b>Analysera fråga</b></h2>
           </div>
-          <div class="graph-container">
+          <div class="graph-container" style="height: 90%;">
             <canvas id="enpsChart"></canvas>
           </div>
         </div>
@@ -91,7 +91,8 @@
         initEnpsGauge("enpsGauge", enpsGaugeData, enpsDataDataChange, enpsDate);
         initEnpsBar("enpsBar", enpsBarLabels, enpsBarData);
         initAnswerFrequency("canvas", answerData, dataAnswerChange);
-        initPieChart("enpsChart", pieLabels, pieData, pieColors);
+        //initPieChart("enpsChart", pieLabels, pieData, pieColors);
+        initBarChart("enpsChart", pieLabels, pieData, pieColors);
     });
     </script>
   </body>
