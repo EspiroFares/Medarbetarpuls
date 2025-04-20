@@ -135,16 +135,20 @@ function initEnpsBar(){
             options: {
                 responsive: true,
                 borderRadius: 10,
+                barThickness: 20,
                 plugins: { // Add this section to control the legend
                     legend: {
                         display: false, // This will hide the legend
                     }
                 },
+                style: {
+                    barPercentage: 'flex',
+                    },
                 scales: {
                     x: {
                         grid: {
                             display: false // Disable vertical grid lines
-                        }
+                        },
                     },
                 y: {
                     border: {
