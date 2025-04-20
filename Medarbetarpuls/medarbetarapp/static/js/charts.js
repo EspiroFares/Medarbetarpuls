@@ -53,16 +53,51 @@ function initPieChart(chartID, chartLabels, chartData, chartColors) {
     }
 }
 
-function initEnpsGauge(chartID, chartData, dataChange) {
+function initEnpsGauge(chartID, chartData, dataChange, lastDateChange) {
     const enpsGaugeElement = document.getElementById(chartID);
     if (enpsGaugeElement) { // Check if the canvas exists, else the script will crash
         const ctx3 = enpsGaugeElement.getContext("2d");
+        let dataChangeText = '';
+        let chartDataText = '';
+        let dataChangeColor = '';
+        let chartDataColor = '';
+
+        if (dataChange > 0) {
+            dataChangeText = '↑' + dataChange;
+            dataChangeColor = 'rgb(140, 214, 16)';
+        } else if (dataChange < 0) {
+            dataChangeText = '↓' + Math.abs(dataChange);
+            dataChangeColor = 'rgb(214, 16, 16)';
+        } else {
+            dataChangeText = '+-0';
+            dataChangeColor = 'black';
+        }
+
+        if (chartData > 0) {
+            chartDataText = '+' + chartData; 
+            if (chartData > 20) {
+                chartDataColor = 'rgb(140, 214, 16)'; // Green
+            } else {
+                chartDataColor = 'rgb(248, 149, 28)'; // Orange
+            }
+        } else if (chartData < 0) {
+            chartDataText = '-' + Math.abs(chartData);
+            if (chartData < -20) {
+                chartDataColor = 'rgb(214, 16, 16)'; // Red
+            } else {
+                chartDataColor = 'rgb(248, 149, 28)'; // Orange
+            }
+        } else {
+            chartDataText = '0';
+            chartDataColor = 'rgb(248, 149, 28)'; // Orange
+        }
+        
         new Chart(ctx3, {
             type: 'doughnut',
             data: {
                 datasets: [{
-                    data: chartData, // Example data
-                    backgroundColor: ['rgb(140, 214, 16)', 'grey'],
+                    data: [100+chartData, 100-chartData],
+                    backgroundColor: [chartDataColor, 'grey'],
                 }],
             },
             options: {
@@ -71,21 +106,24 @@ function initEnpsGauge(chartID, chartData, dataChange) {
                 rotation: -90,
                 cutout: '80%',
                 plugins: {
+                    tooltip: {
+                        enabled: false // Disable tooltips
+                    },
                     annotation: {
                         annotations: {
                             doughnutLabel: {
                                 type: 'doughnutLabel',
-                                content: ({chart}) => [ '↑' + dataChange,
-                                  '+' + chart.data.datasets[0].data[0].toFixed(0),
-                                  '2025/05/12',
+                                content: [dataChangeText,
+                                  chartDataText,
+                                  lastDateChange,
                                 ],
                                 drawTime: 'beforeDraw',
                                 position: {
                                   y: '-30px'
                                 },
-                                font: [{size: 30}, {size: 50, weight: 'bold'}, {size: 30}],
-                                color: ({chart}) => ['rgb(140, 214, 16)','rgb(140, 214, 16)', 'grey']
-                              }
+                                font: [{size: 30, weight: 'bold'}, {size: 50, weight: 'bold'}, {size: 30}],
+                                color: [dataChangeColor,chartDataColor,'black'],
+                            }
                         }
                     }
                 }
@@ -93,6 +131,28 @@ function initEnpsGauge(chartID, chartData, dataChange) {
         });
     } else {
         console.warn("enpsGauge canvas not found.");
+    }
+}
+
+function generateLabelContent(chartData, dataChange) {
+    if (dataChange > 0) {
+        return [
+            '↑ ' + dataChange, // Up arrow with positive change
+            '+' + chartData,    // Display chartData
+            '2025/05/12',       // Date
+        ];
+    } else if (dataChange < 0) {
+        return [
+            '↓ ' + Math.abs(dataChange), // Down arrow with negative change
+            '-' + chartData,              // Display chartData
+            '2025/05/12',                  // Date
+        ];
+    } else {
+        return [
+            'No Change', // Indicate no change
+            chartData,   // Display chartData
+            '2025/05/12', // Date
+        ];
     }
 }
 
@@ -162,11 +222,25 @@ function initAnswerFrequency(chartID, chartData, dataChange) {
     const radiusA = 60; 
     const radiusB = 110;
 
+    let colorStart;
+    let colorEnd; 
+    if (chartData < 40) {
+        colorStart = 'rgb(204, 22, 22)'; // Red
+        colorEnd = 'rgba(204, 22, 22, 0)';   // Transparent Red
+    } else if (chartData < 60) {
+        colorStart = 'rgb(248, 149, 28)'; // Orange
+        colorEnd = 'rgba(248, 149, 28, 0)';   // Transparent Orange
+    } else if (chartData < 80) {
+        colorStart = 'rgb(252, 252, 29)'; // Yellow
+        colorEnd = 'rgba(252, 252, 29, 0)';   // Transparent Yellow
+    } else {
+        colorStart = 'rgba(132, 204, 22, 1)'; // Green
+        colorEnd = 'rgba(132, 204, 22, 0)';   // Transparent Green
+    }
+
     const gradient = ctx.createRadialGradient(centerX, centerY, radiusA, centerX, centerY, radiusB);
-
-    gradient.addColorStop(0, 'rgba(132, 204, 22, 1)'); // Full opacity at radius A (center)
-    gradient.addColorStop(1, 'rgba(132, 204, 22, 0)'); // Transparent at radius B
-
+    gradient.addColorStop(0, colorStart); // Full opacity at radius A (center)
+    gradient.addColorStop(1, colorEnd);
     // Clear the canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -177,10 +251,20 @@ function initAnswerFrequency(chartID, chartData, dataChange) {
     ctx.fill();
     ctx.closePath();
     ctx.font = "15px sans-serif";
-    ctx.fillStyle = "black";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText("↑ +" + dataChange, centerX, centerY - 20); 
+
+    if (dataChange > 0) {
+        ctx.fillStyle = "green"; // Change color to green if dataChange is positive
+        ctx.fillText("↑ +" + dataChange + "%", centerX, centerY - 20);
+    } else if (dataChange < 0) {
+        ctx.fillStyle = "red"; // Change color to red if dataChange is negative
+        ctx.fillText("↓ -" + dataChange + "%", centerX, centerY - 20);
+    } else if (dataChange == 0) {
+        ctx.fillStyle = "black"; // Default color
+        ctx.fillText("+- " + dataChange + "%", centerX, centerY - 20);
+    } 
+    ctx.fillStyle = "black"
     ctx.font = "30px sans-serif";
     ctx.fillText(chartData + "%", centerX, centerY + 10);
 }
