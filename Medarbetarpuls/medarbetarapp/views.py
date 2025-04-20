@@ -1119,6 +1119,10 @@ def start_user_view(request):
 def survey_result_view(request, survey_id):
     survey = models.Survey.objects.filter(id=survey_id).first()
 
+    if survey is None:
+        # This survey has no answers (should not even be displayed to the user then)
+        return HttpResponse(400)
+
     # TODO : Ändra så att analysis handler fås från organization
     analysis_handler = AnalysisHandler()
 
