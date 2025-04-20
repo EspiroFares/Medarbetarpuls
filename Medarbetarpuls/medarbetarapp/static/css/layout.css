@@ -393,13 +393,13 @@
 
 .analysis-item.ratio-5-1 {
     width: calc(100% - 20px);
-    aspect-ratio: 6 / 1;
+    aspect-ratio: 5 / 1;
     min-width: 720px;
 }
 
 .analysis-item-title {
     position: absolute; /* Position the title absolutely */
-    top: 0px; /* Distance from the top */
+    top: -10px; /* Distance from the top */
     left: 10px; /* Distance from the left */
     padding: 5px; /* Padding around the title */
     border-radius: 5px; /* Rounded corners for the title box */
@@ -411,17 +411,19 @@
 .graph-container {
     flex: 1;
     display: flex;
+    justify-content: center;
     align-items: center;
     width: 100%;
     height: 100%;
 }
 
 .gauge-container {
-    flex: 1;
     display: flex;
+    flex: 0.5;
     align-items: center;
-    height: 100%;
-    min-width: 33%;
+    justify-content: center;
+    height: 90%;
+    min-width: 20%;
     overflow-x: hidden;
 }
 

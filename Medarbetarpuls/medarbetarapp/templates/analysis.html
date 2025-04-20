@@ -43,7 +43,7 @@
           <div class="analysis-item-title">
             <h2><b>Svarsfrekvens</b></h2>
           </div>  
-          <div class="graph-container" style = "justify-content: center;">
+          <div class="graph-container">
             <canvas id="canvas" width="400" height="400"></canvas>
           </div>
         </div>
@@ -63,7 +63,35 @@
     
 
     <script>
-      
+
+      //Data for the enpsGauge, replace with data from database
+      const enpsGaugeData = [70, 30]
+      const enpsDataDataChange = 15
+
+      //Data for the enpsBar, replace with data from database
+      const enpsBarLabels = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
+      const enpsBarData = [5, 2, 3, 30, 56, 55, 40, 20, 10, 5, 10]
+
+      //Data for the answer frequency, replace with data from database
+      const answerData = 70
+      const dataAnswerChange = 15
+
+      //Data for the pie chart, replace with data from database
+      const pieLabels = ['Promoters', 'Passives', 'Detractors']
+      const pieData = [70, 20, 10]
+      const pieColors = [
+        'rgb(140, 214, 16)',
+        'rgb(16, 23, 214)',
+        'rgb(16, 191, 214)'
+      ];
+
+      document.addEventListener("DOMContentLoaded", function() {
+
+        initEnpsGauge("enpsGauge", enpsGaugeData, enpsDataDataChange);
+        initEnpsBar("enpsBar", enpsBarLabels, enpsBarData);
+        initAnswerFrequency("canvas", answerData, dataAnswerChange);
+        initPieChart("enpsChart", pieLabels, pieData, pieColors);
+    });
     </script>
   </body>
 </html>
