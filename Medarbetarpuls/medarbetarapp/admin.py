@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser, SurveyTemplate, Organization, SurveyResult, Answer  # Import your CustomUser model
+from .models import CustomUser, SurveyTemplate, Organization, SurveyUserResult, Answer  # Import your CustomUser model
 
 class SurveyResultAdmin(admin.ModelAdmin):
     list_display = ("user", "published_survey", "is_answered", "get_answers")
@@ -17,7 +17,7 @@ class AnswerAdmin(admin.ModelAdmin):
 
 admin.site.register(Answer, AnswerAdmin)
 
-admin.site.register(SurveyResult, SurveyResultAdmin)
+admin.site.register(SurveyUserResult, SurveyResultAdmin)
 
 class CustomUserAdmin(UserAdmin):
     model = CustomUser
