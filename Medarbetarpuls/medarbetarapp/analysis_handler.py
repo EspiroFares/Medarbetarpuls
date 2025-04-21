@@ -1,4 +1,3 @@
-from getpass import getuser
 from django.db import models
 from django.db.models.query import QuerySet
 from django.db.models.manager import BaseManager
@@ -40,13 +39,19 @@ class AnalysisHandler:
         # use question__icontains= instead of question= for a more flexible match.
         return Question.objects.filter(id=question_id).first()
 
+    def get_surveys_for_group(self, employee_group: EmployeeGroup):
+        return Survey.objects.filter(
+            employee_group=employee_group
+        ).distinct()  # distinct() removes duplicates
+
     def get_answers(
         self,
         question: Question,
         survey: Survey | None = None,
         user: CustomUser | None = None,
+        employee_group: EmployeeGroup | None = None,
     ):
-        """Get answers for a given question. Can optionally be filtered to a specific survey/result or a specific user/responder."""
+        """Get answers for a given question. Can optionally be filtered to a specific survey/result, specific user/responder or an employeegroup."""
         filters = {"question": question, "is_answered": True}
 
         if survey:
@@ -57,8 +62,10 @@ class AnalysisHandler:
             if user == survey.creator:
                 print("No answers available for the creator of the survey.")
                 return None
-
             filters["survey__user"] = user
+
+        elif employee_group:
+            filters["survey__user__in"] = employee_group.employees.all()
 
         answers = Answer.objects.filter(**filters)
 
@@ -75,13 +82,24 @@ class AnalysisHandler:
         self,
         question: Question,
         survey: Survey | None = None,
+        user: CustomUser | None = None,
+        employee_group: EmployeeGroup | None = None,
     ):
-        """Returns all comments from a question, optionaly question and survey."""
+        """Returns all comments from a question, optionally question and survey."""
         filters = {"question": question, "is_answered": True, "comment__isnull": False}
 
         if survey:
             results = self.get_survey_result(survey)
             filters["survey__in"] = results
+
+        if user:
+            if user == survey.creator:
+                print("No comments available for the creator of the survey.")
+                return None
+            filters["survey__user"] = user
+
+        elif employee_group:
+            filters["survey__user__in"] = employee_group.employees.all()
 
         return Answer.objects.filter(**filters).exclude(
             comment=""
@@ -113,6 +131,7 @@ class AnalysisHandler:
         self,
         survey_id: int,
         user: CustomUser | None = None,
+        employee_group: EmployeeGroup | None = None,
     ):
         """
         Get all data needed to render ENPS analysis:
@@ -127,14 +146,18 @@ class AnalysisHandler:
         question = Question.objects.filter(
             question__icontains=question_txt
         ).first()  # maybe change this way of getting the question later...
-        answers = self.get_answers(question, survey, user)
+        answers = self.get_answers(
+            question, survey, user=user, employee_group=employee_group
+        )
         # answers = self.get_answers(question)
         promoters, passives, detractors = self.calculate_enps_data(answers)
         score = self.calculate_enps_score(promoters, passives, detractors)
         distribution = self.get_response_distribution_slider(answers)
         standard_deviation = self.calculate_standard_deviation(answers)
         variation_coefficient = self.calculate_variation_coefficient(answers)
-        comments = self.get_comments(question, survey)
+        comments = self.get_comments(
+            question, survey, user=user, employee_group=employee_group
+        )
         return {
             "question": question,
             "answers": answers,
@@ -188,6 +211,7 @@ class AnalysisHandler:
         question_id: int,
         survey_id: int,
         user: CustomUser | None = None,
+        employee_group: EmployeeGroup | None = None,
     ):
         """
         Get all data needed to render slider analysis:
@@ -197,7 +221,9 @@ class AnalysisHandler:
         """
         survey = self.get_survey(survey_id)
         question = self.get_question(question_id)
-        answers = self.get_answers(question, survey, user)
+        answers = self.get_answers(
+            question, survey, user=user, employee_group=employee_group
+        )
         distribution = self.get_response_distribution_slider(answers)
         standard_deviation = self.calculate_standard_deviation(answers)
         variation_coefficient = self.calculate_variation_coefficient(answers)
@@ -205,7 +231,7 @@ class AnalysisHandler:
         return {
             "question": question,
             "answers": answers,
-            "slider_values": list(range(1, 11)),
+            "slider_values": [str(i) for i in range(1, 11)],
             "comments": comments,
             "distribution": distribution,
             "standard_deviation": standard_deviation,
@@ -233,13 +259,16 @@ class AnalysisHandler:
         question_id: int,
         survey_id: int,
         user: CustomUser | None = None,
+        employee_group: EmployeeGroup | None = None,
     ):
         survey = self.get_survey(survey_id)
         question = self.get_question(question_id)
         answer_options = (
             question.specific_question.options
         )  # maybe change this line to question.multiple_choice_question.options
-        answers = self.get_answers(question, survey, user)
+        answers = self.get_answers(
+            question, survey, user=user, employee_group=employee_group
+        )
         distribution = self.get_response_distribution_mc(answers, answer_options)
         comments = self.get_comments(question, survey)
         return {
@@ -263,6 +292,7 @@ class AnalysisHandler:
         question_id: int,
         survey_id: int,
         user: CustomUser | None = None,
+        employee_group: EmployeeGroup | None = None,
     ):
         survey = self.get_survey(survey_id)
         question = self.get_question(question_id)
@@ -270,7 +300,9 @@ class AnalysisHandler:
             "YES",
             "NO",
         ]
-        answers = self.get_answers(question, survey, user)
+        answers = self.get_answers(
+            question, survey, user=user, employee_group=employee_group
+        )
         distribution = self.get_response_distribution_yes_no(answers)
         comments = self.get_comments(question, survey)
         return {
@@ -287,10 +319,13 @@ class AnalysisHandler:
         question_id: int,
         survey_id: int,
         user: CustomUser | None = None,
+        employee_group: EmployeeGroup | None = None,
     ):
         survey = self.get_survey(survey_id)
         question = self.get_question(question_id)
-        answers = self.get_answers(question, survey, user)
+        answers = self.get_answers(
+            question, survey, user=user, employee_group=employee_group
+        )
         comments = self.get_comments(question, survey)
         filters = {
             "question": question,
@@ -310,6 +345,7 @@ class AnalysisHandler:
         self,
         survey_id: int,
         user: CustomUser | None = None,
+        employee_group: EmployeeGroup | None = None,
     ):
         """
         This function returns a summary for a whole survey. Optionally filtered to a specific user.
@@ -325,18 +361,38 @@ class AnalysisHandler:
         for question in questions:
             if question.question_format == QuestionFormat.MULTIPLE_CHOICE:
                 question_summary = self.get_multiple_choice_summary(
-                    question.id, survey.id, user
+                    question_id=question.id,
+                    survey_id=survey.id,
+                    user=user,
+                    employee_group=employee_group,
                 )
             elif question.question_format == QuestionFormat.YES_NO:
-                question_summary = self.get_yes_no_summary(question.id, survey.id, user)
+                question_summary = self.get_yes_no_summary(
+                    question_id=question.id,
+                    survey_id=survey.id,
+                    user=user,
+                    employee_group=employee_group,
+                )
             elif question.question_format == QuestionFormat.TEXT:
                 question_summary = self.get_free_text_summary(
-                    question.id, survey.id, user
+                    question_id=question.id,
+                    survey_id=survey.id,
+                    user=user,
+                    employee_group=employee_group,
                 )
             elif question.question_type == QuestionType.ENPS:
-                question_summary = self.get_enps_summary(survey.id, user)
+                question_summary = self.get_enps_summary(
+                    survey_id=survey.id,
+                    user=user,
+                    employee_group=employee_group,
+                )
             elif question.question_format == QuestionFormat.SLIDER:
-                question_summary = self.get_slider_summary(question.id, survey.id, user)
+                question_summary = self.get_slider_summary(
+                    question_id=question.id,
+                    survey_id=survey.id,
+                    user=user,
+                    employee_group=employee_group,
+                )
 
             summary["summaries"].append(question_summary)
 
