@@ -36,64 +36,58 @@
           <div class="graph-container">
             <canvas id="enpsBar"></canvas>
           </div>
-          
         </div>
 
         <div class="analysis-item ratio-1-1">
           <div class="analysis-item-title">
             <h2><b>Svarsfrekvens</b></h2>
-          </div>  
+          </div>
           <div class="graph-container">
             <canvas id="canvas" width="400" height="400"></canvas>
           </div>
         </div>
-        
+
         <div class="analysis-item ratio-2-1">
           <div class="analysis-item-title">
             <h2><b>Analysera fråga</b></h2>
           </div>
-          <div class="graph-container" style="height: 90%;">
+          <div class="graph-container" style="height: 90%">
             <canvas id="enpsChart"></canvas>
           </div>
         </div>
-  
       </div>
-      
     </div>
-    
 
     <script>
-
       //Data for the enpsGauge, replace with data from database
-      const enpsGaugeData = 21
-      const enpsDataDataChange = -10
-      const enpsDate = "2023-10-01" // Replace with the most recent date that changed the eNPS score
+      const enpsGaugeData = {{enpsScore|safe}};
+      const enpsDataDataChange = -10;
+      const enpsDate = "{{deadline}}"; // Replace with the most recent date that changed the eNPS score
 
       //Data for the enpsBar, replace with data from database
-      const enpsBarLabels = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
-      const enpsBarData = [5, 2, 3, 30, 56, 55, 40, 20, 10, 5, 10]
+      const enpsBarLabels = {{slider_values|safe}};
+      const enpsBarData = {{enpsDistribution|safe}};
 
       //Data for the answer frequency, replace with data from database
-      const answerData = 51
-      const dataAnswerChange = 0
+      const answerData = 51;
+      const dataAnswerChange = 0;
 
       //Data for the pie chart, replace with data from database
-      const pieLabels = ['Promoters', 'Passives', 'Detractors']
-      const pieData = [70, 20, 10]
+      const pieLabels = {{enpsPieLabels|safe}};
+      const pieData = {{enpsPieData|safe}};
       const pieColors = [
-        'rgb(140, 214, 16)',
-        'rgb(16, 23, 214)',
-        'rgb(16, 191, 214)'
+        "rgb(140, 214, 16)",
+        "rgb(16, 23, 214)",
+        "rgb(16, 191, 214)",
       ];
 
-      document.addEventListener("DOMContentLoaded", function() {
-
+      document.addEventListener("DOMContentLoaded", function () {
         initEnpsGauge("enpsGauge", enpsGaugeData, enpsDataDataChange, enpsDate);
         initEnpsBar("enpsBar", enpsBarLabels, enpsBarData);
         initAnswerFrequency("canvas", answerData, dataAnswerChange);
         //initPieChart("enpsChart", pieLabels, pieData, pieColors);
         initBarChart("enpsChart", pieLabels, pieData, pieColors);
-    });
+      });
     </script>
   </body>
 </html>

@@ -8,7 +8,7 @@ from django.db.models import Count
 from django.core.cache import cache
 from datetime import datetime, time
 from django.http import HttpResponse
-from .models import SurveyUserResult
+from .models import QuestionType, SurveyUserResult
 from django.core.mail import send_mail
 from .tasks import publish_survey_async
 from django.utils.timezone import make_aware
@@ -1268,11 +1268,33 @@ def find_organization_by_email(email: str) -> models.Organization | None:
 
 
 def chart_view(request):
-    SURVEY_ID = 3  # Choose which survey to show here
+    #
+    # const enpsGaugeData = 21
+    # const enpsDataDataChange = -10
+    # const enpsDate = "2023-10-01" // Replace with the most recent date that changed the eNPS score
+
+    #
+    # const enpsBarLabels = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
+    # const enpsBarData = [5, 2, 3, 30, 56, 55, 40, 20, 10, 5, 10]
+
+    #
+    # const answerData = 51
+    # const dataAnswerChange = 0
+
+    #
+    # const pieLabels = ['Promoters', 'Passives', 'Detractors']
+    # const pieData = [70, 20, 10]
+    SURVEY_ID = 1  # Choose which survey to show here
 
     analysisHandler = AnalysisHandler()
-    question_txt = "Did you take enough breaks throughout the day?"
-    context = analysisHandler.get_survey_summary(SURVEY_ID)
+    summary = analysisHandler.get_survey_summary(SURVEY_ID)
+    for i in summary["summaries"]:
+        if i["question"].question_type == QuestionType.ENPS:
+            print(i)
+            context = i
+            break
+    context["deadline"] = summary["survey"].deadline.strftime("%Y-%m-%d")
+
     return render(request, "analysis.html", context)
 
 

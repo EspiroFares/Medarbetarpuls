@@ -124,7 +124,9 @@ class AnalysisHandler:
         question_txt = (
             "How likely are you to recommend this company as a place to work?"
         )
-        question = Question.objects.filter(question__icontains=question_txt).first()
+        question = Question.objects.filter(
+            question__icontains=question_txt
+        ).first()  # maybe change this way of getting the question later...
         answers = self.get_answers(question, survey, user)
         # answers = self.get_answers(question)
         promoters, passives, detractors = self.calculate_enps_data(answers)
@@ -134,12 +136,14 @@ class AnalysisHandler:
         variation_coefficient = self.calculate_variation_coefficient(answers)
         comments = self.get_comments(question, survey)
         return {
-            "score": score,
+            "question": question,
+            "answers": answers,
+            "enpsScore": score,
             "comments": comments,
-            "labels": ["Promoters", "Passives", "Detractors"],
-            "data": [promoters, passives, detractors],
-            "slider_values": list(range(1, 11)),
-            "distribution": distribution,
+            "enpsPieLabels": ["Promoters", "Passives", "Detractors"],
+            "enpsPieData": [promoters, passives, detractors],
+            "slider_values": [str(i) for i in range(1, 11)],
+            "enpsDistribution": distribution,
             "standard_deviation": standard_deviation,
             "variation_coefficient": variation_coefficient,
         }
@@ -232,7 +236,9 @@ class AnalysisHandler:
     ):
         survey = self.get_survey(survey_id)
         question = self.get_question(question_id)
-        answer_options = question.specific_question.options
+        answer_options = (
+            question.specific_question.options
+        )  # maybe change this line to question.multiple_choice_question.options
         answers = self.get_answers(question, survey, user)
         distribution = self.get_response_distribution_mc(answers, answer_options)
         comments = self.get_comments(question, survey)
@@ -311,26 +317,28 @@ class AnalysisHandler:
         survey = Survey.objects.filter(id=survey_id).first()
 
         summary = {
-            "Survey": survey,
-            "Summaries": [],
+            "survey": survey,
+            "summaries": [],
         }
         questions = Question.objects.filter(connected_surveys__id=survey_id)
 
         for question in questions:
             if question.question_format == QuestionFormat.MULTIPLE_CHOICE:
                 question_summary = self.get_multiple_choice_summary(
-                    question.id, survey.id
+                    question.id, survey.id, user
                 )
             elif question.question_format == QuestionFormat.YES_NO:
-                question_summary = self.get_yes_no_summary(question.id, survey.id)
+                question_summary = self.get_yes_no_summary(question.id, survey.id, user)
             elif question.question_format == QuestionFormat.TEXT:
-                question_summary = self.get_free_text_summary(question.id, survey.id)
-            elif question.question_format == QuestionFormat.SLIDER:
-                question_summary = self.get_slider_summary(question.id, survey.id)
+                question_summary = self.get_free_text_summary(
+                    question.id, survey.id, user
+                )
             elif question.question_type == QuestionType.ENPS:
-                question_summary = self.get_enps_summary(survey.id)
+                question_summary = self.get_enps_summary(survey.id, user)
+            elif question.question_format == QuestionFormat.SLIDER:
+                question_summary = self.get_slider_summary(question.id, survey.id, user)
 
-            summary["Summaries"].append(question_summary)
+            summary["summaries"].append(question_summary)
 
         return summary
 

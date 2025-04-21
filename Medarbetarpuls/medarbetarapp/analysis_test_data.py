@@ -290,18 +290,24 @@ for user in [admin, survey_creator, *survey_responders]:
 # ----- CREATE SURVEYS AND QUESTIONS -----
 surveys = createSurveys(3, survey_creator)
 
+question_enps = createQuestions(1, QuestionFormat.SLIDER, QuestionType.ENPS, surveys[0])
 question_mc = createQuestions(
     1, QuestionFormat.MULTIPLE_CHOICE, QuestionType.REOCCURRING, surveys[0]
 )
 
+question_yn = createQuestions(
+    1, QuestionFormat.YES_NO, QuestionType.REOCCURRING, surveys[0]
+)
+all_questions = question_mc + question_enps + question_yn
+
 for s in surveys:
-    for q in question_mc:
+    for q in all_questions:
         q.connected_surveys.add(s)
 
     for r in survey_responders:
         survey_result = createSurveyUserResult(1, s, r)
         for sr in survey_result:
-            for q in question_mc:
+            for q in all_questions:
                 createAnswers(1, sr, q)
 
 print("✅ Test organization and users created successfully!")
