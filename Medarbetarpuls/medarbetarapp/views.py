@@ -22,8 +22,8 @@ from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 
 
-
 logger = logging.getLogger(__name__)
+
 
 @csrf_protect
 def create_acc(request):
@@ -50,7 +50,7 @@ def create_acc(request):
             logger.error("This email is not authorized for registration.")
             return HttpResponse(status=400)
 
-        code = 123456   # make random later, just test now
+        code = 123456  # make random later, just test now
         cache.set(f"verify_code_{email}", code, timeout=300)
 
         send_mail(
@@ -106,13 +106,13 @@ def add_employee_view(request):
         editGroup = request.POST.get("edit_employee")
         editName = request.POST.get("new_employee_group")
         editUserMail = request.POST.get("employee")
-        if(editGroup == "true"):
+        if editGroup == "true":
             if models.EmailList.objects.filter(email=editUserMail).exists():
                 org = user.admin
                 if models.EmployeeGroup.objects.filter(name=editName).exists():
-                        group = models.EmployeeGroup.objects.get(name=editName)
+                    group = models.EmployeeGroup.objects.get(name=editName)
                 else:
-                    #create new employee group
+                    # create new employee group
                     group = models.EmployeeGroup(name=editName, organization=org)
                     group.save()
                 editUser = models.CustomUser.objects.get(email=editUserMail)
@@ -120,7 +120,7 @@ def add_employee_view(request):
                 user.survey_groups.add(group)
                 return HttpResponse("Successful", status=200)
 
-            else: 
+            else:
                 logger.warning("User does not exist")
                 return HttpResponse("Användaren finns inte", status=400)
         elif user.user_role == models.UserRole.ADMIN and hasattr(user, "admin"):
@@ -184,7 +184,9 @@ def answer_survey_view(request, survey_result_id, question_index=0):
     Returns:
         HttpResponse: Renders the current question or redirects after completion.
     """
-    survey_result = get_object_or_404(SurveyUserResult, pk=survey_result_id, user=request.user)
+    survey_result = get_object_or_404(
+        SurveyUserResult, pk=survey_result_id, user=request.user
+    )
     questions = survey_result.published_survey.questions.all()
 
     if question_index >= len(questions):
@@ -268,9 +270,9 @@ def authentication_acc_view(request):
         expected_code = cache.get(f"verify_code_{email}")
 
         if str(auth_code) == str(expected_code):
-            data = request.session.get('user_data')
-            name=data['name']
-            password=data['password']
+            data = request.session.get("user_data")
+            name = data["name"]
+            password = data["password"]
 
             # Delete everything saved in session and cache - data not needed anymore
             del request.session["user_data"]
@@ -320,7 +322,7 @@ def authentication_acc_view(request):
         else:
             logger.error("Wrong authentication code")
             return HttpResponse(status=400)
-    
+
     return render(request, "authentication_acc.html")
 
 
@@ -384,7 +386,8 @@ def authentication_org_view(request):
 
     return render(request, "authentication_org.html")
 
-def create_question(request, survey_id: int) -> HttpResponse: 
+
+def create_question(request, survey_id: int) -> HttpResponse:
     """
     Makes it possible to create a question with predefined formats.
     This function is reachable from create_survey.
@@ -413,11 +416,12 @@ def create_question(request, survey_id: int) -> HttpResponse:
         },
     )
 
+
 @csrf_protect
 def create_org(request) -> HttpResponse:
     """
     Initiates organization creation by generating
-    a verification code, sending it via email, 
+    a verification code, sending it via email,
     saving form data in the session, and redirecting
     to the authentication page
     (supports HTMX and standard requests).
@@ -426,51 +430,50 @@ def create_org(request) -> HttpResponse:
         request: The HTTP request containing org_name, name, email, and password.
 
     Returns:
-        HttpResponse: For POST, sends HX-Redirect header or standard redirect to "/authentication-org/"; 
+        HttpResponse: For POST, sends HX-Redirect header or standard redirect to "/authentication-org/";
         for GET, sends HX-Redirect header or renders "create_org.html".
     """
-    
+
     if request.method == "POST":
-        #Get data from the forum
+        # Get data from the forum
         org_name = request.POST.get("org_name")
         name = request.POST.get("name")
         email = request.POST.get("email")
         password = request.POST.get("password")
 
+        code = 123456  # make random later, just test now
+        cache.set(f"verify_code_{email}", code, timeout=300)
 
-        code = 123456 # make random later, just test now
-        cache.set(f'verify_code_{email}', code, timeout=300)
-
-        #Send email with the code to the user
+        # Send email with the code to the user
         send_mail(
-            subject='Your Verification Code',
-            message=f'Your verification code is: {code}',
-            from_email='medarbetarpuls@gmail.com',
+            subject="Your Verification Code",
+            message=f"Your verification code is: {code}",
+            from_email="medarbetarpuls@gmail.com",
             recipient_list=[email],
             fail_silently=False,
         )
 
         # Save potential user account data in session
-        request.session['user_org_data'] = {
-            'org_name': org_name,
-            'name': name,
-            'password': password,
+        request.session["user_org_data"] = {
+            "org_name": org_name,
+            "name": name,
+            "password": password,
         }
         # Save the mail where the two factor code is sent
-        request.session['email_two_factor_code_org'] = email
+        request.session["email_two_factor_code_org"] = email
 
         # Redirect to authentication
         if request.headers.get("HX-Request"):
             return HttpResponse(headers={"HX-Redirect": "/authentication-org/"})
         return redirect("/authentication-org/")
-    
+
     else:
         # GET-request: render or redirect to create_org
         if request.headers.get("HX-Request"):
             return HttpResponse(headers={"HX-Redirect": "/create_org/"})
         return render(request, "create_org.html")
-    
-    #maybe implement error 400??
+
+    # maybe implement error 400??
 
 
 @csrf_protect
@@ -754,11 +757,11 @@ def login_view(request):
 
     Args:
         request: The HTTP request with user login credentials.
-    
+
     Returns:
         HttpResponse: Redirects to the appropriate page on success or renders the login page on failure.
     """
-    
+
     # maybe implement sesion timer so you dont get logged out??
     # if request.user.is_authenticated:
     # logger.debug("User %e is already logged in.", request.user)
@@ -779,7 +782,7 @@ def login_view(request):
                     response["HX-Redirect"] = "/start-admin/"
                     logger.debug("Admin %e successfully logged in.", email)
                     return response
-                elif user.user_role == models.UserRole.SURVEY_RESPONDER: 
+                elif user.user_role == models.UserRole.SURVEY_RESPONDER:
                     response = HttpResponse()
                     response["HX-Redirect"] = "/start-user/"
                     logger.debug("User %e successfully logged in.", email)
@@ -809,7 +812,7 @@ def my_org_view(request):
 
     Args:
         request: The HTTP request with employee removal or search parameters.
-    
+
     Returns:
         HttpResponse: Renders the organization page or redirects after a removal.
     """
@@ -829,8 +832,8 @@ def my_org_view(request):
             for group in all_groups:
                 if group != group_to_keep:
                     employee_to_remove.employee_groups.remove(group)
-                    
-            employee_to_remove.save()               
+
+            employee_to_remove.save()
             models.EmailList.objects.filter(email=employee_to_remove.email).delete()
         return redirect("my_org")
     # Retrieve all employee groups associated with this organization
@@ -880,7 +883,7 @@ def my_results_view(request):
 
     Args:
         request: The HTTP request with the authenticated user.
-    
+
     Returns:
         HttpResponse: Renders the survey results page.
     """
@@ -917,7 +920,7 @@ def delete_survey_template(request, survey_id: int) -> HttpResponse:
     Returns:
         HttpResponse: Redirects to "/templates_and_drafts/" on success or returns status 400 on failure.
     """
-    if request.method == "POST":  
+    if request.method == "POST":
         if request.headers.get("HX-Request"):
             survey_temp = get_object_or_404(
                 models.SurveyTemplate, id=survey_id, creator=request.user
@@ -1001,7 +1004,7 @@ def settings_admin_view(request):
     Returns:
         HttpResponse: Redirects to home on success or renders the settings page.
     """
-    #Leave over account to new admin function
+    # Leave over account to new admin function
     # if pressed leave over account
     if request.method == "POST":
         if request.headers.get("HX-Request"):
@@ -1063,13 +1066,13 @@ def settings_user_view(request):
 
     Args:
         request: The HTTP request with the password for account deletion.
-    
+
     Returns:
         HttpResponse: Redirects to home on deletion or returns status 400 if authentication fails.
     """
-    
+
     # FIX - needs to fix so when wrong password is written the popup doesnt dissappear and a message is sent
-    #Delete user function
+    # Delete user function
     # if pressed delete user
     if request.method == "POST":
         if request.headers.get("HX-Request"):
@@ -1094,7 +1097,9 @@ def settings_user_view(request):
 @login_required
 def start_creator_view(request):
     return render(
-        request, "start_creator.html", {"pagetitle": f"Välkommen<br>{request.user.name}"}
+        request,
+        "start_creator.html",
+        {"pagetitle": f"Välkommen<br>{request.user.name}"},
     )  # Fix so only works if the user is actually an admin
 
 
@@ -1199,6 +1204,7 @@ def start_user_view(request):
         request, "start_user.html", {"pagetitle": f"Välkommen<br>{request.user.name}"}
     )
 
+
 @login_required
 def start_admin_view(request):
     return render(
@@ -1216,7 +1222,7 @@ def survey_result_view(request, survey_id):
         return HttpResponse(400)
 
     # Proceed to render the survey results
-    return render(request, "survey_result.html", {"survey_result": result}) #result ??
+    return render(request, "survey_result.html", {"survey_result": result})  # result ??
 
 
 @login_required
@@ -1255,16 +1261,18 @@ def unanswered_surveys_view(request):
         },
     )
 
+
 def find_organization_by_email(email: str) -> models.Organization | None:
     email_entry = get_object_or_404(models.EmailList, email=email)
     return email_entry.org  # Follow the ForeignKey to Organization
+
 
 def chart_view(request):
     SURVEY_ID = 3  # Choose which survey to show here
 
     analysisHandler = AnalysisHandler()
     question_txt = "Did you take enough breaks throughout the day?"
-    context = analysisHandler.survey_result_summary(SURVEY_ID)
+    context = analysisHandler.get_survey_summary(SURVEY_ID)
     return render(request, "analysis.html", context)
 
 

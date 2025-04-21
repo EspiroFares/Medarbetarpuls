@@ -34,26 +34,58 @@ class AnalysisHandler:
         """Retrieve a specific SurveyUserResult."""
         return SurveyUserResult.objects.filter(published_survey=survey)
 
-    def get_question(self, question_txt: str) -> Question:
+    def get_question(self, question_id: int) -> Question:
         """Fetch the question object by text. Assumes there is only one question phrased the same way."""
         # Right now the question is fetched by an exact match,
         # use question__icontains= instead of question= for a more flexible match.
-        return Question.objects.filter(question__icontains=question_txt).first()
+        return Question.objects.filter(id=question_id).first()
 
     def get_answers(
         self,
         question: Question,
         survey: Survey | None = None,
+        user: CustomUser | None = None,
     ):
-        """Get answers for a given question, optionally filtered to a specific survey/result."""
-
+        """Get answers for a given question. Can optionally be filtered to a specific survey/result or a specific user/responder."""
         filters = {"question": question, "is_answered": True}
 
         if survey:
             results = self.get_survey_result(survey)
             filters["survey__in"] = results
 
-        return Answer.objects.filter(**filters)
+        if user:
+            if user == survey.creator:
+                print("No answers available for the creator of the survey.")
+                return None
+
+            filters["survey__user"] = user
+
+        answers = Answer.objects.filter(**filters)
+
+        if not answers.exists():
+            if user:
+                print(f"No answers available for {user}.")
+                return None
+            print("No answers available.")
+            return None
+
+        return answers
+
+    def get_comments(
+        self,
+        question: Question,
+        survey: Survey | None = None,
+    ):
+        """Returns all comments from a question, optionaly question and survey."""
+        filters = {"question": question, "is_answered": True, "comment__isnull": False}
+
+        if survey:
+            results = self.get_survey_result(survey)
+            filters["survey__in"] = results
+
+        return Answer.objects.filter(**filters).exclude(
+            comment=""
+        )  # only returns comments non empty comments, do we want empty comments?
 
     # --------- SLIDER-QUESTION FUNCTIONALITY -------------
     def calculate_enps_data(self, answers) -> tuple[int, int, int]:
@@ -80,6 +112,7 @@ class AnalysisHandler:
     def get_enps_summary(
         self,
         survey_id: int,
+        user: CustomUser | None = None,
     ):
         """
         Get all data needed to render ENPS analysis:
@@ -87,22 +120,22 @@ class AnalysisHandler:
 
         With survey_id set to None you get all the answers from an eNPS question.
         """
-        survey = self.get_survey(survey)
+        survey = self.get_survey(survey_id)
         question_txt = (
             "How likely are you to recommend this company as a place to work?"
         )
-        question = self.get_question(question_txt)
-        print(question)
-        answers = self.get_answers(question, survey)
+        question = Question.objects.filter(question__icontains=question_txt).first()
+        answers = self.get_answers(question, survey, user)
         # answers = self.get_answers(question)
         promoters, passives, detractors = self.calculate_enps_data(answers)
-        print(promoters, passives, detractors)
         score = self.calculate_enps_score(promoters, passives, detractors)
         distribution = self.get_response_distribution_slider(answers)
         standard_deviation = self.calculate_standard_deviation(answers)
         variation_coefficient = self.calculate_variation_coefficient(answers)
+        comments = self.get_comments(question, survey)
         return {
             "score": score,
+            "comments": comments,
             "labels": ["Promoters", "Passives", "Detractors"],
             "data": [promoters, passives, detractors],
             "slider_values": list(range(1, 11)),
@@ -148,8 +181,9 @@ class AnalysisHandler:
 
     def get_slider_summary(
         self,
-        question_txt: str,
+        question_id: int,
         survey_id: int,
+        user: CustomUser | None = None,
     ):
         """
         Get all data needed to render slider analysis:
@@ -158,13 +192,17 @@ class AnalysisHandler:
         With survey_id set to None you get all the answers from the question.
         """
         survey = self.get_survey(survey_id)
-        question = self.get_question(question_txt)
-        answers = self.get_answers(question, survey)
+        question = self.get_question(question_id)
+        answers = self.get_answers(question, survey, user)
         distribution = self.get_response_distribution_slider(answers)
         standard_deviation = self.calculate_standard_deviation(answers)
         variation_coefficient = self.calculate_variation_coefficient(answers)
+        comments = self.get_comments(question, survey)
         return {
+            "question": question,
+            "answers": answers,
             "slider_values": list(range(1, 11)),
+            "comments": comments,
             "distribution": distribution,
             "standard_deviation": standard_deviation,
             "variation_coefficient": variation_coefficient,
@@ -188,16 +226,20 @@ class AnalysisHandler:
 
     def get_multiple_choice_summary(
         self,
-        question_txt: str,
+        question_id: int,
         survey_id: int,
+        user: CustomUser | None = None,
     ):
         survey = self.get_survey(survey_id)
-        question = self.get_question(question_txt)
+        question = self.get_question(question_id)
         answer_options = question.specific_question.options
-        answers = self.get_answers(question, survey)
+        answers = self.get_answers(question, survey, user)
         distribution = self.get_response_distribution_mc(answers, answer_options)
+        comments = self.get_comments(question, survey)
         return {
-            "question": question_txt,
+            "question": question,
+            "answers": answers,
+            "comments": comments,
             "answer_options": answer_options,
             "distribution": distribution,
         }
@@ -212,41 +254,83 @@ class AnalysisHandler:
 
     def get_yes_no_summary(
         self,
-        question_txt: str,
+        question_id: int,
         survey_id: int,
+        user: CustomUser | None = None,
     ):
         survey = self.get_survey(survey_id)
-        question = self.get_question(question_txt)
+        question = self.get_question(question_id)
         answer_options = [
             "YES",
             "NO",
         ]
-        answers = self.get_answers(question, survey)
+        answers = self.get_answers(question, survey, user)
         distribution = self.get_response_distribution_yes_no(answers)
+        comments = self.get_comments(question, survey)
         return {
             "question": question,
+            "answers": answers,
+            "comments": comments,
             "answer_options": answer_options,
             "distribution": distribution,
         }
 
-    def survey_result_summary(self, survey_id):
+    # ---------------- FREE TEXT -------------
+    def get_free_text_summary(
+        self,
+        question_id: int,
+        survey_id: int,
+        user: CustomUser | None = None,
+    ):
+        survey = self.get_survey(survey_id)
+        question = self.get_question(question_id)
+        answers = self.get_answers(question, survey, user)
+        comments = self.get_comments(question, survey)
+        filters = {
+            "question": question,
+            "is_answered": True,
+        }
+        answer_count = Answer.objects.filter(**filters).count()
+
+        return {
+            "question": question,
+            "answers": answers,
+            "answer_count": answer_count,
+            "comments": comments,
+        }
+
+    # --------------- FULL SURVEY SUMMARY -----------
+    def get_survey_summary(
+        self,
+        survey_id: int,
+        user: CustomUser | None = None,
+    ):
+        """
+        This function returns a summary for a whole survey. Optionally filtered to a specific user.
+        """
         survey = Survey.objects.filter(id=survey_id).first()
 
-        summary = {}
+        summary = {
+            "Survey": survey,
+            "Summaries": [],
+        }
         questions = Question.objects.filter(connected_surveys__id=survey_id)
 
         for question in questions:
             if question.question_format == QuestionFormat.MULTIPLE_CHOICE:
                 question_summary = self.get_multiple_choice_summary(
-                    question.question, survey.id
+                    question.id, survey.id
                 )
             elif question.question_format == QuestionFormat.YES_NO:
-                question_summary = self.get_yes_no_summary(question.question, survey.id)
+                question_summary = self.get_yes_no_summary(question.id, survey.id)
             elif question.question_format == QuestionFormat.TEXT:
-                pass
+                question_summary = self.get_free_text_summary(question.id, survey.id)
             elif question.question_format == QuestionFormat.SLIDER:
-                question_summary = self.get_slider_summary(question.question, survey.id)
-            summary[question] = question_summary
+                question_summary = self.get_slider_summary(question.id, survey.id)
+            elif question.question_type == QuestionType.ENPS:
+                question_summary = self.get_enps_summary(survey.id)
+
+            summary["Summaries"].append(question_summary)
 
         return summary
 
@@ -259,7 +343,7 @@ class AnalysisHandler:
             "How likely are you to recommend this company as a place to work?"
         )
 
-        question = self.get_question(question_txt)
+        question = Question.objects.filter(question__icontains=question_txt).first()
         surveys = Survey.objects.order_by("sending_date")
         history = []
 

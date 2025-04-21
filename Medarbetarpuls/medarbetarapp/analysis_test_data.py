@@ -10,6 +10,9 @@ from medarbetarapp.models import (
     UserRole,
     MultipleChoiceQuestion,
     YesNoQuestion,
+    EmployeeGroup,
+    EmailList,
+    Organization,
 )
 import random
 
@@ -236,33 +239,69 @@ def createAnswers(amount: int, result: SurveyUserResult, question: Question):
 
 # -------------------------------------------------
 
-# removing old objects to avoid problems
+
+# Clean up related models to avoid duplicates
 Answer.objects.all().delete()
 Question.objects.all().delete()
 SurveyUserResult.objects.all().delete()
 Survey.objects.all().delete()
+CustomUser.objects.all().delete()
+EmployeeGroup.objects.all().delete()
+EmailList.objects.all().delete()
+Organization.objects.all().delete()
 
-# Create new surveys with answers
+# ----- CREATE MOCK ORGANISATION WITH USERS -----
+org = Organization.objects.create(name="TestOrg")
+
 admin = createUsers(UserRole.ADMIN, 1)[0]
+admin.admin = org
+admin.is_staff = True
+admin.is_superuser = True
+admin.save()
+
 survey_creator = createUsers(UserRole.SURVEY_CREATOR, 1)[0]
+survey_creator.admin = org
+survey_creator.is_staff = True
+survey_creator.save()
+
 survey_responders = createUsers(UserRole.SURVEY_RESPONDER, 4)
+for r in survey_responders:
+    r.admin = org
+    r.save()
 
-surveys = createSurveys(6, survey_creator)  # max 12 surveys
+# ----- EMPLOYEE GROUPS -----
+base_group = EmployeeGroup.objects.create(name="Alla", organization=org)
+dev_team = EmployeeGroup.objects.create(name="hr", organization=org)
 
-# question_enps = createQuestions(1, QuestionFormat.SLIDER, QuestionType.ENPS)
+# Assign users to employee groups
+base_group.employees.add(admin, survey_creator, *survey_responders)
+dev_team.employees.add(*survey_responders)
+
+# Admin manages both groups
+base_group.managers.add(admin)
+dev_team.managers.add(admin)
+
+# ----- EMAIL LIST (for account validation flow) -----
+for user in [admin, survey_creator, *survey_responders]:
+    email_entry = EmailList.objects.create(email=user.email, org=org)
+    email_entry.employee_groups.add(base_group)
+    email_entry.save()
+
+# ----- CREATE SURVEYS AND QUESTIONS -----
+surveys = createSurveys(3, survey_creator)
+
 question_mc = createQuestions(
     1, QuestionFormat.MULTIPLE_CHOICE, QuestionType.REOCCURRING, surveys[0]
 )
-# question_yn = createQuestions(1, QuestionFormat.YES_NO, QuestionType.REOCCURRING)
 
 for s in surveys:
     for q in question_mc:
-        q.connected_surveys.add(
-            s
-        )  # establish the link between questions and this survey
+        q.connected_surveys.add(s)
 
     for r in survey_responders:
         survey_result = createSurveyUserResult(1, s, r)
         for sr in survey_result:
             for q in question_mc:
                 createAnswers(1, sr, q)
+
+print("✅ Test organization and users created successfully!")
