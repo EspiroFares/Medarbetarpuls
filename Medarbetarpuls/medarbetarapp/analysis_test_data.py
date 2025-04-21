@@ -264,22 +264,27 @@ survey_creator.admin = org
 survey_creator.is_staff = True
 survey_creator.save()
 
-survey_responders = createUsers(UserRole.SURVEY_RESPONDER, 4)
+survey_responders = createUsers(UserRole.SURVEY_RESPONDER, 8)
 for r in survey_responders:
     r.admin = org
     r.save()
 
+hr_responders = survey_responders[:4]
+it_responders = survey_responders[4:]
 # ----- EMPLOYEE GROUPS -----
 base_group = EmployeeGroup.objects.create(name="Alla", organization=org)
-dev_team = EmployeeGroup.objects.create(name="hr", organization=org)
+hr_team = EmployeeGroup.objects.create(name="HR", organization=org)
+it_team = EmployeeGroup.objects.create(name="IT", organization=org)
 
 # Assign users to employee groups
 base_group.employees.add(admin, survey_creator, *survey_responders)
-dev_team.employees.add(*survey_responders)
+hr_team.employees.add(*hr_responders)
+it_team.employees.add(*it_responders)
 
 # Admin manages both groups
 base_group.managers.add(admin)
-dev_team.managers.add(admin)
+hr_team.managers.add(admin)
+it_team.managers.add(admin)
 
 # ----- EMAIL LIST (for account validation flow) -----
 for user in [admin, survey_creator, *survey_responders]:

@@ -17,7 +17,7 @@ from django.shortcuts import redirect, render
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.db.models import Case, When, IntegerField, Value
-from .models import Answer, Question, Survey, SurveyUserResult
+from .models import Answer, Question, Survey, SurveyUserResult, EmployeeGroup
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 
@@ -1287,13 +1287,16 @@ def chart_view(request):
     SURVEY_ID = 1  # Choose which survey to show here
 
     analysisHandler = AnalysisHandler()
-    summary = analysisHandler.get_survey_summary(SURVEY_ID)
+    employee_group = EmployeeGroup.objects.get(name="Alla")
+    print(employee_group)
+    summary = analysisHandler.get_survey_summary(SURVEY_ID, employee_group=employee_group)
+    print(summary["employee_group"])
     for i in summary["summaries"]:
         if i["question"].question_type == QuestionType.ENPS:
             print(i)
             context = i
             break
-    context["deadline"] = summary["survey"].deadline.strftime("%Y-%m-%d")
+    context["deadline"] = summary["survey"].deadline.strftime("%Y-%m-%d") #maybe move this row to get_survey_summary
 
     return render(request, "analysis.html", context)
 

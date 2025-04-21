@@ -348,12 +348,14 @@ class AnalysisHandler:
         employee_group: EmployeeGroup | None = None,
     ):
         """
-        This function returns a summary for a whole survey. Optionally filtered to a specific user.
+        This function returns a summary for a whole survey. Optionally filtered to a specific user or an employee_group.
         """
         survey = Survey.objects.filter(id=survey_id).first()
 
         summary = {
             "survey": survey,
+            "user":user,
+            "employee_group":employee_group,
             "summaries": [],
         }
         questions = Question.objects.filter(connected_surveys__id=survey_id)
