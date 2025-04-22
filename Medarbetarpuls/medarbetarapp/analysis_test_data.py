@@ -121,6 +121,8 @@ def createSurveys(amount: int, surveyCreator: CustomUser):
             deadline=deadlines[i],
             sending_date="2025-01-01 10:00:00",
         )
+        target_group = EmployeeGroup.objects.get(name="IT")   # hämta IT‑gruppen
+        survey.employee_groups.add(target_group)
         surveys.append(survey)
     return surveys
 

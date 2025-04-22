@@ -1268,36 +1268,56 @@ def find_organization_by_email(email: str) -> models.Organization | None:
 
 
 def chart_view(request):
-    #
-    # const enpsGaugeData = 21
-    # const enpsDataDataChange = -10
-    # const enpsDate = "2023-10-01" // Replace with the most recent date that changed the eNPS score
-
-    #
-    # const enpsBarLabels = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
-    # const enpsBarData = [5, 2, 3, 30, 56, 55, 40, 20, 10, 5, 10]
-
-    #
-    # const answerData = 51
-    # const dataAnswerChange = 0
-
-    #
-    # const pieLabels = ['Promoters', 'Passives', 'Detractors']
-    # const pieData = [70, 20, 10]
-    SURVEY_ID = 1  # Choose which survey to show here
-
+    group_id = request.GET.get("group_id")
     analysisHandler = AnalysisHandler()
-    employee_group = EmployeeGroup.objects.get(name="Alla")
-    print(employee_group)
-    summary = analysisHandler.get_survey_summary(SURVEY_ID, employee_group=employee_group)
-    print(summary["employee_group"])
+    context: dict = {}
+
+    if not group_id:
+        return render(request, "analysis.html", context)
+
+    group = get_object_or_404(EmployeeGroup, id=group_id)
+
+
+    surveys = analysisHandler.get_surveys_for_group(group)
+    if not surveys.exists():
+        context["message"] = "Gruppen har inga enkäter ännu."
+        return render(request, "analysis.html", context)
+
+    survey = surveys.latest("sending_date")  #behöver fixas
+
+    summary = analysisHandler.get_survey_summary(
+        survey_id=survey.id,
+        employee_group=group,
+    )
+
     for i in summary["summaries"]:
         if i["question"].question_type == QuestionType.ENPS:
-            print(i)
-            context = i
+            context = i 
             break
-    context["deadline"] = summary["survey"].deadline.strftime("%Y-%m-%d") #maybe move this row to get_survey_summary
 
+    if not context:
+        context["message"] = "Ingen eNPS-fråga i den här enkäten."
+        return render(request, "analysis.html", context)
+
+    context["deadline"] = summary["survey"].deadline.strftime("%Y-%m-%d")
+    context["amount"] = summary["survey"].collected_answer_count
+
+    participant_count = group.employees.count()
+
+    answered_count = SurveyUserResult.objects.filter(
+            published_survey=survey,
+            user__in=group.employees.all(),
+            is_answered=True           
+    ).count()
+
+    # procent – avrunda till en decimal
+    answer_pct = round((answered_count / participant_count) * 100, 1) if participant_count else 0
+
+    context.update({
+    "participant_count": participant_count,
+    "answered_count": answered_count,
+    "answer_pct": answer_pct,
+})
     return render(request, "analysis.html", context)
 
 

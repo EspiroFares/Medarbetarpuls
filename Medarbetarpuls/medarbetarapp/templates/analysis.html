@@ -15,14 +15,31 @@
     <div class="main-container">
       {% include "topbar.html" with pagetitle="Analys"%}
       <div class="analysis-title">
-        <div class="filter-container">
-          <!-- Filter for work-group -->
-          Filter:
+        <div id="filterBar">
+          <strong>Filter:</strong>
+          <span id="pillContainer">
+          </span>
+          <form method="get" action="{% url 'analysis' %}">
+            <select name="group_id" onchange="this.form.submit()">
+              <option value="">— Välj grupp —</option>
+              {% for group in user.survey_groups.all %}
+                <option value="{{ group.id }}" {% if group.id|stringformat:"s" == request.GET.group_id %}selected{% endif %}>
+                  {{ group.name }}
+                </option>
+              {% endfor %}
+            </select>
+          </form>
         </div>
         <div class="time-period-container">
           <!-- Filter for time period -->
           Time period
         </div>
+
+        <div>
+          <p>answerd surveys: {{ amount }}</p>
+          <p>Deadline: {{ deadline }}</p>
+        </div>
+        
       </div>
 
       <div class="analysis-container">
@@ -59,35 +76,69 @@
     </div>
 
     <script>
-      //Data for the enpsGauge, replace with data from database
-      const enpsGaugeData = {{enpsScore|safe}};
-      const enpsDataDataChange = -10;
-      const enpsDate = "{{deadline}}"; // Replace with the most recent date that changed the eNPS score
-
-      //Data for the enpsBar, replace with data from database
-      const enpsBarLabels = {{slider_values|safe}};
-      const enpsBarData = {{enpsDistribution|safe}};
-
-      //Data for the answer frequency, replace with data from database
-      const answerData = 51;
-      const dataAnswerChange = 0;
-
-      //Data for the pie chart, replace with data from database
-      const pieLabels = {{enpsPieLabels|safe}};
-      const pieData = {{enpsPieData|safe}};
-      const pieColors = [
-        "rgb(140, 214, 16)",
-        "rgb(16, 23, 214)",
-        "rgb(16, 191, 214)",
-      ];
-
-      document.addEventListener("DOMContentLoaded", function () {
-        initEnpsGauge("enpsGauge", enpsGaugeData, enpsDataDataChange, enpsDate);
-        initEnpsBar("enpsBar", enpsBarLabels, enpsBarData);
-        initAnswerFrequency("canvas", answerData, dataAnswerChange);
-        //initPieChart("enpsChart", pieLabels, pieData, pieColors);
-        initBarChart("enpsChart", pieLabels, pieData, pieColors);
-      });
+      document
+        .getElementById("groupDropdown")
+        .addEventListener("change", function () {
+          const select = this;
+          const val = select.value;
+          const text = select.options[select.selectedIndex].text;
+          if (!val) return; // första “Välj grupp”
+          // Skippa om redan valt
+          if (document.getElementById("pill-" + val)) {
+            select.value = "";
+            return;
+          }
+          // Bygg piller‐span
+          const pill = document.createElement("span");
+          pill.id = "pill-" + val;
+          pill.textContent = text + " ";
+          // kryss‐knapp
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.textContent = "×";
+          btn.onclick = () => pill.remove();
+          pill.appendChild(btn);
+          // lägg in i containern
+          document.getElementById("pillContainer").appendChild(pill);
+          // nollställ dropdown
+          select.value = "";
+        });
     </script>
+
+
+<script>
+  const enpsGaugeData   = {{ enpsScore        |default:"0"  |safe }};
+  const enpsBarLabels   = {{ slider_values    |default:"[]" |safe }};
+  const enpsBarData     = {{ enpsDistribution |default:"[]" |safe }};
+  const pieLabels       = {{ enpsPieLabels    |default:"[]" |safe }};
+  const pieData         = {{ enpsPieData      |default:"[]" |safe }};
+  const enpsDate        = "{{ deadline|default:'' }}";
+  const answerData     = {{ answer_pct|default:"0" }};
+  
+  const enpsDataChange  = 0;            // Hur ska detta hämtas??
+  const answerChange    = 0;              // placeholder
+  const pieColors       = ["rgb(140,214,16)","rgb(16,23,214)","rgb(16,191,214)"];
+  
+  function safeInit(fn, id, ...args) {
+    const canvas = document.getElementById(id);
+    if (!canvas) return;                       // canvas saknas (t.ex. ingen data)
+    if (canvas._chartInstance) {               // chart finns – ta bort
+        canvas._chartInstance.destroy();
+        canvas._chartInstance = null;
+    }
+    const chart = fn(id, ...args); 
+    canvas._chartInstance = chart;
+  }
+  
+  document.addEventListener("DOMContentLoaded", function () {
+    if (enpsBarLabels.length === 0) return;
+  
+    safeInit(initEnpsGauge, "enpsGauge", enpsGaugeData, enpsDataChange, enpsDate);
+    safeInit(initEnpsBar,   "enpsBar",   enpsBarLabels, enpsBarData);
+    safeInit(initAnswerFrequency, "canvas", answerData, answerChange);
+    safeInit(initBarChart,  "enpsChart", pieLabels, pieData, pieColors);
+  });
+  </script>
+  
   </body>
 </html>

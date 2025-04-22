@@ -40,9 +40,8 @@ class AnalysisHandler:
         return Question.objects.filter(id=question_id).first()
 
     def get_surveys_for_group(self, employee_group: EmployeeGroup):
-        return Survey.objects.filter(
-            employee_group=employee_group
-        ).distinct()  # distinct() removes duplicates
+        return Survey.objects.filter(employee_groups=employee_group).distinct()
+
 
     def get_answers(
         self,
@@ -152,6 +151,7 @@ class AnalysisHandler:
         # answers = self.get_answers(question)
         promoters, passives, detractors = self.calculate_enps_data(answers)
         score = self.calculate_enps_score(promoters, passives, detractors)
+        print("scorreeeeeee", score)
         distribution = self.get_response_distribution_slider(answers)
         standard_deviation = self.calculate_standard_deviation(answers)
         variation_coefficient = self.calculate_variation_coefficient(answers)
@@ -255,17 +255,26 @@ class AnalysisHandler:
         return dist
 
     def get_multiple_choice_summary(
-        self,
-        question_id: int,
-        survey_id: int,
-        user: CustomUser | None = None,
-        employee_group: EmployeeGroup | None = None,
-    ):
+    self,
+    question_id: int,
+    survey_id: int,
+    user: CustomUser | None = None,
+    employee_group: EmployeeGroup | None = None,
+):
         survey = self.get_survey(survey_id)
         question = self.get_question(question_id)
-        answer_options = (
-            question.specific_question.options
-        )  # maybe change this line to question.multiple_choice_question.options
+
+        if not question or not question.specific_question:
+            # Om question eller specific_question inte finns
+            return {
+                "question": question,
+                "answers": [],
+                "comments": [],
+                "answer_options": [],
+                "distribution": [],
+            }
+
+        answer_options = question.specific_question.options
         answers = self.get_answers(
             question, survey, user=user, employee_group=employee_group
         )
