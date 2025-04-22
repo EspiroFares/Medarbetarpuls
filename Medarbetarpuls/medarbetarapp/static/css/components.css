@@ -142,3 +142,102 @@
     position: fixed;
     width: 5%;
 }
+
+
+.vertical-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 400px; /* This is actually the height when rotated */
+    height: 40px;
+    transform: rotate(-90deg);
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.3);
+    outline: none;
+    background: linear-gradient(to right, #ff6b6b 0%, #eee 0%); /* gets updated via JS */
+    margin: 2rem 0;
+    position: relative;
+    z-index: 1;
+}
+  
+.vertical-slider::-webkit-slider-thumb, .vertical-slider::-moz-range-thumb{
+    /* style the draggable circle (thumb) here */
+    -webkit-appearance: none;
+    appearance: none;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    background: transparent;
+    background-size: cover;
+}
+
+.arrow {
+    text-decoration: none;
+    color: #ffffff;
+    transition: color 0.2s;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.arrow:hover {
+    text-decoration: underline;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+}
+  
+
+.question-counter {
+    font-size: 1.8rem;
+    color: white;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.answer-survey-button {
+    background-color: var(--almost_white);
+    /* #4e8ce1; */
+    color: var(--dark_blue);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    /*white;*/
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 16px auto;
+    cursor: pointer;
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 100px;
+
+}
+
+.answer-survey-button:hover{
+    background-color: white;
+}
+
+.multiple-input{
+    display: flex;
+    padding: 1rem 2rem;
+    border-radius: 20px;
+    margin: 0 auto;    
+    width: 60%;
+    text-align: left;
+    background-color: var(--almost_white);
+    color: var(--dark_blue);
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease; 
+}
+
+.multiple-input:hover {
+    transform: scale(1.05);
+}
+
+.multiple-input input[type="checkbox"] {
+    display: none; /* Hide default checkbox */
+}
+
+.choice-label{
+    flex-grow: 1;
+    color: var(--dark_blue);
+    font-size: large;
+}

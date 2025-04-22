@@ -32,6 +32,47 @@
           hx-trigger="submit"
         >
         {% endif %}
+        {% csrf_token %}
+        {% if question_format == "multiplechoice" %}
+        {% if question_text is None %}
+        <input
+          type="text"
+          id="question"
+          name="question"
+          placeholder="Fråga"
+          required
+        />
+        <div id="options-container" class="options-container">
+      
+          <div class="option-input">
+            <input type="text" name="options" placeholder="Alternativ 1" required />
+          </div>
+          <div class="option-input">
+            <input type="text" name="options" placeholder="Alternativ 2" required />
+          </div>
+        </div>
+        {% else %}
+        <input
+          type="text"
+          id="question"
+          name="question"
+          value="{{ question_text }}"
+          required
+        />    
+        <div id="options-container" class="options-container">
+          {% for option in options %}
+          <div class="option-input">
+            <input type="text" name="options" placeholder="Alternativ {{ forloop.counter }}" value="{{ option }}" />
+          </div>
+        
+        {% endfor %}
+      </div>
+        {% endif %}
+      
+        <button type="button" id="add-option-btn">Lägg till alternativ</button>
+        <button type="submit">Spara</button>
+        {% else %}
+        
           {% csrf_token %}
           {% if question_text is None %}
           <input
@@ -53,6 +94,7 @@
           <button type="button">Demonstrera</button>
           <button type="submit">Spara</button>
         </form>
+        {% endif %}
         <button
           class="image-button"
           onclick="window.location.href='{% url 'create_survey_with_id' survey_temp.id %}'"
@@ -66,4 +108,27 @@
       </div>
     </div>
   </body>
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const addOptionBtn = document.getElementById("add-option-btn");
+    const optionsContainer = document.getElementById("options-container");
+
+    let optionCount = 3;
+
+    addOptionBtn.addEventListener("click", () => {
+      const newOption = document.createElement("div");
+      newOption.classList.add("option-input");
+
+      const input = document.createElement("input");
+      input.type = "text";
+      input.name = "options";
+      input.placeholder = `Alternativ ${optionCount}`;
+
+      newOption.appendChild(input);
+      optionsContainer.appendChild(newOption);
+      optionCount++;
+    });
+  });
+
+  </script>
 </html>
