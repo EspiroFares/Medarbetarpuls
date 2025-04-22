@@ -278,6 +278,11 @@
   /* Sets the stacking order, higher numbers mean closer to the user */
 }
 
+.popup-overlay.textquestion {
+    background-color: transparent;
+    z-index: 0;
+}
+
 .popup-content {
   background-color: white;
   padding: 20px;
@@ -287,6 +292,12 @@
   position: relative;
   /* So the close button can be positioned relative to this */
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.popup-content.textquestion {
+    background-color: transparent;
+    /* Remove the box-shadow */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0);
 }
 
 .popup-content.messages {

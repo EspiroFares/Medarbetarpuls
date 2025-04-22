@@ -57,8 +57,18 @@
           
           <!-- Text question -->
           {% elif question.question_format == "text" %}
-            <input type="hidden" name="question_format" value="text" />
-            <input type="text" name="text" value="{{ text_answer }}" required />
+          <div class="popup-overlay textquestion">
+            <div class="popup-content textquestion">
+              <input type="hidden" name="question_format" value="text" />
+              <textarea name="text"
+              {% if text_answer and text_answer != "None" %}
+              value="{{ text_answer }}"
+              {% else %}
+              placeholder="Ditt svar..."
+              {% endif %}required></textarea>
+            </div>
+          </div>
+                 
           
           <!-- Yes/No question (thumbs up/down) -->
           {% elif question.question_format == "yesno" %}
