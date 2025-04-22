@@ -65,10 +65,68 @@ function initPieChart(chartID, chartLabels, chartData, chartColors) {
     }
 }
 
+function initLineChart(chartID, chartLabels, chartData, chartColors) {
+    const lineChart = document.getElementById(chartID);
+    if (lineChart) { // Check if the canvas exists, else the script will crash
+        const ctx3 = lineChart.getContext("2d");
+        new Chart(ctx3, {
+            type: "line",
+            data: {
+                labels: chartLabels, 
+                datasets: [{
+                    label: "Survey Responses",
+                    data: chartData, 
+                    backgroundColor: chartColors,
+                    borderColor: chartColors,
+                    fill: false,
+                }]
+            },
+            options: {
+                responsive: true
+            }
+        });
+    }
+    else {
+        console.warn("lineChart canvas not found.");
+    }
+}
+
+function initStackedBarChart(chartID, chartLabels, chartData, chartColors) {
+    const stackedBarChart = document.getElementById(chartID);
+    if (stackedBarChart) { // Check if the canvas exists, else the script will crash
+        const ctx4 = stackedBarChart.getContext("2d");
+        new Chart(ctx4, {
+            type: 'bar',
+            data: {
+                labels: chartLabels,
+                datasets: chartData.map((data, index) => ({
+                    label: data.label,
+                    data: data.data,
+                    backgroundColor: chartColors[index],
+                }))
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        stacked: true
+                    },
+                    y: {
+                        stacked: true
+                    }
+                }
+            }
+        });
+    }
+    else {
+        console.warn("stackedBarChart canvas not found.");
+    }
+}
+
 function initEnpsGauge(chartID, chartData, dataChange, lastDateChange) {
     const enpsGaugeElement = document.getElementById(chartID);
     if (enpsGaugeElement) { // Check if the canvas exists, else the script will crash
-        const ctx3 = enpsGaugeElement.getContext("2d");
+        const ctx5 = enpsGaugeElement.getContext("2d");
         let dataChangeText = '';
         let chartDataText = '';
         let dataChangeColor = '';
@@ -104,7 +162,7 @@ function initEnpsGauge(chartID, chartData, dataChange, lastDateChange) {
             chartDataColor = 'rgb(248, 149, 28)'; // Orange
         }
         
-        new Chart(ctx3, {
+        new Chart(ctx5, {
             type: 'doughnut',
             data: {
                 datasets: [{
@@ -171,8 +229,8 @@ function generateLabelContent(chartData, dataChange) {
 function initEnpsBar(chartID, chartLabels, chartData){
     const enpsBarElement = document.getElementById(chartID);
     if (enpsBarElement) { // Check if the canvas exists, else the script will crash
-        const ctx4 = enpsBarElement.getContext("2d");
-        new Chart(ctx4, {
+        const ctx6 = enpsBarElement.getContext("2d");
+        new Chart(ctx6, {
             type: 'bar',
             data: {
                 labels: chartLabels,
