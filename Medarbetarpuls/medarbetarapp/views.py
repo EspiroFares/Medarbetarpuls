@@ -170,83 +170,134 @@ def analysis_view(request):
 
 
 @login_required
-def answer_survey_view(request, survey_result_id, question_index=0):
+@csrf_protect
+def answer_survey_view(request, survey_result_id: int, question_index: int = 0) -> HttpResponse:
     """
-    Saves a survey answer and moves to the next question.
-    Retrieves the survey for the user, saves the answer based on the input type,
-    and redirects to the next question or finalizes the survey if all questions are answered.
+    Makes it possible for the user to answer all questions of a survey. 
+    Page is navigated using its question index which is then used to 
+    save and display a unique Answer object for each Question. 
 
     Args:
-        request: The HTTP request containing the survey answer.
-        survey_result_id: The ID of the user's survey result.
-        question_index: The index of the current question to answer.
+        request: The input from the various answer fields 
+        survey_result_id (int): The id of the SurveyResult being answered
+        question_index (int): The index of the question which should be displayed 
 
     Returns:
-        HttpResponse: Renders the current question or redirects after completion.
+        HttpResponse: Redirects to next or previous question, then unanswered surveys 
+        page after survey completion, otherwise status 400 on errors
     """
-    survey_result = get_object_or_404(SurveyUserResult, pk=survey_result_id, user=request.user)
-    questions = survey_result.published_survey.questions.all()
+    user: models.CustomUser = request.user
+    survey_result: models.SurveyUserResult = get_object_or_404(SurveyUserResult, pk=survey_result_id, user=user)
+    questions: list[models.Question] = survey_result.published_survey.questions.all()
+    answers: list[models.Answer] = survey_result.answers.all()
+    answer: models.Answer = models.Answer()
+    
+    # Calculate question navigation indexes
+    if question_index - 1 < 0: 
+        prev_question_index: int = 0
+    else: 
+        prev_question_index: int = question_index - 1
+    
+    if question_index + 1 >= len(questions): 
+        next_question_index: int = len(questions) - 1 
+    else: 
+        next_question_index: int = question_index + 1
 
-    if question_index >= len(questions):
-        # All questions answered, redirect somewhere else
-        survey_result.is_answered = True
-        # This survey has now been answered by another user
-        survey_result.published_survey.collected_answer_count += 1
-        survey_result.published_survey.save()
-        survey_result.save()
-        return redirect("start_user")  # or a summary page
+    question: models.Question = questions[question_index]
 
-    question = questions[question_index]
+    # Create a new answer if none exists for this question 
+    if question_index >= len(answers): 
+        question_format: models.QuestionFormat = question.question_format
+        if question_format is not None:
+            if question_format == models.QuestionFormat.SLIDER: 
+                answer = models.Answer(survey=survey_result, question=question, slider_answer=5.0)
+            elif question_format == models.QuestionFormat.TEXT: 
+                answer = models.Answer(survey=survey_result, question=question)
+            elif question_format == models.QuestionFormat.YES_NO: 
+                answer = models.Answer(survey=survey_result, question=question)
+            elif question_format == models.QuestionFormat.MULTIPLE_CHOICE: 
+                answer = models.Answer(survey=survey_result, question=question)
+            else: 
+                return HttpResponse(status=400)
+                       
+            answer.save()
+    # Otherwise get the existing question 
+    else: 
+        answer = answers[question_index] 
 
     if request.method == "POST":
-        if "slider" in request.POST:
-            # Returns the object with Boolean 'created', which says if a new object was created
-            answer, created = models.Answer.objects.get_or_create(
-                survey=survey_result,
-                question=question,
-                slider_answer=request.POST.get("slider"),
-            )
+        if request.headers.get("HX-Request"):
+            question_format: models.QuestionFormat = request.POST.get("question_format")
+            submit_answers: str = request.POST.get("submit_answers")
 
-        elif "text" in request.POST:
-            answer, created = models.Answer.objects.get_or_create(
-                survey=survey_result,
-                question=question,
-                free_text_answer=request.POST.get("text"),
-            )
+            # Save the format specific answer
+            if question_format is not None:
+                if question_format == "slider": 
+                    answer.slider_answer = request.POST.get("slider") 
+                elif question_format == "text": 
+                    answer.free_text_answer = request.POST.get("text")
+                elif question_format == "yesno": 
+                    answer.yes_no_answer = request.POST.get("yesno")
+                elif question_format == "multiplechoice": 
+                    selected: list[str] = request.POST.getlist("multiplechoice")
+                    all_options: list[str] = question.multiple_choice_question.options 
+                    bool_list: list[bool] = [opt in selected for opt in all_options]
+                    answer.multiple_choice_answer = bool_list
 
-        elif "yesno" in request.POST:
-            answer, created = models.Answer.objects.get_or_create(
-                survey=survey_result,
-                question=question,
-                yes_no_answer=request.POST.get("yesno"),
-            )
+                # Also save the potential comment
+                answer.comment = request.POST.get("comment")
+                answer.is_answered = True
+                answer.save()
+            
+                # All questions answered, submit answers and redirect
+                if submit_answers == "1": 
+                    survey_result.is_answered = True
+                    survey_result.published_survey.collected_answer_count += 1 
+                    survey_result.published_survey.save()
+                    survey_result.save()
 
-        elif "multiplechoice" in request.POST:
-            answer, created = models.Answer.objects.get_or_create(
-                survey=survey_result,
-                question=question,
-                multiple_choice_answer=request.POST.get("multiplechoice"),
-            )
+                    # Redirect to unanswered surveys page after completion
+                    return HttpResponse(headers={"HX-Redirect": "/unanswered-surveys/"})  
+                
+                # Redirect to next question
+                return HttpResponse(headers={"HX-Redirect": "/survey/" + str(survey_result.id) + "/question/" + str(question_index+1)})  
+            
+            return HttpResponse(status=400)
 
-        answer.is_answered = True
-        answer.save()
-        # Redirects to the next question to answer
-        return redirect(
-            "answer_survey",
-            survey_result_id=survey_result.id,
-            question_index=question_index + 1,
-        )
+    # This is added so a "double" loop can be used to go through 
+    # which boxes should be checked
+    if question.multiple_choice_question is not None: 
+        # Edge case where no answer yet exists, but we still 
+        # want to display the options...
+        if not answer.multiple_choice_answer: 
+            zipped = zip(question.multiple_choice_question.options, [False, False, False, False])
+        else: 
+            zipped = zip(question.multiple_choice_question.options, answer.multiple_choice_answer)
+    else: 
+        zipped = None
 
-    return render(
-        request,
-        "answer_survey.html",
-        {
-            "question": question,
-            "question_index": question_index,
-            "total": len(questions),
-            "survey_result_id": survey_result.id,
-        },
-    )
+    # Calculate amount of "answered" answers
+    # Start at 1 because the last question always gets a saved answer
+    # that is not counted
+    total_answers: int = 1
+    for ans in answers: 
+        if ans.is_answered:  
+            total_answers += 1
+
+    return render(request, "answer_survey.html", {
+        "question": question,
+        "question_index": question_index,
+        "total": len(questions),
+        "total_answers": total_answers, 
+        "survey_result_id": survey_result.id,
+        "prev_question_index": prev_question_index,
+        "next_question_index": next_question_index,
+        "slider_answer": answer.slider_answer,
+        "text_answer": answer.free_text_answer, 
+        "yes_no_answer": answer.yes_no_answer,
+        "multiple_choice_pairs": zipped,
+        "comment": answer.comment,
+    })
 
 
 @csrf_exempt
@@ -573,7 +624,8 @@ def edit_question_view(
         HttpResponse: Redirects to create_survey or renders edit_question_view
     """
     user: models.CustomUser = request.user
-
+    options = None # Use later to show options
+    
     # Get the survey from given id
     survey_temp: models.SurveyTemplate = user.survey_templates.filter(
         id=survey_id
@@ -599,8 +651,21 @@ def edit_question_view(
                 return HttpResponse("Invalid question type", status=404)
 
             # Specify question format
-            question.question_format = question_format
+            question.question_format = question_format 
             question.save()
+
+            # Add testcase for multiplechoice questions
+            if question_format == models.QuestionFormat.MULTIPLE_CHOICE: 
+                options = request.POST.getlist('options')
+                for option in options:
+                    if not option:
+                        options.remove(option)
+                # This is kinda fucked and can maybe be re-written better
+                question.multiple_choice_question = models.MultipleChoiceQuestion(question_format=question_format)
+                question.multiple_choice_question.save()
+                question.multiple_choice_question.options.extend(options)
+                question.multiple_choice_question.save()
+                question.save()
 
             # Add question text
             question.question = request.POST.get("question")
@@ -610,25 +675,16 @@ def edit_question_view(
             survey_temp.last_edited = timezone.now()
             survey_temp.save()
 
-            return HttpResponse(
-                headers={"HX-Redirect": "/create-survey/" + str(survey_id)}
-            )
+            return HttpResponse(headers={"HX-Redirect": "/create-survey/" + str(survey_id)})  
 
     # Checks if there is a specific question text to be displayed
     question_text: str | None = None
     if question_id is not None:
         question_text = models.Question.objects.filter(id=question_id).first().question
+        if models.Question.objects.filter(id=question_id).first().multiple_choice_question:
+            options = models.Question.objects.filter(id=question_id).first().multiple_choice_question.options
 
-    return render(
-        request,
-        "edit_question.html",
-        {
-            "survey_temp": survey_temp,
-            "question_format": question_format,
-            "question_id": question_id,
-            "question_text": question_text,
-        },
-    )
+    return render(request, "edit_question.html", {"survey_temp": survey_temp, "question_format": question_format, "question_id": question_id, "question_text": question_text, "options": options})
 
 
 def publish_survey(request, survey_id: int) -> HttpResponse:

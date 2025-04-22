@@ -11,34 +11,36 @@
   </head>
   <body>
     <!-- To test this, switch to authentication_org.html in views.py -->
-    <div class="create-container">
-      <h1>Skapa din nya organisation</h1>
-      <h2>En kod har skickats till din mejladress</h2>
-      <!-- This form sends the input data to the server using a POST request -->
-      <form
-        class="create-form"
-        hx-post="/authentication-org/"
-        hx-trigger="submit"
-        hx-target=".create-form"
-        hx-swap="innerHTML"
-      >
-        {% csrf_token %}
-        <label for="auth_code">Ange koden:</label>
-        <input
-          type="text"
-          id="auth_code"
-          name="auth_code"
-          placeholder="6-siffrig kod"
-          inputmode="numeric"
-          maxlength="6"
-          required
-        />
+    <div class="main-container">
+      <div class="create-container">
+        <h1>Skapa din nya organisation</h1>
+        <h2>En kod har skickats till din mejladress</h2>
+        <!-- This form sends the input data to the server using a POST request -->
+        <form
+          class="create-form"
+          hx-post="/authentication-org/"
+          hx-trigger="submit"
+          hx-target=".create-form"
+          hx-swap="innerHTML"
+        >
+          {% csrf_token %}
+          <label for="auth_code">Ange koden:</label>
+          <input
+            type="text"
+            id="auth_code"
+            name="auth_code"
+            placeholder="6-siffrig kod"
+            inputmode="numeric"
+            maxlength="6"
+            required
+          />
 
-        <button type="submit">Fortsätt</button>
-      </form>
-      <div class="account-help-links">
-        <!-- Replace # later with actual path -->
-        <a href="#">Fick du ingen kod? Klicka här för att skicka igen</a>
+          <button type="submit">Fortsätt</button>
+        </form>
+        <div class="account-help-links">
+          <!-- Replace # later with actual path -->
+          <a href="#">Fick du ingen kod? Klicka här för att skicka igen</a>
+        </div>
       </div>
     </div>
   </body>
