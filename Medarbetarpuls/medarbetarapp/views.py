@@ -1234,7 +1234,7 @@ def survey_result_view(request, survey_id):
     else:
         answers = None
 
-    summary_context = analysis_handler.get_survey_summary(survey.id, answers)
+    summary_context = analysis_handler.survey_result_summary(survey.id, answers)
 
     if survey_results is None:
         # This survey has no answers (should not even be displayed to the user then)

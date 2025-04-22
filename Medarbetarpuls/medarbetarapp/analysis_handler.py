@@ -34,11 +34,9 @@ class AnalysisHandler:
         """Retrieve a specific SurveyUserResult."""
         return SurveyUserResult.objects.filter(published_survey=survey)
 
-    def get_question(self, question_txt: str) -> Question:
-        """Fetch the question object by text. Assumes there is only one question phrased the same way."""
-        # Right now the question is fetched by an exact match,
-        # use question__icontains= instead of question= for a more flexible match.
-        return Question.objects.filter(question__icontains=question_txt).first()
+    def get_question(self, question_id: int) -> Question:
+        """Fetch the question object by id."""
+        return Question.objects.filter(id=question_id).first()
 
     def get_answers(
         self,
@@ -275,7 +273,7 @@ class AnalysisHandler:
 
     # ------------------- FULL SURVEY -----------------
 
-    def get_survey_summary(self, survey_id, answers=None):
+    def survey_result_summary(self, survey_id, answers=None):
         """
         This function returns a summary in the form of a context for a whole survey.
 

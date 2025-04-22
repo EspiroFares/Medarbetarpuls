@@ -48,14 +48,20 @@
               </tr>
             </thead>
             <tbody id="employeeTable">
-              {% for employee in employees %} {% if employee.is_active %}
+              {% for employee in employees %}
+              <!---->
+              {% if employee.is_active %}
               <tr>
                 <td>{{ employee.name }}</td>
                 <td>{{ employee.email }}</td>
                 <td>
-                  {% for group in employee.employee_groups.all %} {{
-                  group.name}}{% if not forloop.last %}, {% endif %} {% endfor
-                  %}
+                  {% for group in employee.employee_groups.all %}
+                  <!---->
+                  {{ group.name}}
+                  <!---->
+                  {% if not forloop.last %}, {% endif %}
+                  <!---->
+                  {% endfor %}
                 </td>
 
                 <td>
