@@ -399,6 +399,25 @@
     /* Larger space between inputs */
 }
 
+.question-form.comment {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    /* Alpha: 0.4 = 40% opacity */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2;
+}
+
+.question-form.comment input{
+    position: fixed;
+    bottom: 35px;
+}
+
 .analysis-container h2 {
     margin-bottom: 12%;
     font-weight: normal;
@@ -477,4 +496,32 @@
     font-size: 28px;
     color: var(--blue);
     /* #4e8ce1; */
+}
+
+.main-container h2 {
+    color: var(--dark_blue);
+}
+
+.option-input {
+    margin: 5px 0;
+    width: 500px;
+}
+  
+.option-input input{
+    height: 30px;
+}
+
+.answer-survey-container h2 {
+    font-size: 2rem;
+    font-weight: bold;
+    color: white;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+    margin-bottom: 2rem;
+}
+
+.answer-survey-container p {
+    font-size: 2rem;
+    color: white;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+    margin-bottom: 2rem;
 }
