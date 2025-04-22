@@ -1289,14 +1289,26 @@ def chart_view(request):
     analysisHandler = AnalysisHandler()
     employee_group = EmployeeGroup.objects.get(name="Alla")
     print(employee_group)
-    summary = analysisHandler.get_survey_summary(SURVEY_ID, employee_group=employee_group)
+    summary = analysisHandler.get_survey_summary(
+        SURVEY_ID, employee_group=employee_group
+    )
     print(summary["employee_group"])
     for i in summary["summaries"]:
         if i["question"].question_type == QuestionType.ENPS:
             print(i)
             context = i
             break
-    context["deadline"] = summary["survey"].deadline.strftime("%Y-%m-%d") #maybe move this row to get_survey_summary
+    context["deadline"] = summary["survey"].deadline.strftime(
+        "%Y-%m-%d"
+    )  # maybe move this row to get_survey_summary
+
+    context["time_periods"] = [
+        ("senaste", "sen"),
+        ("1 mån", "1m"),
+        ("3 mån", "3m"),
+        ("6 mån", "6m"),
+        ("1 år", "1y"),
+    ]
 
     return render(request, "analysis.html", context)
 

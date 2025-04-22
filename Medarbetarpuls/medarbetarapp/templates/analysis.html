@@ -22,6 +22,21 @@
         <div class="time-period-container">
           <!-- Filter for time period -->
           Time period
+          <div
+            class="flex space-x-2 bg-gray-100 p-2 rounded-md"
+            id="time-filter"
+          >
+            {% for label, value in time_periods %}
+            <button
+              hx-get="?period={{ value }}"
+              hx-target="#filtered-content"
+              hx-swap="outerHTML"
+              class="px-3 py-1 rounded-md text-sm font-medium {% if value == selected_period %} bg-blue-500 text-white {% else %} bg-blue-100 text-blue-900 {% endif %}"
+            >
+              {{ label }}
+            </button>
+            {% endfor %}
+          </div>
         </div>
       </div>
 

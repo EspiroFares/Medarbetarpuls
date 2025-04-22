@@ -263,6 +263,7 @@ class AnalysisHandler:
     ):
         survey = self.get_survey(survey_id)
         question = self.get_question(question_id)
+
         answer_options = (
             question.specific_question.options
         )  # maybe change this line to question.multiple_choice_question.options
@@ -354,8 +355,8 @@ class AnalysisHandler:
 
         summary = {
             "survey": survey,
-            "user":user,
-            "employee_group":employee_group,
+            "user": user,
+            "employee_group": employee_group,
             "summaries": [],
         }
         questions = Question.objects.filter(connected_surveys__id=survey_id)
@@ -432,3 +433,18 @@ class AnalysisHandler:
             "deadlines": survey_deadlines,
             "scores": enps_scores,
         }
+
+    def get_filtered_surveys(
+        self,
+        start: str,
+        end: str,
+        employee_group: EmployeeGroup | None = None,
+    ):
+        surveys = Survey.objects.all()
+        surveys = surveys.filter(deadline__gte=start)
+        surveys = surveys.filter(deadline__lte=end)
+
+        if employee_group:
+            surveys = surveys.filter(employee_groups=employee_group)
+
+        return surveys.order_by("deadline")
