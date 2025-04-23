@@ -58,6 +58,23 @@
                 alt="{{ summary.question.question_format }}"
                 class="question-icon"
                 />
+            {% elif summary.question.question_format == "multiplechoice" %}
+                {% comment %}
+                <canvas id="{{ forloop.counter }}" ></canvas>
+                <script>
+                    const pieColors = [
+                      'rgb(140, 214, 16)',
+                      'rgb(16, 23, 214)',
+                      'rgb(16, 191, 214)',
+                      'rgb(255, 20, 50)',
+                    ];
+              
+                    document.addEventListener("DOMContentLoaded", function() {
+              
+                      initPieChart("{{ forloop.counter }}", {{ summary.answer_options }}, {{ summary.distribution }}, pieColors);
+                  });
+                </script>
+                {% endcomment %}
             {% endif %}
           </div>
         </div>

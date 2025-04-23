@@ -247,8 +247,12 @@ class AnalysisHandler:
         num_of_answers = answers.count()
         yes_count = answers.filter(yes_no_answer=True).count()
         no_count = answers.filter(yes_no_answer=False).count()
-        yes_percent = (yes_count / num_of_answers) * 100
-        no_percent = (no_count / num_of_answers) * 100
+        if num_of_answers == 0:
+            yes_percent = 0
+            no_percent = 0
+        else:
+            yes_percent = (yes_count / num_of_answers) * 100
+            no_percent = (no_count / num_of_answers) * 100
         comments = self.get_comments(question, survey)
         return {
             "question": question,
