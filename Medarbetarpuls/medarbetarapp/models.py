@@ -1,5 +1,3 @@
-from getpass import getuser
-from importlib.metadata import distribution
 from django.db import models
 from django.core.mail import send_mail
 from django.db.models.manager import BaseManager
@@ -9,9 +7,7 @@ from django.contrib.auth.models import (
     PermissionsMixin,
 )
 import logging
-import math
 from typing import cast
-import time
 
 
 logger = logging.getLogger(__name__)
@@ -389,7 +385,7 @@ class Answer(models.Model):
     multiple_choice_answer = models.JSONField(
         default=list, null=True, blank=True
     )  # Stores a list of booleans
-    yes_no_answer = models.BooleanField(default=False, null=True, blank=True)  # pyright: ignore
+    yes_no_answer = models.BooleanField(null=True, blank=True)  # pyright: ignore
     slider_answer = models.FloatField(null=True, blank=True)
 
     @property
