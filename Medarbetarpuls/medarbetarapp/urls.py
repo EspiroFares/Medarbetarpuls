@@ -6,6 +6,7 @@ urlpatterns = [
     path("analysis/", views.chart_view, name="analysis"),
     path("survey/<int:survey_result_id>/question/<int:question_index>/", views.answer_survey_view, name="answer_survey"),
     path("authentication-acc/", views.authentication_acc_view, name="authentication_acc"),
+    path("resend-authentication-code-acc/", views.resend_authentication_code_acc, name="resend_authentication_code_acc"),
     path("authentication-org/", views.authentication_org_view, name="authentication_org"),
     path("create-question/<int:survey_id>/", views.create_question, name="create_question"),
     path("create_acc/", views.create_acc, name="create_acc"),
