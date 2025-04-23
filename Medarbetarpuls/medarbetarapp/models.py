@@ -394,6 +394,20 @@ class Answer(models.Model):
     slider_answer = models.FloatField(null=True, blank=True)
 
     @property
+    def answer(self):
+        if self.question:
+            if self.question.question_format == QuestionFormat.MULTIPLE_CHOICE:
+                return self.multiple_choice_answer
+            elif self.question.question_format == QuestionFormat.YES_NO:
+                return self.yes_no_answer
+            elif self.question.question_format == QuestionFormat.TEXT:
+                return self.free_text_answer
+            elif self.question.question_format == QuestionFormat.SLIDER:
+                return self.slider_answer
+
+        return None
+
+    @property
     def answer_format(self) -> QuestionFormat | None:
         """
         This method is a getter function for the answer format.
