@@ -45,10 +45,20 @@
           </div>
 
           <div class="question-result">
-            <img src="{% static 'images/' %}{{ summary.question.question_format }}.png" 
-            alt="{{ summary.question.question_format }}"
-            class="question-icon"
-        />
+
+            {% if summary.question.question_format == "yesno" %}
+                <p> {{ summary.yes_percent }}% </p>
+                <img src="{% static 'images/' %}{{ summary.question.question_format }}.png" 
+                alt="{{ summary.question.question_format }}"
+                class="question-icon"
+                />
+                <p> {{ summary.no_percent }}% </p>
+            {% elif summary.question.question_format == "text" %}
+                <img src="{% static 'images/' %}{{ summary.question.question_format }}.png" 
+                alt="{{ summary.question.question_format }}"
+                class="question-icon"
+                />
+            {% endif %}
           </div>
         </div>
         {% endfor %}
