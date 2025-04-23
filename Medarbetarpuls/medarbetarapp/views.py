@@ -2,7 +2,6 @@ import logging
 import platform
 from . import models
 from django.db.models import Q
-from collections import Counter
 from django.utils import timezone
 from django.db.models import Count
 from django.core.cache import cache
@@ -17,7 +16,6 @@ from django.shortcuts import redirect, render
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.db.models import Case, When, IntegerField, Value
-from .models import Answer, Question, Survey, SurveyUserResult
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 
@@ -229,6 +227,7 @@ def answer_survey_view(request, survey_result_id: int, question_index: int = 0) 
         if request.headers.get("HX-Request"):
             question_format: models.QuestionFormat = request.POST.get("question_format")
             submit_answers: str = request.POST.get("submit_answers")
+            action = request.POST.get("action_type")
 
             # Save the format specific answer
             if question_format is not None:
@@ -250,7 +249,7 @@ def answer_survey_view(request, survey_result_id: int, question_index: int = 0) 
                 answer.save()
             
                 # All questions answered, submit answers and redirect
-                if submit_answers == "1": 
+                if submit_answers == "submit": 
                     survey_result.is_answered = True
                     survey_result.published_survey.collected_answer_count += 1 
                     survey_result.published_survey.save()
@@ -259,8 +258,12 @@ def answer_survey_view(request, survey_result_id: int, question_index: int = 0) 
                     # Redirect to unanswered surveys page after completion
                     return HttpResponse(headers={"HX-Redirect": "/unanswered-surveys/"})  
                 
-                # Redirect to next question
-                return HttpResponse(headers={"HX-Redirect": "/survey/" + str(survey_result.id) + "/question/" + str(question_index+1)})  
+                if action == "previous":
+                    # Redirect to previous question
+                    return HttpResponse(headers={"HX-Redirect": "/survey/" + str(survey_result.id) + "/question/" + str(prev_question_index)})  
+                elif action == "next":
+                    # Redirect to next question
+                    return HttpResponse(headers={"HX-Redirect": "/survey/" + str(survey_result.id) + "/question/" + str(next_question_index)})  
             
             return HttpResponse(status=400)
 
@@ -270,7 +273,8 @@ def answer_survey_view(request, survey_result_id: int, question_index: int = 0) 
         # Edge case where no answer yet exists, but we still 
         # want to display the options...
         if not answer.multiple_choice_answer: 
-            zipped = zip(question.multiple_choice_question.options, [False, False, False, False])
+            zipped = zip(question.multiple_choice_question.options, 
+                         [False for _ in question.multiple_choice_question.options])
         else: 
             zipped = zip(question.multiple_choice_question.options, answer.multiple_choice_answer)
     else: 
@@ -283,6 +287,11 @@ def answer_survey_view(request, survey_result_id: int, question_index: int = 0) 
     for ans in answers: 
         if ans.is_answered:  
             total_answers += 1
+
+    # Sometimes the extra one added at the begining will cause this to 
+    # be bigger than amount of questions, do not wory about it :)
+    if total_answers > len(questions): 
+        total_answers = len(questions)
 
     return render(request, "answer_survey.html", {
         "question": question,
