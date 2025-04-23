@@ -5,32 +5,29 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://unpkg.com/htmx.org@1.8.4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
+    <script src="{% static 'js/charts.js' %}" defer></script>
     <title>Medarbetarpuls - Surveys</title>
     <link rel="stylesheet" href="{% static 'css/main.css' %}" />
   </head>
   <body>
-    {% include "topbar.html" %}
+    <div class="main-container">
+    {% include "topbar.html" with pagetitle="Resultat på enkät"%}
     
     {% if request.path == '/survey-result/420/' %}
     <!-- Static test version -->
-    <div class="start-container">
-    
-      <h1>*Titel på enkät*</h1>
+  
       <div class="title-background">
         <button class="title-back-button" onclick="window.location.href='{% url 'my_results' %}'">Tillbaka</button>
         <h2>Resultat</h2>
       </div>
 
- 
-
     {% elif survey %}
     <!-- Dynamic survey result view -->
-    <div class="start-container">
-   
-      <h1>{{ survey.published_survey.name }}</h1>
       <div class="title-background">
         <button class="title-back-button" onclick="window.location.href='{% url 'my_results' %}'">Tillbaka</button>
-        <h2>Resultat</h2>
+        <h2>{{ survey.published_survey.name }} Namn</h2>
       </div>
 
       <div class="grid-container">
@@ -59,22 +56,22 @@
                 class="question-icon"
                 />
             {% elif summary.question.question_format == "multiplechoice" %}
-                {% comment %}
-                <canvas id="{{ forloop.counter }}" ></canvas>
-                <script>
-                    const pieColors = [
-                      'rgb(140, 214, 16)',
-                      'rgb(16, 23, 214)',
-                      'rgb(16, 191, 214)',
-                      'rgb(255, 20, 50)',
-                    ];
-              
-                    document.addEventListener("DOMContentLoaded", function() {
-              
-                      initPieChart("{{ forloop.counter }}", {{ summary.answer_options }}, {{ summary.distribution }}, pieColors);
-                  });
-                </script>
-                {% endcomment %}
+            <div class="graph-container">
+              <canvas id="{{ forloop.counter }}" ></canvas>
+            </div>
+            <script>
+                const pieColors = [
+                  'rgb(140, 214, 16)',
+                  'rgb(16, 23, 214)',
+                  'rgb(16, 191, 214)',
+                  'rgb(255, 20, 50)',
+                ];
+          
+                document.addEventListener("DOMContentLoaded", function() {
+          
+                  initBarChart("{{ forloop.counter }}", {{ summary.answer_options|safe}}, {{ summary.distribution|safe  }}, pieColors);
+              });
+            </script>
             {% endif %}
           </div>
         </div>
