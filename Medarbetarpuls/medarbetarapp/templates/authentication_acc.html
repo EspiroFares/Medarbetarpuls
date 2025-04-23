@@ -35,12 +35,15 @@
             required
           />
 
-          <button type="submit">Fortsätt</button>
-        </form>
-        <div class="account-help-links">
-          <!-- Replace # later with actual path -->
-          <a href="#">Fick du ingen kod? Klicka här för att skicka igen</a>
-        </div>
+        <button type="submit">Fortsätt</button>
+      </form>
+      <div class="account-help-links">
+        <!-- Replace # later with actual path -->
+        
+        <a href="#" 
+        hx-post="/resend-authentication-code-acc/"
+        hx-swap="none"
+        hx-vals='{"csrfmiddlewaretoken": "{{ csrf_token }}", "source": "from_account"}' >Fick du ingen kod? Klicka här för att skicka igen</a>
       </div>
     </div>
   </body>

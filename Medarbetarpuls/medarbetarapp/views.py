@@ -299,6 +299,34 @@ def answer_survey_view(request, survey_result_id: int, question_index: int = 0) 
         "comment": answer.comment,
     })
 
+@csrf_exempt
+def resend_authentication_code_acc(request):
+    if request.method == "POST":
+        source = request.POST.get("source")
+        email = "not_defined"
+        if(source=="from_account"):
+            print("from_account")
+            email = request.session.get("email_two_factor_code")
+        elif(source=="from_org"):
+            print("from_org")
+            email = request.session.get("email_two_factor_code_org")
+        if email == "not_defined":
+            return HttpResponse("No email defined", 404)
+        print("here")
+        code = 654321 # make random later, just test now
+        cache.set(f'verify_code_{email}', code, timeout=300)
+
+        #Send email with the code to the user
+        send_mail(
+            subject='Your Verification Code',
+            message=f'Your verification code is: {code}',
+            from_email='medarbetarpuls@gmail.com',
+            recipient_list=[email],
+            fail_silently=False,
+        )
+        return HttpResponse("Sent", 200)
+
+
 
 @csrf_exempt
 def authentication_acc_view(request):
