@@ -1,5 +1,16 @@
-// Initialize the surveyChart
 function initBarChart(chartID, chartLabels, chartData, chartColors) {
+    /**
+     * Renders a bar chart on a specified canvas element using Chart.js.
+     *
+     * Args:
+     * chartID (str): The ID of the canvas element for the bar chart.
+     * chartLabels (Array <string>): Labels for the bar chart segments.
+     * chartData (Array <number>) : Data values for each label.
+     * chartColors(Array <string>): - Colors for each segment of the bar chart.
+     *
+     * Returns:
+     * No return value; logs a warning if the canvas is not found.
+     */
     const barElement = document.getElementById(chartID);
     if (barElement) { // Check if the canvas exists, else the script will crash
         const ctx1 = barElement.getContext("2d");
@@ -41,8 +52,20 @@ function initBarChart(chartID, chartLabels, chartData, chartColors) {
     }
 }
 
-// Initialize the enpsChart
 function initPieChart(chartID, chartLabels, chartData, chartColors) {
+    /**
+     * Renders a pie chart on a specified canvas element using Chart.js.
+     *
+     * Args:
+     * chartID (str): The ID of the canvas element for the pie chart.
+     * chartLabels (Array <string>): Labels for the pie chart segments.
+     * chartData (Array <number>) : Data values for each label.
+     * chartColors(Array <string>): - Colors for each segment of the pie chart.
+     *
+     * Returns:
+     * No return value; logs a warning if the canvas is not found.
+     */
+
     const pieChart = document.getElementById(chartID);
     if (pieChart) { // Check if the canvas exists, else the script will crash
         const ctx2 = pieChart.getContext("2d");
@@ -66,6 +89,18 @@ function initPieChart(chartID, chartLabels, chartData, chartColors) {
 }
 
 function initLineChart(chartID, chartLabels, chartData, chartColors) {
+    /**
+     * Renders a line chart on a specified canvas element using Chart.js.
+     *
+     * Args:
+     * chartID (str): The ID of the canvas element for the line chart.
+     * chartLabels (Array <string>): Labels for the line chart segments.
+     * chartData (Array <number>) : Data values for each label.
+     * chartColors(Array <string>): - Colors for each segment of the line chart.
+     *
+     * Returns:
+     * No return value; logs a warning if the canvas is not found.
+     */
     const lineChart = document.getElementById(chartID);
     if (lineChart) { // Check if the canvas exists, else the script will crash
         const ctx3 = lineChart.getContext("2d");
@@ -92,6 +127,18 @@ function initLineChart(chartID, chartLabels, chartData, chartColors) {
 }
 
 function initStackedBarChart(chartID, chartLabels, chartData, chartColors) {
+    /**
+     * Renders a stacked bar chart on a specified canvas element using Chart.js.
+     *
+     * Args:
+     * chartID (str): The ID of the canvas element for the stacked bar chart.
+     * chartLabels (Array <string>): Labels for the stacked bar chart segments.
+     * chartData (Array <number>) : Data values for each label.
+     * chartColors(Array <string>): - Colors for each segment of the stacked bar chart.
+     *
+     * Returns:
+     * No return value; logs a warning if the canvas is not found.
+     */
     const stackedBarChart = document.getElementById(chartID);
     if (stackedBarChart) { // Check if the canvas exists, else the script will crash
         const ctx4 = stackedBarChart.getContext("2d");
@@ -124,6 +171,18 @@ function initStackedBarChart(chartID, chartLabels, chartData, chartColors) {
 }
 
 function initEnpsGauge(chartID, chartData, dataChange, lastDateChange) {
+    /**
+     * Renders a gauge chart on a specified canvas element using Chart.js.
+     *
+     * Args:
+     * chartID (str): The ID of the canvas element for the gauge chart.
+     * chartData (number): The data value for the gauge chart.
+     * dataChange (number): The change in data value for the gauge chart.
+     * lastDateChange (string): The date of the last change.
+     *
+     * Returns:
+     * No return value; logs a warning if the canvas is not found.
+     */
     const enpsGaugeElement = document.getElementById(chartID);
     if (enpsGaugeElement) { // Check if the canvas exists, else the script will crash
         const ctx5 = enpsGaugeElement.getContext("2d");
@@ -204,29 +263,18 @@ function initEnpsGauge(chartID, chartData, dataChange, lastDateChange) {
     }
 }
 
-function generateLabelContent(chartData, dataChange) {
-    if (dataChange > 0) {
-        return [
-            '↑ ' + dataChange, // Up arrow with positive change
-            '+' + chartData,    // Display chartData
-            '2025/05/12',       // Date
-        ];
-    } else if (dataChange < 0) {
-        return [
-            '↓ ' + Math.abs(dataChange), // Down arrow with negative change
-            '-' + chartData,              // Display chartData
-            '2025/05/12',                  // Date
-        ];
-    } else {
-        return [
-            'No Change', // Indicate no change
-            chartData,   // Display chartData
-            '2025/05/12', // Date
-        ];
-    }
-}
-
 function initEnpsBar(chartID, chartLabels, chartData){
+    /**
+     * Renders a bar chart on a specified canvas element using Chart.js.
+     *
+     * Args:
+     * chartID (str): The ID of the canvas element for the bar chart.
+     * chartLabels (Array <string>): Labels for the bar chart segments.
+     * chartData (Array <number>) : Data values for each label.
+     *
+     * Returns:
+     * No return value; logs a warning if the canvas is not found.
+     */
     const enpsBarElement = document.getElementById(chartID);
     if (enpsBarElement) { // Check if the canvas exists, else the script will crash
         const ctx6 = enpsBarElement.getContext("2d");
@@ -281,9 +329,18 @@ function initEnpsBar(chartID, chartLabels, chartData){
     }
 }
 
-// Function to draw a gradient circle
 function initAnswerFrequency(chartID, chartData, dataChange) {
-    // Create a radial gradient
+    /**
+     * Renders a gradient circle on a specified canvas element.
+     *
+     * Args:
+     * chartID (str): The ID of the canvas element for the gradient circle.
+     * chartData (number): The data value for the gradient circle.
+     * dataChange (number): The change in data value for the gradient circle.
+     *
+     * Returns:
+     * No return value; logs a warning if the canvas is not found.
+     */
     const canvas = document.getElementById(chartID);
     const ctx = canvas.getContext('2d');
 
