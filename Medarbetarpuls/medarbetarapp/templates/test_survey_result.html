@@ -36,20 +36,34 @@
       <div class="grid-container">
         {% for summary in summaries %}
        
-        <div class="grid-item result green">
-          <div class="question-title result">
-            <h1>Fråga {{ forloop.counter }} </h1>
+        <div class="grid-item blue">
+          <div class="question-title">
+            <h1>Fråga {{ forloop.counter }}</h1>
           </div>
-          <div class="question-background result">
-            <p> {{ summary.question.question }} </p>
+
+          <div class="question-background">
+            <p>{{ summary.question.question }}</p>
           </div>
 
           <div class="question-result">
-            <img src="{% static 'images/' %}{{ summary.question.question_format }}.png" 
-            alt="{{ summary.question.question_format }}"
-            class="question-icon"
-        />
+            {% comment %}
+            <img
+              src="{% static 'images/' %}{{ summary.question_format}}.png"
+             
+              alt="{{ summary.question_format.label }}"
+              class="question-icon"
+            />
+            {% endcomment %}
           </div>
+          <canvas id="{{ summary.question.id }}"></canvas>
+          <p> hej</p>
+          <script>
+            const pieColors = [
+                'rgb(140, 214, 16)',
+                'rgb(16, 191, 214)'
+            ];
+            initBarChart("{{ summary.question.id }}", {{ summary.answer_options }}, {{ summary.distribution }}, pieColors)
+          </script>
         </div>
         {% endfor %}
       </div>
@@ -68,3 +82,4 @@
     {% endif %}
   </body>
 </html>
+
