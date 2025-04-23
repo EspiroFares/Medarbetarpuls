@@ -858,18 +858,16 @@ def login_view(request):
             logger.debug("User %e has role: %e", email, user.user_role)
             if user.is_active:
                 login(request, user)
-                if user.user_role == models.UserRole.ADMIN:
-                    response = HttpResponse()
+                response = HttpResponse(status=200)
+                if user.user_role == models.UserRole.ADMIN: 
                     response["HX-Redirect"] = "/start-admin/"
                     logger.debug("Admin %e successfully logged in.", email)
                     return response
                 elif user.user_role == models.UserRole.SURVEY_RESPONDER: 
-                    response = HttpResponse()
                     response["HX-Redirect"] = "/start-user/"
                     logger.debug("User %e successfully logged in.", email)
                     return response
                 else:
-                    response = HttpResponse()
                     response["HX-Redirect"] = "/start-creator/"
                     logger.debug("User %e successfully logged in.", email)
                     return response

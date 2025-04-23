@@ -70,10 +70,9 @@
     // Error handling
     document.body.addEventListener("htmx:afterRequest", function (event) {
       const errorBox = document.getElementById("error-box");
-
       if (!event.detail.successful) {
         errorBox.innerHTML =
-          event.detail.xhr.responseText || "Fel inloggningsuppgifter";
+          event.detail.xhr.responseText;
         errorBox.style.color = "red";
         errorBox.style.display = "block";
       }
