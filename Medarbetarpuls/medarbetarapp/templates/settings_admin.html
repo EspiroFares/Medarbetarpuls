@@ -80,13 +80,20 @@
           hx-trigger="submit"
           hx-swap="outerHTML"
           >
+           <!-- For showing error messages -->
+           <div
+           id="name-error-box"
+           class="error-msg"
+           style="color: red; font-weight: bold"
+           >
+           {{ message }}
+         </div>
           <span class="close-button" onclick="closeEditName()">&times;</span>
           {% csrf_token %}
               <label for="name">Ditt nya namn:</label>
               <input type="name" id="name" name="name" placeholder="Namn" required > 
               <input type="hidden" name="from_settings" value="true">
-              <!-- This line will reload the page after 100 ms (after the form is submitted) -->
-              <button type="submit" onclick="setTimeout(() => location.reload(), 100);" class="delete-button">Byt namn</button>
+              <button type="submit"  class="delete-button">Byt namn</button>
         </form>
       </div>
   </div>
@@ -118,7 +125,6 @@
               <input type="password" id="pass_new" name="pass_new" placeholder="Nytt lösenord" required >
               <label for="password">Repetera ditt nya lösenord:</label>
               <input type="password" id="pass_check" name="pass_check" placeholder="Repetera lösenord" required >
-              <!-- Must reload after 500ms in order for this form to submit (slower) --> 
               <button type="submit"  class="delete-button">Byt lösenord</button>
         </form>
       </div>
