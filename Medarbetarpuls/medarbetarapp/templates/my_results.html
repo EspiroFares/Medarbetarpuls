@@ -21,7 +21,7 @@
                     - {{ survey.published_survey.deadline }}</p>
                     <p><strong>*{{ survey.published_survey.name }}*</strong></p>
                     <p> {{survey.published_survey.collected_answer_count}} svarade på enkäten</p>
-                    <button class="view-survey-button" onclick="window.location.href='{% url 'survey_result' survey.id %}'"> 
+                    <button class="view-survey-button" onclick="window.location.href='{% url 'survey_result' survey.published_survey.id %}'"> 
                     Se resultat</button>
                     </div>
                 {% else %}
