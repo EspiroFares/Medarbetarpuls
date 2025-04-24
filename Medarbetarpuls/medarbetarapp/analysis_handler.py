@@ -40,9 +40,7 @@ class AnalysisHandler:
         return Question.objects.filter(id=question_id).first()
 
     def get_surveys_for_group(self, employee_group: EmployeeGroup):
-        return Survey.objects.filter(
-            employee_group=employee_group
-        ).distinct()  # distinct() removes duplicates
+        return Survey.objects.filter(employee_groups=employee_group).distinct()
 
     def get_answers(
         self,
@@ -55,11 +53,13 @@ class AnalysisHandler:
         filters = {"question": question, "is_answered": True}
 
         if survey:
-            results = self.get_survey_result(survey)
+            results = SurveyUserResult.objects.filter(published_survey=survey)
             filters["survey__in"] = results
 
         if user:
-            if user == survey.creator:
+            if (
+                user == survey.creator
+            ):  # tycker vi bör ha hanterat detta någon annanstans
                 print("No answers available for the creator of the survey.")
                 return None
             filters["survey__user"] = user
@@ -104,6 +104,23 @@ class AnalysisHandler:
         return Answer.objects.filter(**filters).exclude(
             comment=""
         )  # only returns comments non empty comments, do we want empty comments?
+
+    def get_participation_metrics(self, survey: Survey, employee_group: EmployeeGroup):
+        """
+        Calculate participant count, answered count and answer percentage for a given survey and group.
+        """
+        total_participants = employee_group.employees.count()
+        answered_count = SurveyUserResult.objects.filter(
+            published_survey=survey,
+            user__in=employee_group.employees.all(),
+            is_answered=True,
+        ).count()
+        answer_pct = round((answered_count / total_participants) * 100, 1)
+        return {
+            "participant_count": total_participants,
+            "answered_count": answered_count,
+            "answer_pct": answer_pct,
+        }
 
     # --------- SLIDER-QUESTION FUNCTIONALITY -------------
     def calculate_enps_data(self, answers) -> tuple[int, int, int]:
@@ -264,9 +281,17 @@ class AnalysisHandler:
         survey = self.get_survey(survey_id)
         question = self.get_question(question_id)
 
-        answer_options = (
-            question.specific_question.options
-        )  # maybe change this line to question.multiple_choice_question.options
+        if not question or not question.specific_question:
+            # Om question eller specific_question inte finns
+            return {
+                "question": question,
+                "answers": [],
+                "comments": [],
+                "answer_options": [],
+                "distribution": [],
+            }
+
+        answer_options = question.specific_question.options
         answers = self.get_answers(
             question, survey, user=user, employee_group=employee_group
         )

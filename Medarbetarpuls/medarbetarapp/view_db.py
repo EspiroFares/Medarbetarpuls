@@ -57,3 +57,4 @@ for q in Question.objects.all():
 
 print(CustomUser.objects.filter(user_role=UserRole.ADMIN))
 print(CustomUser.objects.filter(user_role=UserRole.SURVEY_CREATOR))
+print(EmployeeGroup.objects.all())
