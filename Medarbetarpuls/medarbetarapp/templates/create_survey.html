@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="sv">
   <head>
     {% load static %}
@@ -21,9 +21,9 @@
         <h2>Skapa enkät</h2>
       </div>
 
-      <div class="grid-container">
+      <div class="grid-container" id="question-list">
         <!-- Make all of this dynamic -->
-        {% for question in survey_temp.questions.all %}
+        {% for question in survey_temp.get_ordered_questions %}
         <a
           href="{% url 'edit_question' survey_temp.id question.question_format question.id %}"
           class="grid-item blue"
@@ -46,12 +46,35 @@
           <div class="question-background">
             <p>{{question.question}}</p>
           </div>
+
           <div class="question-result">
+            <form
+              hx-post="{% url 'move_question_left' survey_temp.id question.id %}"
+              hx-trigger="submit"
+              hx-target="#question-list"
+              hx-swap="outerHTML"
+              class="px-2"
+            >
+              {% csrf_token %}
+              <button type="submit">&larr;</button>
+            </form>
+
             <img
               src="{% static 'images/' %}{{ question.question_format }}.png"
               alt="{{ question.question_format.label }} image"
               class="question-icon"
             />
+
+            <form
+              hx-post="{% url 'move_question_right' survey_temp.id question.id %}"
+              hx-trigger="submit"
+              hx-target="#question-list"
+              hx-swap="outerHTML"
+              class="px-2"
+            >
+              {% csrf_token %}
+              <button type="submit">&rarr;</button>
+            </form>
           </div>
         </a>
         {% endfor %}
@@ -195,6 +218,7 @@
         </form>
       </div>
     </div>
+
     <script>
       function openPopup() {
         document.getElementById("publish-popup").style.display = "flex";
