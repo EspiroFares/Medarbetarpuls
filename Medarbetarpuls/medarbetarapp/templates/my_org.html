@@ -116,23 +116,11 @@
                 <td>
                   <div class="value">
                     <a href="#" onclick="openEditUser('{{ employee.email }}','{{ employee.user_role }}')">
-                      <span class="edit-icon">✏️</span></a
-                    >
-                      {% csrf_token %}
-                      <input
-                        type="hidden"
-                        name="user_id"
-                        value="{{ employee.id }}"
-                      />
-                      <button type="submit" class="delete-button">
-                        Ta bort medarbetaren
-                      </button>
+                      <span class="edit-icon">✏️</span></a>
+
                     </form>
                   </div>
                 </td>
-                  {% endif %}
-                
-
                 {% endif %}
               
             </tr>
