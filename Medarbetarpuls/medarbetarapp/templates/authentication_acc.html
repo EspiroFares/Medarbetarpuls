@@ -13,6 +13,17 @@
     <!-- To test this, switch to authentication_acc.html in views.py -->
     <div class="main-container">
       <div class="create-container">
+        <!-- Go back button-->
+        <button
+          class="image-button"
+          onclick="window.location.href='{% url 'create_acc' %}'"
+        >
+          <img
+            src="{% static 'images/go-back-btn.png' %}"
+            alt="Gå Tillbaka"
+            class="back-icon"
+          />
+      </button>
         <h1>Skapa ditt nya konto</h1>
         <h2>En kod har skickats till din mejladress</h2>
         <!-- This form sends the input data to the server using a POST request -->

@@ -11,9 +11,20 @@
   </head>
   <body>
     <div class="main-container">
-      {% include "topbar.html" with pagetitle="Min organisation" %}
+      {% include "topbar.html" with pagetitle=pagetitle %}
       <div class="my-org-container">
       <h1>{{ organization.name }}</h1>
+      <!-- Go back button-->
+      <button
+        class="image-button"
+        onclick="navigateBack()"
+      >
+        <img
+          src="{% static 'images/go-back-btn.png' %}"
+          alt="Gå Tillbaka"
+          class="back-icon"
+        />
+      </button>
 
         <div class="search-container">
         <!-- Form för att trigga sökning via HTMX -->
@@ -247,5 +258,20 @@
       });
     });
   });
+  function navigateBack() {
+      // The previous URL that linked to this page
+      let previousUrl = document.referrer;
+      if (previousUrl) {
+        if (previousUrl.includes("add-employee")){
+          // Avoid redirecting back to this page to prevent an infinite loop
+          previousUrl = '/start-admin/';
+        }
+        window.location.href = previousUrl;
+      } else {
+        // Fallback if referrer is empty
+        // This simulates the user pressing the back button
+        window.history.back();
+      }
+    }
   </script>
 </html>

@@ -11,6 +11,18 @@
   <body>
     <div class="main-container">
       {% include "topbar.html" with pagetitle=pagetitle %}
+      <!-- Go back button-->
+      <button
+        class="image-button"
+        onclick="navigateBack()"
+      >
+        <img
+          src="{% static 'images/go-back-btn.png' %}"
+          alt="Gå Tillbaka"
+          class="back-icon"
+        />
+      </button>
+
       <!-- Change later, if time, so user.profile_pic shows here (or default)  -->
       <div class=pagetitle>
         <h2>Administratör för<br>{{organization.name}}</h2>
@@ -174,6 +186,21 @@
 
       function closeEditPass() {
           document.getElementById("edit-pass-popup").style.display = "none";
+      }
+      function navigateBack() {
+        // The previous URL that linked to this page
+        let previousUrl = document.referrer;
+        if (previousUrl) {
+          if (previousUrl.includes("settings")){
+            // Avoid redirecting back to this page to prevent an infinite loop
+            previousUrl = '/start-admin/';
+          }
+          window.location.href = previousUrl;
+        } else {
+          // Fallback if referrer is empty
+          // This simulates the user pressing the back button
+          window.history.back();
+        }
       }
   </script>
   </body>
