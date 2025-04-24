@@ -61,13 +61,13 @@
             x-data="{ index: 0, answer_count: {{ summary.answer_count }} }"
           >
             {% if summary.question.question_format == "yesno" %}
-            <p>{{ summary.yes_percent }}%</p>
+            <p>{{ summary.yes_percentage }}%</p>
             <img
               src="{% static 'images/' %}{{ summary.question.question_format }}.png"
               alt="{{ summary.question.question_format }}"
               class="question-icon"
             />
-            <p>{{ summary.no_percent }}%</p>
+            <p>{{ summary.no_percentage }}%</p>
 
             {% elif summary.question.question_format == "text" %}
             <div>
