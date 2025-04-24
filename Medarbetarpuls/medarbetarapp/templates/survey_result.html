@@ -56,7 +56,10 @@
             <p>{{ summary.question.question }}</p>
           </div>
 
-          <div class="question-result" x-data="{ index: 0 }">
+          <div
+            class="question-result"
+            x-data="{ index: 0, answer_count: {{ summary.answer_count }} }"
+          >
             {% if summary.question.question_format == "yesno" %}
             <p>{{ summary.yes_percent }}%</p>
             <img
@@ -67,6 +70,7 @@
             <p>{{ summary.no_percent }}%</p>
 
             {% elif summary.question.question_format == "text" %}
+            <p x-text="`${index+1}/${answer_count}`"></p>
             <img
               src="{% static 'images/' %}{{ summary.question.question_format }}.png"
               alt="{{ summary.question.question_format }}"
@@ -88,9 +92,9 @@
               </button>
 
               <button
-                @click="if(index < {{ summary.answer_count }} - 1) index++"
-                :disabled="index === {{ summary.answer_count }} - 1"
-                x-show="index < {{ summary.answer_count }} - 1"
+                @click="if(index < answer_count - 1) index++"
+                :disabled="index === answer_count - 1"
+                x-show="index < answer_count - 1"
               >
                 Nästa
               </button>
