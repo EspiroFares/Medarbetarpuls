@@ -159,7 +159,7 @@ def add_employee_view(request):
             if existing_user:
                 if not existing_user.is_active:
                     if models.EmployeeGroup.objects.filter(name=team).exists():
-                        group = models.EmployeeGroup.objects.get(name=team)
+                        group = models.EmployeeGroup.objects.filter(name=team).first()
                     else:
                         # create new employee group
                         group = models.EmployeeGroup(name=team, organization=org)
@@ -175,7 +175,7 @@ def add_employee_view(request):
 
             else:
                 if models.EmployeeGroup.objects.filter(name=team).exists():
-                    group = models.EmployeeGroup.objects.get(name=team)
+                    group = models.EmployeeGroup.objects.filter(name=team).first()
                 else:
                     # create new employee group
                     group = models.EmployeeGroup(name=team, organization=org)
