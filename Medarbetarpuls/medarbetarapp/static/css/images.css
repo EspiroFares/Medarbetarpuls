@@ -34,9 +34,9 @@
 }
 
 .image-button {
-  position: absolute;
-  top: 82%;
-  left: 2%;
+  position: fixed;
+  top: 85%;
+  left: 10px;
   margin: 10px;
   background-color: transparent;
   border: none;
@@ -57,7 +57,7 @@
 }
 
 .image-button:hover img {
-  filter: brightness(1.1);
+  transform: scale(1.1)
   /* Lighten on hover */
 }
 
@@ -84,6 +84,7 @@
 /* For icons in bottom right corner in answer_survey */
 .image-button.action-icon {
   font-size: 2rem;
+  position: absolute;
   text-decoration: none;
   width: 80px;
   padding: 10px;

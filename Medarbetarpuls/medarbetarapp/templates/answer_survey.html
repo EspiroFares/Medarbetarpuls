@@ -30,6 +30,17 @@
           value=""
         />
         <h2>{{ question.question }}</h2>
+        <!-- Go back button-->
+        <button
+        class="image-button"
+        onclick="window.location.href='{% url 'unanswered_surveys' %}'"
+        >
+        <img
+          src="{% static 'images/go-back-btn.png' %}"
+          alt="Gå Tillbaka"
+          class="back-icon"
+        />
+      </button>
 
         <!-- Slider question -->
         {% if question.question_format == "slider" %}

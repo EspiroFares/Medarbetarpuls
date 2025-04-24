@@ -1334,7 +1334,7 @@ def settings_user_view(request):
 def start_creator_view(request):
     return render(
         request, "start_creator.html", {"pagetitle": f"Välkommen<br>{request.user.name}"}
-    )  # Fix so only works if the user is actually an admin
+    )  
 
 
 @login_required
@@ -1492,6 +1492,7 @@ def unanswered_surveys_view(request):
             "unanswered_surveys": unanswered_surveys,
             "pagetitle": "Obesvarade enkäter",
             "current_time": current_time,
+            "user_role": user.user_role
         },
     )
 
@@ -1513,7 +1514,6 @@ def correct_name(name: str) -> Boolean | str:
     res = ""
     # Split on the blank space
     first_last_name = name.split(' ') 
-    print(first_last_name)
     if len(first_last_name) == 1 or first_last_name[1] == '':
         # No blank space found or a blank space not followed by a last name
         return False
