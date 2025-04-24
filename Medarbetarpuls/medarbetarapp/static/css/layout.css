@@ -249,6 +249,15 @@
   font-weight: bold;
   gap: 20px;
 }
+.result-text {
+  align-self: flex-start;
+  text-align: left;
+  width: 100%;
+  margin-top: 2px;
+  gap:0;
+  word-break: break-word;   
+  overflow-wrap: break-word;
+}
 
 .settings-container {
   text-align: center;
@@ -569,3 +578,5 @@
   height: 400px;
   padding-right: 0.5rem;
 }
+
+
