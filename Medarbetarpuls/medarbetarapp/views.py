@@ -52,8 +52,10 @@ def create_acc(request):
 
         user = models.CustomUser.objects.filter(email=email).exists()
         if user: 
-            # There already exists an user with this email
-            return HttpResponse("Det existerar redan en användare med denna mejladress", status=400)
+            active_user = models.CustomUser.objects.get(email=email)
+            if active_user.is_active == True:
+                # There already exists an user with this email
+                return HttpResponse("Det existerar redan en användare med denna mejladress", status=400)
 
         org = find_organization_by_email(email=email)
         if not org:
