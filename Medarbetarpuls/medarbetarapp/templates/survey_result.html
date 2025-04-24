@@ -17,8 +17,9 @@
   </head>
   <body>
     <div class="main-container">
-      {% include "topbar.html" with pagetitle="Resultat på enkät"%} {% if
-      request.path == '/survey-result/420/' %}
+      {% include "topbar.html" with pagetitle="Resultat på enkät"%}
+      <!---->
+      {% if request.path == '/survey-result/420/' %}
       <!-- Static test version -->
 
       <div class="title-background">
