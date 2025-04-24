@@ -76,12 +76,13 @@
               alt="{{ summary.question.question_format }}"
               class="question-icon"
             />
-            
+
             <div x-data="{ answers: {{ summary.answers|safe }} }">
               <p
                 x-text="answers.length > 0 ? answers[index] : 'No answers available'"
               ></p>
             </div>
+
             <div>
               <button
                 @click="if(index > 0) index--"
@@ -105,84 +106,80 @@
               <canvas id="{{ forloop.counter }}"></canvas>
             </div>
             <script>
-                const pieColors = [
-                  'rgb(140, 214, 16)',
-                  'rgb(16, 23, 214)',
-                  'rgb(16, 191, 214)',
-                  'rgb(255, 20, 50)',
-                ];
+              const pieColors = [
+              'rgb(140, 214, 16)',
+              'rgb(16, 23, 214)',
+              'rgb(16, 191, 214)',
+              'rgb(255, 20, 50)',
+              ];
 
-                document.addEventListener("DOMContentLoaded", function() {
+              document.addEventListener("DOMContentLoaded", function() {
 
-                  initBarChart("{{ forloop.counter }}", {{ summary.answer_options|safe}}, {{ summary.distribution|safe  }}, pieColors);
+              initBarChart("{{ forloop.counter }}", {{ summary.answer_options|safe}}, {{ summary.distribution|safe  }}, pieColors);
               });
             </script>
-             {% elif summary.question.question_format == "slider" %}
-              <p> Medelvärde: </p>
-              <p>  {{ summary.mean|safe  }}</p>
-              {% if summary.mean < 2 %}
-              <img
+            {% elif summary.question.question_format == "slider" %}
+
+            <p>Medelvärde:</p>
+            <p>{{ summary.mean|safe }}</p>
+            {% if summary.mean < 2 %}
+            <img
               src=" {% static 'images/smiley-sad.png' %} "
               alt="Sad Smiley"
               class="question-icon"
-               />
-               
-              
-              {% elif summary.mean < 4.5 %}
-              <img
+            />
+
+            {% elif summary.mean < 4.5 %}
+            <img
               src=" {% static 'images/smiley-meh.png' %} "
               alt="meh Smiley"
               class="question-icon"
-               />
-         
-              {% elif summary.mean < 5.5 %}
-              <img
+            />
+
+            {% elif summary.mean < 5.5 %}
+            <img
               src=" {% static 'images/smiley-neutral.png' %} "
               alt="neutral smily"
               class="question-icon"
-               />
-                
-              
-              {% elif summary.mean < 8 %}
-                <img
-                src=" {% static 'images/smiley-happy.png' %} "
-                alt="happy smily"
-                class="question-icon"
-                 />
+            />
 
-              {% else %}
-                <img
-                src=" {% static 'images/smiley-superhappy.png' %} "
-                alt="happy smily"
-                class="question-icon"
-                 />
-              {% endif %}
+            {% elif summary.mean < 8 %}
+            <img
+              src=" {% static 'images/smiley-happy.png' %} "
+              alt="happy smily"
+              class="question-icon"
+            />
 
-
-          </div>
-        </div>
+            {% else %}
+            <img
+              src=" {% static 'images/smiley-superhappy.png' %} "
+              alt="happy smily"
+              class="question-icon"
+            />
+            {% endif %}
+            <!---->
             {% endif %}
           </div>
         </div>
         {% endfor %}
-      </body>
-    </html>
-
-    {% else %}
-    <!-- No access or no survey -->
-    <div class="start-container">
-      <div class="title-background">
-        <button
-          class="title-back-button"
-          onclick="window.location.href='{% url 'my_results' %}'"
-        >
-          Tillbaka
-        </button>
-        <h2>Resultat</h2>
       </div>
-      <h1>No results available for this survey.</h1>
-      <p>Du kanske inte har tillgång till denna enkät.</p>
+      {% else %}
+
+      <!-- No access or no survey -->
+      <div class="start-container">
+        <div class="title-background">
+          <button
+            class="title-back-button"
+            onclick="window.location.href='{% url 'my_results' %}'"
+          >
+            Tillbaka
+          </button>
+          <h2>Resultat</h2>
+        </div>
+        <h1>No results available for this survey.</h1>
+        <p>Du kanske inte har tillgång till denna enkät.</p>
+      </div>
+      {% endif %}
     </div>
-    {% endif %}
   </body>
 </html>
