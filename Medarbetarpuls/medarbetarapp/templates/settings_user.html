@@ -69,13 +69,21 @@
           hx-trigger="submit"
           hx-swap="outerHTML"
           >
+          <!-- For showing error messages -->
+          <div
+          id="name-error-box"
+          class="error-msg"
+          style="color: red; font-weight: bold"
+          >
+          {{ message }}
+          </div>
+
           <span class="close-button" onclick="closeEditName()">&times;</span>
           {% csrf_token %}
               <label for="name">Ditt nya namn:</label>
               <input type="name" id="name" name="name" placeholder="Namn" required > 
               <input type="hidden" name="from_settings" value="true">
-              <!-- This line will reload the page after 100 ms (after the form is submitted) -->
-              <button type="submit" onclick="setTimeout(() => location.reload(), 100);" class="delete-button">Byt namn</button>
+              <button type="submit" class="delete-button">Byt namn</button>
         </form>
       </div>
   </div>
@@ -95,7 +103,7 @@
             id="error-box"
             class="error-msg"
             style="color: red; font-weight: bold"
-          >
+            >
             {{ message }}
           </div>
           
@@ -116,16 +124,23 @@
     <script>
       // Error handling
       document.body.addEventListener("htmx:afterRequest", function (event) {
-        const errorBox = document.getElementById("error-box");
+        const form = event.target;
+
+        // Find the nearest error box *inside that form*
+        const errorBox = form.querySelector(".error-msg");
+
+        // Safety check
+        if (!errorBox) return;
+
 
         if (event.detail.successful) {
-        errorBox.innerHTML = "Lösenordet har ändrats";
+        errorBox.innerHTML = "Ändringen lyckades";
         errorBox.style.color = "green";
         errorBox.style.display = "block";
         // Close the popup for the user
         setTimeout(() => location.reload(), 1000);
       } else {
-        errorBox.innerHTML = event.detail.xhr.responseText || "Fel lösenord";
+        errorBox.innerHTML = event.detail.xhr.responseText || "Något gick fel";
         errorBox.style.color = "red";
         errorBox.style.display = "block";
       }

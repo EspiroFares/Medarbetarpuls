@@ -1,5 +1,5 @@
 <!-- Create account -->
-<!doctype html>
+<!DOCTYPE html>
 <html lang="sv">
   <head>
     {% load static %}
@@ -21,6 +21,15 @@
         hx-trigger="submit"
         hx-swap="outerHTML"
       >
+        <!-- For showing error messages -->
+        <div
+          id="error-box"
+          class="error-msg"
+          style="color: red; font-weight: bold"
+        >
+          {{ message }}
+        </div>
+
         {% csrf_token %}
         <label for="name">För- och Efternamn:</label>
         <input type="text" id="name" name="name" placeholder="Namn" required />
@@ -47,4 +56,25 @@
       </form>
     </div>
   </body>
+  <script>
+    // Error handling
+    document.body.addEventListener("htmx:afterRequest", function (event) {
+      const errorBox = document.getElementById("error-box");
+      if (!event.detail.successful) {
+        errorBox.innerHTML = event.detail.xhr.responseText;
+        errorBox.style.color = "red";
+        errorBox.style.display = "block";
+      }
+    });
+
+    // Hide error box when user focuses on any input field
+    document.querySelectorAll("input").forEach((input) => {
+      input.addEventListener("focus", () => {
+        const errorBox = document.getElementById("error-box");
+        if (errorBox) {
+          errorBox.style.display = "none";
+        }
+      });
+    });
+  </script>
 </html>
