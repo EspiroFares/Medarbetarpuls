@@ -268,16 +268,22 @@ class AnalysisHandler:
         survey = self.get_survey(survey_id)
         question = self.get_question(question_id)
         answers = self.get_answers(question, survey)
+        answer_count = answers.count()
+
+        answer_list = list(answers)
+        text_answers = []
+        for answer_ in answer_list:
+            text_answers.append(answer_.free_text_answer)
+
         comments = self.get_comments(question, survey)
         filters = {
             "question": question,
             "is_answered": True,
         }
-        answer_count = Answer.objects.filter(**filters).count()
 
         return {
             "question": question,
-            "answers": answers,
+            "answers": text_answers,
             "answer_count": answer_count,
             "comments": comments,
         }

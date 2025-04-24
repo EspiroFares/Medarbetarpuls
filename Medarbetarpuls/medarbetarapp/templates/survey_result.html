@@ -8,56 +8,96 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
     <script src="{% static 'js/charts.js' %}" defer></script>
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+    ></script>
     <title>Medarbetarpuls - Surveys</title>
     <link rel="stylesheet" href="{% static 'css/main.css' %}" />
   </head>
   <body>
     <div class="main-container">
-    {% include "topbar.html" with pagetitle="Resultat på enkät"%}
-    
-    {% if request.path == '/survey-result/420/' %}
-    <!-- Static test version -->
-  
+      {% include "topbar.html" with pagetitle="Resultat på enkät"%} {% if
+      request.path == '/survey-result/420/' %}
+      <!-- Static test version -->
+
       <div class="title-background">
-        <button class="title-back-button" onclick="window.location.href='{% url 'my_results' %}'">Tillbaka</button>
+        <button
+          class="title-back-button"
+          onclick="window.location.href='{% url 'my_results' %}'"
+        >
+          Tillbaka
+        </button>
         <h2>Resultat</h2>
       </div>
 
-    {% elif survey %}
-    <!-- Dynamic survey result view -->
+      {% elif survey %}
+      <!-- Dynamic survey result view -->
       <div class="title-background">
-        <button class="title-back-button" onclick="window.location.href='{% url 'my_results' %}'">Tillbaka</button>
+        <button
+          class="title-back-button"
+          onclick="window.location.href='{% url 'my_results' %}'"
+        >
+          Tillbaka
+        </button>
         <h2>{{ survey.published_survey.name }} Namn</h2>
       </div>
 
       <div class="grid-container">
         {% for summary in summaries %}
-       
+
         <div class="grid-item result green">
           <div class="question-title result">
-            <h1>Fråga {{ forloop.counter }} </h1>
+            <h1>Fråga {{ forloop.counter }}</h1>
           </div>
+
           <div class="question-background result">
-            <p> {{ summary.question.question }} </p>
+            <p>{{ summary.question.question }}</p>
           </div>
 
-          <div class="question-result">
-
+          <div class="question-result" x-data="{ index: 0 }">
             {% if summary.question.question_format == "yesno" %}
-                <p> {{ summary.yes_percent }}% </p>
-                <img src="{% static 'images/' %}{{ summary.question.question_format }}.png" 
-                alt="{{ summary.question.question_format }}"
-                class="question-icon"
-                />
-                <p> {{ summary.no_percent }}% </p>
+            <p>{{ summary.yes_percent }}%</p>
+            <img
+              src="{% static 'images/' %}{{ summary.question.question_format }}.png"
+              alt="{{ summary.question.question_format }}"
+              class="question-icon"
+            />
+            <p>{{ summary.no_percent }}%</p>
+
             {% elif summary.question.question_format == "text" %}
-                <img src="{% static 'images/' %}{{ summary.question.question_format }}.png" 
-                alt="{{ summary.question.question_format }}"
-                class="question-icon"
-                />
+            <img
+              src="{% static 'images/' %}{{ summary.question.question_format }}.png"
+              alt="{{ summary.question.question_format }}"
+              class="question-icon"
+            />
+
+            <div x-data="{ answers: {{ summary.answers|safe }} }">
+              <p
+                x-text="answers.length > 0 ? answers[index] : 'No answers available'"
+              ></p>
+            </div>
+            <div>
+              <button
+                @click="if(index > 0) index--"
+                :disabled="index === 0"
+                x-show="index > 0"
+              >
+                Föregående
+              </button>
+
+              <button
+                @click="if(index < {{ summary.answer_count }} - 1) index++"
+                :disabled="index === {{ summary.answer_count }} - 1"
+                x-show="index < {{ summary.answer_count }} - 1"
+              >
+                Nästa
+              </button>
+            </div>
+
             {% elif summary.question.question_format == "multiplechoice" %}
             <div class="graph-container">
-              <canvas id="{{ forloop.counter }}" ></canvas>
+              <canvas id="{{ forloop.counter }}"></canvas>
             </div>
             <script>
                 const pieColors = [
@@ -66,9 +106,9 @@
                   'rgb(16, 191, 214)',
                   'rgb(255, 20, 50)',
                 ];
-          
+
                 document.addEventListener("DOMContentLoaded", function() {
-          
+
                   initBarChart("{{ forloop.counter }}", {{ summary.answer_options|safe}}, {{ summary.distribution|safe  }}, pieColors);
               });
             </script>
@@ -83,7 +123,12 @@
     <!-- No access or no survey -->
     <div class="start-container">
       <div class="title-background">
-        <button class="title-back-button" onclick="window.location.href='{% url 'my_results' %}'">Tillbaka</button>
+        <button
+          class="title-back-button"
+          onclick="window.location.href='{% url 'my_results' %}'"
+        >
+          Tillbaka
+        </button>
         <h2>Resultat</h2>
       </div>
       <h1>No results available for this survey.</h1>
