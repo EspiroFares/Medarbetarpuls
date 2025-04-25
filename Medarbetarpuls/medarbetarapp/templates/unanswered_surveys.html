@@ -28,7 +28,6 @@
       <div class="grid-container">
         {% for survey in unanswered_surveys %}
         <!-- prettier-ignore -->
-        {% if survey.published_survey.deadline >= current_time %}
         <!-- Click on the survey and this will take it to answer_survey with correct parameters  -->
         <a
           href="{% url 'answer_survey' survey.id 0 %}"
@@ -38,7 +37,7 @@
           <p><strong>*{{ survey.published_survey.name }}*</strong></p>
           <p>Deadline: {{ survey.published_survey.deadline }}</p>
         </a>
-        {% endif %} {% endfor %}
+        {% endfor %}
       </div>
       <button
         class="view-survey_result"

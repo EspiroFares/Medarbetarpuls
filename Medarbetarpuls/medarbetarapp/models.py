@@ -8,6 +8,7 @@ from django.contrib.auth.models import (
 )
 import logging
 from typing import cast
+from django.utils import timezone
 
 # from .analysis_handler import AnalysisHandler
 
@@ -131,7 +132,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):  # pyright: ignore
 
     # To see how many surveys this user has unanswered
     def count_unanswered_surveys(self):
-        return self.survey_results.filter(is_answered=False).count()
+        return self.survey_results.filter(is_answered=False, published_survey__deadline__gt=timezone.now()).count()
 
     # To see how many surveys this user has answered
     def count_answered_surveys(self):
@@ -139,7 +140,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):  # pyright: ignore
 
     # To get all unanswered surveys for this user
     def get_unanswered_surveys(self):
-        return self.survey_results.filter(is_answered=False)
+        return self.survey_results.filter(is_answered=False, published_survey__deadline__gt=timezone.now())
 
     # To get all answered surveys for this user
     def get_answered_surveys(self):
@@ -194,7 +195,7 @@ class Survey(models.Model):
 
     def __str__(self) -> str:
         return f"{self.name} ({self.creator})"
-
+    
     def publish_survey(self):
         """
         Publishes the survey to all employees in all
