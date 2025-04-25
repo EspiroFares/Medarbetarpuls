@@ -250,10 +250,11 @@
 .reminder-tag {
   display: inline-flex;
   align-items: center;
-  background-color: #dce7f8;
-  color: #102b46;
+  background-color: var(--almost_white);
+  color: var(--dark_blue);
   padding: 5px 10px;
   border-radius: 5px;
+  margin-right: 5px;
 }
 
 .tag .close,
@@ -266,10 +267,11 @@
 .date-group {
   display: flex;
   justify-content: space-between;
+  gap: 20px;
 }
 
 .date-input {
-    background-color: #eef5fe;
+    background-color: var(--almost_white);
     padding: 5px;
     border: none;
     border-radius: 10px;

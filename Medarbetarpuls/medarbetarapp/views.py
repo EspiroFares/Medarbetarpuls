@@ -10,7 +10,7 @@ from datetime import datetime, time
 from django.http import HttpResponse
 from .models import SurveyUserResult
 from django.core.mail import send_mail
-from .tasks import publish_survey_async
+from .tasks import schedule_notification, publish_survey_async
 from django.utils.timezone import make_aware
 from .analysis_handler import AnalysisHandler
 from django.shortcuts import redirect, render
@@ -976,6 +976,9 @@ def publish_survey(request, survey_id: int) -> HttpResponse:
             publish_date: str = request.POST.get("publish-date")
             end_date: str = request.POST.get("end-date")
 
+            # This will give you the days when reminders should be sent, e.g. ['3', '7', '14']
+            reminders: list[str] = request.POST.getlist("reminders[]")
+
             # Make the dates timezone aware to keep django from complaining
             if end_date:
                 naive_deadline = datetime.combine(
@@ -1030,6 +1033,7 @@ def publish_survey(request, survey_id: int) -> HttpResponse:
                 creator=user,
                 deadline=deadline,
                 sending_date=sending_date,
+                last_notification=current_time, 
                 is_viewable=is_public,
                 is_anonymous=is_anonymous,
             )
@@ -1055,6 +1059,7 @@ def publish_survey(request, survey_id: int) -> HttpResponse:
                 publish_survey_async.apply_async(
                     args=[survey.id], eta=survey.sending_date
                 )
+                schedule_notification(survey.id, reminders)
             else:
                 survey.publish_survey()
 

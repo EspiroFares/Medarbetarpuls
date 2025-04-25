@@ -22,7 +22,6 @@
       </div>
 
       <div class="grid-container" id="question-list">
-        <!-- Make all of this dynamic -->
         {% for question in survey_temp.get_ordered_questions %}
         <a
           href="{% url 'edit_question' survey_temp.id question.question_format question.id %}"
@@ -185,21 +184,10 @@
           <!-- Reminder Options -->
           <div class="reminder-group">
             <label>Påminn efter:</label>
-            <div class="reminder-tags">
-              <div class="reminder-tag">
-                1 v
-                <span class="close">&times;</span>
-              </div>
-              <div class="reminder-tag">
-                2 v
-                <span class="close">&times;</span>
-              </div>
-              <div class="reminder-tag">
-                3 v
-                <span class="close">&times;</span>
-              </div>
+            <div id="reminder-tags" class="reminder-tags">
+              <!-- Tags will dynamically be inserted here -->
             </div>
-          </div>
+          </div>         
 
           <!-- Buttons -->
           <div class="popup-buttons">
@@ -218,7 +206,6 @@
         </form>
       </div>
     </div>
-
     <script>
       function openPopup() {
         document.getElementById("publish-popup").style.display = "flex";
@@ -228,33 +215,87 @@
         document.getElementById("publish-popup").style.display = "none";
       }
 
+      function getDateDiffInDays(start, end) {
+        // Returns the difference in days between two date objects
+        const msPerDay = 1000 * 60 * 60 * 24;
+        return Math.round((end - start) / msPerDay);
+      }
+
+      function generateReminderOptions() {
+        const publishInput = document.getElementById("publish-date");
+        const endInput = document.getElementById("end-date");
+        const reminderTagsDiv = document.getElementById("reminder-tags");
+
+        // Parse dates from input fields
+        const publishDate = new Date(publishInput.value);
+        const endDate = new Date(endInput.value);
+
+        const totalDays = getDateDiffInDays(publishDate, endDate);
+
+        let reminderOptions = [];
+
+        // Always include 3d (3 days after publish)
+        if (totalDays >= 3) reminderOptions.push({ label: "3d", value: 3 });
+
+        // Add "weeks" reminders up to (but not after) the end-date
+        let week = 1;
+        while (week * 7 < totalDays) {
+          reminderOptions.push({ label: week + "v", value: week * 7 });
+          week++;
+        }
+
+        // Render reminder tags
+        reminderTagsDiv.innerHTML = "";
+        for (let option of reminderOptions) {
+          const tag = document.createElement("div");
+          tag.className = "reminder-tag";
+          tag.dataset.days = option.value; // For form submission 
+
+          tag.innerHTML = `
+            ${option.label}
+            <span class="close" onclick="removeReminderTag(this)">&times;</span>
+            <input type="hidden" name="reminders[]" value="${option.value}">
+          `;
+          reminderTagsDiv.appendChild(tag);
+        }
+      }
+
+      // Remove tag when X is clicked
+      function removeReminderTag(button) {
+        button.parentElement.remove();
+      }
+
       function handleRemove(event) {
         event.preventDefault(); // Prevent the link from being followed
-        // Add your logic to handle the removal of the question here
         console.log("Remove button clicked for question:", event.target);
       }
 
+      // Update reminders whenever date changes
+      document.getElementById("publish-date").addEventListener("change", generateReminderOptions);
+      document.getElementById("end-date").addEventListener("change", generateReminderOptions); 
+
       document.addEventListener("DOMContentLoaded", function () {
+        // Get today's date
+        const today = new Date();
+
+        // Set default date to publish to today
+        const today_date = today.toISOString().split("T")[0];
+        document.getElementById("publish-date").value = today_date;
+
+        // Add 14 days
+        const twoWeeksFromNow = new Date();
+        twoWeeksFromNow.setDate(today.getDate() + 14);
+
+        // Set default end date to 2 weeks from today
+        const formatted = twoWeeksFromNow.toISOString().split("T")[0];
+        document.getElementById("end-date").value = formatted;
+        // Generate initial reminder options
+        generateReminderOptions();
         const params = new URLSearchParams(window.location.search);
         if (params.get("trigger_popup") === "true") {
           openPopup();
         }
       });
-
-      // Get today's date
-      const today = new Date();
-
-      // Set default date to publish to today
-      const today_date = today.toISOString().split("T")[0];
-      document.getElementById("publish-date").value = today_date;
-
-      // Add 14 days
-      const twoWeeksFromNow = new Date();
-      twoWeeksFromNow.setDate(today.getDate() + 14);
-
-      // Set default end date to 2 weeks from today
-      const formatted = twoWeeksFromNow.toISOString().split("T")[0];
-      document.getElementById("end-date").value = formatted;
     </script>
   </body>
 </html>
