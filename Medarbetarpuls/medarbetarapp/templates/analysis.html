@@ -81,7 +81,7 @@
             <h2><b>Analysera fråga</b></h2>
           </div>
           <div class="graph-container" style="height: 90%">
-            <canvas id="enpsChart"></canvas>
+            <canvas id="trendChart"></canvas>
           </div>
         </div>
       </div>
@@ -122,14 +122,18 @@
   const enpsGaugeData   = {{ enpsScore        |default:"21"  |safe }};
   const enpsBarLabels   = {{ slider_values    |default:"['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10']" |safe }};
   const enpsBarData     = {{ enpsDistribution |default:"[5, 2, 3, 30, 56, 55, 40, 20, 10, 5, 10]" |safe }};
-  const pieLabels       = {{ enpsPieLabels    |default:"['Promoters', 'Passives', 'Detractors']" |safe }};
+  const pieLabels       = {{ enpsPieLabels    |default:"['Detractors', 'Passives', 'Promoters']" |safe }};
   const pieData         = {{ enpsPieData      |default:"[4,4,3]" |safe }};
   const enpsDate        = "{{ deadline|default:'2023-10-01' }}";
-  const answerData     = {{ answer_pct|default:"51" }};
+  const answerData     = {{ answer_pct|default:"90" }};
   
   const enpsDataChange  = 10;            // Hur ska detta hämtas??
   const answerChange    = 3;              // placeholder
   const pieColors       = ["rgb(140,214,16)","rgb(16,23,214)","rgb(16,191,214)"];
+
+  const lineLabels = {{ lineLabels    |default:"['2023-10-01', '2024-10-01', '2025-10-01']" |safe }};
+  const lineData = {{ lineData      |default:"[4,4,5]" |safe }};
+  const lineColors = ["rgb(140,214,16)","rgb(16,23,214)"];
   
   function safeInit(fn, id, ...args) {
     const canvas = document.getElementById(id);
@@ -149,6 +153,7 @@
     safeInit(initEnpsBar,   "enpsBar",   enpsBarLabels, enpsBarData);
     safeInit(initAnswerFrequency, "canvas", answerData, answerChange);
     safeInit(initBarChart,  "enpsChart", pieLabels, pieData, pieColors);
+    safeInit(initLineChart, "trendChart", lineLabels, lineData, lineColors);
   });
   </script>
   

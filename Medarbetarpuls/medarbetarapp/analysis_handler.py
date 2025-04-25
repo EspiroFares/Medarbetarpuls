@@ -180,8 +180,8 @@ class AnalysisHandler:
             "answers": answers,
             "enpsScore": score,
             "comments": comments,
-            "enpsPieLabels": ["Promoters", "Passives", "Detractors"],
-            "enpsPieData": [promoters, passives, detractors],
+            "enpsPieLabels": ["Detractors", "Passives", "Promoters"],
+            "enpsPieData": [detractors, passives, promoters],
             "slider_values": [str(i) for i in range(1, 11)],
             "enpsDistribution": distribution,
             "standard_deviation": standard_deviation,
@@ -353,11 +353,7 @@ class AnalysisHandler:
             question, survey, user=user, employee_group=employee_group
         )
         comments = self.get_comments(question, survey)
-        filters = {
-            "question": question,
-            "is_answered": True,
-        }
-        answer_count = Answer.objects.filter(**filters).count()
+        answer_count = answers.count() if answers else 0
 
         return {
             "question": question,
@@ -428,43 +424,15 @@ class AnalysisHandler:
 
     # ----------------------- HISTORY ----------------------
 
-    def enps_history_distribution(self):
-        # TO DO: Add time filters
-        # TO DO: add employeegroup option
-        question_txt = (
-            "How likely are you to recommend this company as a place to work?"
-        )
-
-        question = Question.objects.filter(question__icontains=question_txt).first()
-        surveys = Survey.objects.order_by("sending_date")
-        history = []
-
-        for s in surveys:
-            answers = self.get_answers(question, s)
-            promoters, passives, detractors = self.calculate_enps_data(answers)
-            score = self.calculate_enps_score(promoters, passives, detractors)
-            history.append(
-                {
-                    "survey_id": s.id,
-                    "deadline": s.deadline.strftime("%Y-%m-%d"),
-                    "score": score,
-                }
-            )
-        # survey_ids = [item["survey_id"] for item in history]
-        enps_scores = [item["score"] for item in history]
-        survey_deadlines = [item["deadline"] for item in history]
-
-        return {
-            "deadlines": survey_deadlines,
-            "scores": enps_scores,
-        }
-
     def get_filtered_surveys(
         self,
         start: str,
         end: str,
         employee_group: EmployeeGroup | None = None,
     ):
+        """
+        Returns a list of surveys within the timespan start, end. Optionally filtered to a specific employeegroup.
+        """
         surveys = Survey.objects.all()
         surveys = surveys.filter(deadline__gte=start)
         surveys = surveys.filter(deadline__lte=end)
@@ -473,3 +441,63 @@ class AnalysisHandler:
             surveys = surveys.filter(employee_groups=employee_group)
 
         return surveys.order_by("deadline")
+
+    def get_question_trend(
+        self,
+        question: Question,
+        surveys: list[Survey],
+        employee_group: EmployeeGroup | None = None,
+        user: CustomUser | None = None,
+    ):
+        """
+        Returns a trend over time for a single question across multiple surveys.
+
+        """
+        trend = []
+
+        for survey in sorted(surveys, key=lambda s: s.deadline):
+            if question.question_format == QuestionFormat.MULTIPLE_CHOICE:
+                question_summary = self.get_multiple_choice_summary(
+                    question_id=question.id,
+                    survey_id=survey.id,
+                    user=user,
+                    employee_group=employee_group,
+                )
+            elif question.question_format == QuestionFormat.YES_NO:
+                question_summary = self.get_yes_no_summary(
+                    question_id=question.id,
+                    survey_id=survey.id,
+                    user=user,
+                    employee_group=employee_group,
+                )
+            elif question.question_format == QuestionFormat.TEXT:
+                # cant show any trends on text questions, should we show participation metrics here instead?
+                question_summary = self.get_free_text_summary(
+                    question_id=question.id,
+                    survey_id=survey.id,
+                    user=user,
+                    employee_group=employee_group,
+                )
+            elif question.question_type == QuestionType.ENPS:
+                question_summary = self.get_enps_summary(
+                    survey_id=survey.id,
+                    user=user,
+                    employee_group=employee_group,
+                )
+            elif question.question_format == QuestionFormat.SLIDER:
+                question_summary = self.get_slider_summary(
+                    question_id=question.id,
+                    survey_id=survey.id,
+                    user=user,
+                    employee_group=employee_group,
+                )
+
+            trend.append(
+                {
+                    "survey_id": survey.id,
+                    "deadline": survey.deadline.strftime("%Y-%m-%d"),
+                    "summary": question_summary,
+                }
+            )
+
+        return trend
