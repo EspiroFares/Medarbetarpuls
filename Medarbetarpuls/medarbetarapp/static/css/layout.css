@@ -13,7 +13,6 @@
   width: 100%;
   height: auto;
   justify-content: center;
-  padding: 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -26,7 +25,7 @@
   align-items: center;
   margin-top: 0px;
   gap: 0px;
-  margin-bottom: -20px;
+  margin-bottom: -10px;
   width: 500px;
 }
 
@@ -111,7 +110,6 @@
   justify-content: center;
   gap: 20px;
   padding: 20px;
-  margin-top: 10px;
 }
 
 .grid-container.result {
@@ -138,7 +136,7 @@
   justify-content: space-evenly;
   align-items: center;
   /* Limit the height */
-  overflow: hidden;
+  overflow: visible;
 }
 
 .grid-item::after {
@@ -579,4 +577,65 @@
   padding-right: 0.5rem;
 }
 
+.analysis-bar{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 40px;
+    max-height: auto;
+    background-color: var(--blue_white);
+}
 
+.analysis-bar-container{
+    display: flex;
+    flex: 1;
+    justify-content: space-between;
+    align-items: center;
+    max-width: var(--max_width_container);
+    height: 100%;
+    max-height: auto;
+}
+
+.analysis-bar-item{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+    margin: 10px;
+    width: 100%;
+    height: 100%;
+    max-height: auto;
+    font-weight: bold;
+    color: var(--dark_blue);
+    font-size: 18   px;
+}
+
+.analysis-bar-icon{
+    width: 30px; 
+    height: 30px; 
+    padding: 10px;
+}
+
+.notification-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    background-color: #ffc7576d;
+    border: #ffc757 solid 2px;
+    border-radius: 8px;
+    margin-left: 5px;
+    margin-right: 5px;
+    padding: 20px;
+}
+
+.notification-icon {
+    position: absolute; /* Change to absolute positioning */
+    top: -15px; /* Adjust as needed */
+    right: -15px; /* Adjust as needed */
+    z-index: 2;
+    width: 35px;
+    height: 35px;
+}
