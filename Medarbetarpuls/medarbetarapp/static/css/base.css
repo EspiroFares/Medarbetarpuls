@@ -289,13 +289,17 @@
     width: 500px;
 }
   
-.popup-content input {
+.popup-content input, .popup-content select {
     width: 90%;
     padding: 14px;
     margin: 10px 0;
     border: none;
     border-radius: 10px;
     background-color: #eef5fe;
+}
+
+.popup-content select {
+    width: 100%; 
 }
 
 .popup-content.textquestion textarea {
