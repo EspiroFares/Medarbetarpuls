@@ -68,6 +68,7 @@ urlpatterns = [
         name="delete_survey_template",
     ),
     path("", views.login_view, name="login"),
+    path("logout/", views.logout_view, name="logout"),
     path("my-org/", views.my_org_view, name="my_org"),
     path("my-results/", views.my_results_view, name="my_results"),
     path("my-surveys/", views.my_surveys_view, name="my_surveys"),
