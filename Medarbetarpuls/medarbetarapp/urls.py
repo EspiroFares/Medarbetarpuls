@@ -3,6 +3,7 @@ from . import views
 
 urlpatterns = [
     path("add-employee/", views.add_employee_view, name="add_employee"),
+    path("edit-employee/", views.edit_employee_view, name="edit_employee"),
     path("analysis/", views.chart_view, name="analysis"),
     path(
         "survey/<int:survey_result_id>/question/<int:question_index>/",
@@ -11,6 +12,11 @@ urlpatterns = [
     ),
     path(
         "authentication-acc/", views.authentication_acc_view, name="authentication_acc"
+    ),
+    path(
+        "resend-authentication-code-acc/",
+        views.resend_authentication_code_acc,
+        name="resend_authentication_code_acc",
     ),
     path(
         "authentication-org/", views.authentication_org_view, name="authentication_org"
@@ -26,6 +32,16 @@ urlpatterns = [
         "delete_question/<int:question_id>/<int:survey_id>/",
         views.delete_question,
         name="delete_question",
+    ),
+    path(
+        "move_question_left/<int:survey_temp_id>/<int:question_id>/",
+        views.move_question_left,
+        name="move_question_left",
+    ),
+    path(
+        "move_question_right/<int:survey_temp_id>/<int:question_id>/",
+        views.move_question_right,
+        name="move_question_right",
     ),
     path("create-survey/", views.create_survey_view, name="create_survey"),
     path(

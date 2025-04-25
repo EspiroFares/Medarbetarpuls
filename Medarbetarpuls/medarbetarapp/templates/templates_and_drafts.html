@@ -10,6 +10,18 @@
   </head>
   <body>
     <div class="main-container">
+      <!-- Go back button-->
+      <button
+        class="image-button"
+        onclick="navigateBack()"
+      >
+        <img
+          src="{% static 'images/go-back-btn.png' %}"
+          alt="Gå Tillbaka"
+          class="back-icon"
+        />
+      </button>
+
       {% include "topbar.html" with pagetitle="Mallar & utkast" %}
       <div class="title-background">
         <h2>Du har ....</h2>
@@ -28,7 +40,6 @@
         </form>
       </div>
       <!-- Change name to variable -->
-      <!-- Dose not check if user logged in and have access-->
       <div class="grid-container">
         {% for survey_temp in survey_templates %}
         <a
@@ -82,6 +93,23 @@
         ).content;
         event.detail.headers["X-CSRFToken"] = csrfToken;
       });
+
+      function navigateBack() {
+        // The previous URL that linked to this page
+        let previousUrl = document.referrer;
+        if (previousUrl) {
+          if (previousUrl.includes("create-survey")){
+            // Avoid redirecting back to this page to prevent an infinite loop
+            // Only creator and reponder can see results from one survey
+            previousUrl = '/start-creator/';
+          }
+          window.location.href = previousUrl;
+        } else {
+          // Fallback if referrer is empty
+          // This simulates the user pressing the back button
+          window.history.back();
+        }
+      }
     </script>
   </body>
 </html>

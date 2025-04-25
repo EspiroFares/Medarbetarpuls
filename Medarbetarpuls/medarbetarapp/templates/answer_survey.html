@@ -9,179 +9,214 @@
     <link rel="stylesheet" href="{% static 'css/main.css' %}" />
     <!-- For animations-->
     <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
     />
     <!-- Confetti animation-->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   </head>
   <body>
     <div class="answer-survey-container">
-        {% if question_index|add:1 == total %}
-        <form
-          hx-post="{% url 'answer_survey' survey_result_id=survey_result_id question_index=question_index %}"
-          hx-trigger="submit"
-          hx-confirm="{{total_answers}} av {{total}} frågor besvarade, är du säker på att du vill skicka in svaren?"
+      <form
+        hx-post="{% url 'answer_survey' survey_result_id=survey_result_id question_index=question_index %}"
+        hx-trigger="submit"
+      >
+        {% csrf_token %}
+        <input type="hidden" name="action_type" id="actionType" value="" />
+        <input
+          type="hidden"
+          id="submit_answers"
+          name="submit_answers"
+          value=""
+        />
+        <h2>{{ question.question }}</h2>
+        <!-- Go back button-->
+        <button
+        class="image-button"
+        onclick="window.location.href='{% url 'unanswered_surveys' %}'"
         >
-        {% else %}
-        <form
-          hx-post="{% url 'answer_survey' survey_result_id=survey_result_id question_index=question_index %}"
-          hx-trigger="submit"
-        >
-        {% endif %}
-          <!-- prettier-ignore -->
-          {% csrf_token %}
-          <h2>{{ question.question }}</h2>
+        <img
+          src="{% static 'images/go-back-btn.png' %}"
+          alt="Gå Tillbaka"
+          class="back-icon"
+        />
+      </button>
 
-          <!-- Slider question -->
-          {% if question.question_format == "slider" %}
-            <div class="vertical-slider-container">
-              <input type="hidden" name="question_format" value="slider" />
-              <input
-                type="range"
-                name="slider"
-                min="0"
-                max="10"
-                step="0.1"
-                value="{{ slider_answer }}"
-                class="vertical-slider"
-                required
-              />
-              <!-- Smiley in slider -->
-              <img
-              id="smiley-icon"
-              src="{% static 'images/smiley-neutral.png' %}"
-              class="animate__animated"
-              />
-            </div>
-          
-          <!-- Text question -->
-          {% elif question.question_format == "text" %}
-          <div class="popup-overlay textquestion">
-            <div class="popup-content textquestion">
-              <input type="hidden" name="question_format" value="text" />
-              <textarea name="text"
-              {% if text_answer and text_answer != "None" %}
-              value="{{ text_answer }}"
-              {% else %}
-              placeholder="Ditt svar..."
-              {% endif %}required></textarea>
-            </div>
-          </div>
-                 
-          
-          <!-- Yes/No question (thumbs up/down) -->
-          {% elif question.question_format == "yesno" %}
-            <div class="yesno-container">
-              <input type="hidden" name="question_format" value="yesno" />
-              <label>
-                {% if yes_no_answer %}
-                <input type="radio" name="yesno" value="True" checked required />
-                {% else %}
-                <input type="radio" name="yesno" value="True" required />
-                {% endif %}
-                <!-- Thumbs up -->
-                <img
-                src="{% static 'images/thumbs-up.png' %}"
-                alt="Ja"
-                class="yesno-img animate__animated"
-                >
-              </label>
-              <label>
-              {% if yes_no_answer %}
-                <input type="radio" name="yesno" value="False" required />
-                {% elif yes_no_answer == False %}
-                <input type="radio" name="yesno" value="False" checked required />
-                {% else %}
-                <input type="radio" name="yesno" value="False" required />
-                {% endif %}
-                <!-- Thumbs down -->
-                <img
-                src="{% static 'images/thumbs-down.png' %}"
-                alt="Nej"
-                class="yesno-img animate__animated"
-                >
-              </label>
-            </div>
-            
-            
-          <!-- Multiple choice question -->
-          {% elif question.question_format == "multiplechoice" %}
-          <input type="hidden" name="question_format" value="multiplechoice" />
-          <div class="multiple-choice-container">
-            {% for option, is_selected in multiple_choice_pairs %}
-              <label class="multiple-input">
-                <input
-                  type="checkbox"
-                  name="multiplechoice"
-                  value="{{ option }}"
-                  {% if is_selected %}checked{% endif %}
-                />
-                <span class="choice-label">{{ option }}</span>
-                <img
-                  class="checkbox-img animate__animated"
-                  src="{% static 'images/checkbox-unchecked.png' %}"
-                  alt="checkbox"
-                />
-              </label>
-            {% endfor %}
-          </div>
-          {% endif %}
-
-            
-          <!-- Comment popup -->
-          <div class="question-form comment" id="comment-popup" style="display: none">
-              <input
-                type="text"
-                id="comment"
-                name="comment"
-                {% if comment and comment != "None" %}
-                value="{{ comment }}"
-                {% else %}
-                placeholder="Kommentar"
-                {% endif %}
-              />
-          </div>
-
-          <!-- Button for when all questions are answered-->
-          <div>
-            {% if question_index|add:1 == total %}
-            <button type="submit" class="answer-survey-button">Skicka in svar</button>
-            <input type="hidden" name="submit_answers" value="1" />
-            {% endif %}
-          </div>
-        </form>
-
-      <!-- Comment button -->
-          <div class="bottom-actions">
-            <a href="#"  onclick="openCloseComment()" title="Kommentera">
-              <img
-                src="{% static 'images/comment.png' %}"
-                alt="Comment"
-                class="image-button action-icon"
-              />
-            </a>
+        <!-- Slider question -->
+        {% if question.question_format == "slider" %}
+        <div class="vertical-slider-container">
+          <input type="hidden" name="question_format" value="slider" />
+          <input
+            type="range"
+            name="slider"
+            min="0"
+            max="10"
+            step="0.1"
+            value="{{ slider_answer }}"
+            class="vertical-slider"
+            required
+          />
+          <!-- Smiley in slider -->
+          <img
+            id="smiley-icon"
+            src="{% static 'images/smiley-neutral.png' %}"
+            class="animate__animated"
+          />
         </div>
 
-        <!-- Arrows (left & right) -->
-      <div class="navigation-arrows">
-        <a href="{% url 'answer_survey' survey_result_id prev_question_index %}" class="arrow">&lt;</a>
-        <span class="question-counter">{{ question_index|add:1 }} / {{ total }}</span>
-        <a href="#" class="arrow" onclick="submitForm()">&gt;</a>
+        <!-- Text question -->
+        {% elif question.question_format == "text" %}
+        <div class="popup-overlay textquestion">
+          <div class="popup-content textquestion">
+            <input type="hidden" name="question_format" value="text" />
+            {% if text_answer %}
+            <textarea name="text" required>{{ text_answer }}</textarea>
+            {% else %}
+            <textarea
+              name="text"
+              placeholder="Ditt svar..."
+              required
+            ></textarea>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Yes/No question (thumbs up/down) -->
+        {% elif question.question_format == "yesno" %}
+        <div class="yesno-container">
+          <input type="hidden" name="question_format" value="yesno" />
+          <label>
+            {% if yes_no_answer %}
+            <input type="radio" name="yesno" value="True" checked required />
+            {% else %}
+            <input type="radio" name="yesno" value="True" required />
+            {% endif %}
+            <!-- Thumbs up -->
+            <img
+              src="{% static 'images/thumbs-up.png' %}"
+              alt="Ja"
+              class="yesno-img animate__animated"
+            />
+          </label>
+          <label>
+            {% if yes_no_answer %}
+            <input type="radio" name="yesno" value="False" required />
+            {% elif yes_no_answer == False %}
+            <input type="radio" name="yesno" value="False" checked required />
+            {% else %}
+            <input type="radio" name="yesno" value="False" required />
+            {% endif %}
+            <!-- Thumbs down -->
+            <img
+              src="{% static 'images/thumbs-down.png' %}"
+              alt="Nej"
+              class="yesno-img animate__animated"
+            />
+          </label>
+        </div>
+
+        <!-- Multiple choice question -->
+        {% elif question.question_format == "multiplechoice" %}
+        <input type="hidden" name="question_format" value="multiplechoice" />
+        <div class="multiple-choice-container">
+          {% for option, is_selected in multiple_choice_pairs %}
+          <label class="multiple-input">
+            {% if is_selected %}
+            <input
+              type="checkbox"
+              name="multiplechoice"
+              value="{{ option }}"
+              checked
+            />
+            {% else %}
+            <input type="checkbox" name="multiplechoice" value="{{ option }}" />
+            {% endif %}
+            <span class="choice-label">{{ option }}</span>
+            <img
+              class="checkbox-img animate__animated"
+              src="{% static 'images/checkbox-unchecked.png' %}"
+              alt="checkbox"
+            />
+          </label>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Comment popup -->
+        <div
+          class="question-form comment"
+          id="comment-popup"
+          style="display: none"
+        >
+          {% if comment %}
+          <input
+            type="text"
+            id="comment"
+            name="comment"
+            value="{{ comment }}"
+          />
+          {% else %}
+          <input
+            type="text"
+            id="comment"
+            name="comment"
+            placeholder="Kommentar"
+          />
+          {% endif %}
+        </div>
+
+        <!-- Button for when all questions are answered-->
+        <div>
+          {% if question_index|add:1 == total %}
+          <button
+            type="submit"
+            onclick="document.getElementById('submit_answers').value='submit'"
+            class="answer-survey-button"
+          >
+            Skicka in svar
+          </button>
+          {% endif %}
+        </div>
+      </form>
+
+      <!-- Comment button -->
+      <div class="bottom-actions">
+        <a href="#" onclick="openCloseComment()" title="Kommentera">
+          <img
+            src="{% static 'images/comment.png' %}"
+            alt="Comment"
+            class="image-button action-icon"
+          />
+        </a>
       </div>
-    </div> 
+
+      <!-- Arrows (left & right) -->
+      <div class="navigation-arrows">
+        <a href="#" class="arrow" onclick="submitForm('previous')">&lt;</a>
+        <span class="question-counter">
+          {{ question_index|add:1 }} / {{ total }}
+        </span>
+        <a href="#" class="arrow" onclick="submitForm('next')">&gt;</a>
+      </div>
+    </div>
+
     <script>
-        // Script for animations and opening/closing the comment section
-        document.addEventListener("DOMContentLoaded", () => {
-      
+      // Script for animations and opening/closing the comment section
+      document.addEventListener("DOMContentLoaded", () => {
         const slider = document.querySelector(".vertical-slider");
         const smiley = document.getElementById("smiley-icon");
         const yesnoImages = document.querySelectorAll(".yesno-img");
-        const multiplechoice_input = document.querySelectorAll(".multiple-input input[type='checkbox']");
-      
+        const multiplechoice_input = document.querySelectorAll(
+          ".multiple-input input[type='checkbox']",
+        );
+
         const updateSliderVisuals = () => {
           // Remove previous animation classes
-          smiley.classList.remove("animate__faster", "animate__slower", "animate__heartBeat");
+          smiley.classList.remove(
+            "animate__faster",
+            "animate__slower",
+            "animate__heartBeat",
+          );
           const value = parseFloat(slider.value);
           const max = parseFloat(slider.max);
           const percentage = (value / max) * 100;
@@ -190,39 +225,46 @@
           slider.style.background = `linear-gradient(to right, #297CC9 0%, #58C5F4 ${percentage}%, #eee ${percentage}%, #eee 100%)`;
 
           // Update smiley image and apply animation class based on value
-          let smileyURL = '/static/images/smiley-neutral.png';
-          if (value < 2){
-            smileyURL = '/static/images/smiley-sad.png';
-            smiley.classList.add("animate__animated", "animate__heartBeat", "animate__slower");
-          }
-          else if (value < 4.5) {
-            smileyURL = '/static/images/smiley-meh.png';
+          let smileyURL = "/static/images/smiley-neutral.png";
+          if (value < 2) {
+            smileyURL = "/static/images/smiley-sad.png";
+            smiley.classList.add(
+              "animate__animated",
+              "animate__heartBeat",
+              "animate__slower",
+            );
+          } else if (value < 4.5) {
+            smileyURL = "/static/images/smiley-meh.png";
             smiley.classList.add("animate__animated", "animate__heartBeat");
-          }
-          else if (value < 5.5) {
-            smileyURL ='/static/images/smiley-neutral.png';
-          }
-          else if (value < 8) {
-            smileyURL = '/static/images/smiley-happy.png';
+          } else if (value < 5.5) {
+            smileyURL = "/static/images/smiley-neutral.png";
+          } else if (value < 8) {
+            smileyURL = "/static/images/smiley-happy.png";
             smiley.classList.add("animate__animated", "animate__heartBeat");
-          }
-          else if (value < 9.9) {
-            smileyURL = '/static/images/smiley-superhappy.png';
-            smiley.classList.add("animate__animated", "animate__heartBeat", "animate__faster");
-          }
-          else {
-            smileyURL = '/static/images/smiley-superhappy.png';
+          } else if (value < 9.9) {
+            smileyURL = "/static/images/smiley-superhappy.png";
+            smiley.classList.add(
+              "animate__animated",
+              "animate__heartBeat",
+              "animate__faster",
+            );
+          } else {
+            smileyURL = "/static/images/smiley-superhappy.png";
             // Trigger confetti
             confetti({
               particleCount: 100,
               spread: 70,
               origin: { y: 0.6 },
-            });        
+            });
           }
 
           smiley.src = smileyURL;
           // slider.clientWidth returns the slider's total width (height when rotated)
-          const smileyTop = (slider.offsetTop +  slider.clientWidth/2) + (1 - (value / max) *  slider.clientWidth) - 15 ; // 15 made it look the best
+          const smileyTop =
+            slider.offsetTop +
+            slider.clientWidth / 2 +
+            (1 - (value / max) * slider.clientWidth) -
+            15; // 15 made it look the best
           const smileyLeft = slider.offsetLeft + slider.offsetWidth / 2 - 25; // center it (25 half of the smiley width)
 
           smiley.style.top = `${smileyTop}px`;
@@ -230,17 +272,15 @@
         };
 
         // For yes/no-questions
-        yesnoImages.forEach(img => {
+        yesnoImages.forEach((img) => {
           img.addEventListener("click", () => {
             // Remove previous animation classes
-            img.classList.remove("animate__animated", "animate__rubberBand");           
+            img.classList.remove("animate__animated", "animate__rubberBand");
             void img.offsetWidth; // Force reflow to restart animation
             // Add animation again
             img.classList.add("animate__animated", "animate__rubberBand");
           });
         });
-
-        
 
         multiplechoice_input.forEach((checkbox) => {
           const img = checkbox.parentElement.querySelector(".checkbox-img");
@@ -251,12 +291,20 @@
               ? "/static/images/checkbox-checked.png" // if checkbox.checked is True
               : "/static/images/checkbox-unchecked.png"; // False
 
-              parentOption.classList.remove("animate__animated", "animate__pulse", "animate__faster");
-              void parentOption.offsetWidth; // force reflow
-              parentOption.classList.add("animate__animated", "animate__pulse", "animate__faster");
+            parentOption.classList.remove(
+              "animate__animated",
+              "animate__pulse",
+              "animate__faster",
+            );
+            void parentOption.offsetWidth; // force reflow
+            parentOption.classList.add(
+              "animate__animated",
+              "animate__pulse",
+              "animate__faster",
+            );
           };
           updateImage();
-          
+
           // When the checkbox is clicked
           checkbox.addEventListener("change", updateImage);
         });
@@ -264,21 +312,36 @@
         slider.addEventListener("input", updateSliderVisuals);
         window.addEventListener("resize", updateSliderVisuals);
         updateSliderVisuals(); // Initialize
-        
       });
 
-      function openCloseComment() { // Open and close the comment popup
-        if (document.getElementById("comment-popup").style.display == "none"){
+      function openCloseComment() {
+        // Open and close the comment popup
+        if (document.getElementById("comment-popup").style.display == "none") {
           document.getElementById("comment-popup").style.display = "flex";
-        }
-        else{
+        } else {
           document.getElementById("comment-popup").style.display = "none";
-        }      
+        }
       }
 
-      function submitForm() {
+      function submitForm(action) {
+        document.getElementById("actionType").value = action;
+        document.getElementById("submit_answers").value = "navigate";
         document.querySelector("form").requestSubmit(); // Triggers HTMX's hx-post
       }
+
+      document.body.addEventListener("htmx:configRequest", function (evt) {
+        const source = document.getElementById("submit_answers").value;
+
+        if (source === "submit") {
+          const shouldSubmit = confirm(
+            "{{ total_answers }} av {{ total }} frågor besvarade, är du säker på att du vill skicka in svaren?",
+          );
+          console.log("User confirmed?", shouldSubmit);
+          if (!shouldSubmit) {
+            evt.preventDefault();
+          }
+        }
+      });
     </script>
   </body>
 </html>

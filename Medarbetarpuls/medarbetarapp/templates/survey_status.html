@@ -13,6 +13,17 @@
       <div class="pagetitle">
         <h2>Du har publicerat {{ published_count }} enkäter</h2>
       </div>
+      <!-- Go back button-->
+      <button
+        class="image-button"
+        onclick="navigateBack()"
+      >
+        <img
+          src="{% static 'images/go-back-btn.png' %}"
+          alt="Gå Tillbaka"
+          class="back-icon"
+        />
+      </button>
       <div class="grid-container">
             {% for survey in published_surveys.all %}
                 <!-- prettier-ignore -->
@@ -28,13 +39,13 @@
                         <!-- Anonymous and results present -->
                         <div>
                         {% if survey.is_viewable %}
-                            <span class="tooltip" data-tooltip="Svar preseneras till medarbetare efter att enkäten är avslutad">
+                            <span class="tooltip" data-tooltip="Resultatet visas för svarande efter deadline">
                                 <div class="icon-wrapper">
                                 <img src="{% static 'images/is-viewable.png' %}" />
                                 </div>
                             </span>
                         {% else %}
-                            <span class="tooltip" data-tooltip="Svar presenteras inte till medarbetare efter att enkäten är avslutad">
+                            <span class="tooltip" data-tooltip="Resultatet visas ej för svarande efter deadline">
                                 <div class="icon-wrapper">
                                 <img src="{% static 'images/is-not-viewable.png' %}" />
                                 </div>
@@ -94,5 +105,23 @@
       </div>
     </div>
   </body>
+  <script>
+    function navigateBack() {
+        // The previous URL that linked to this page
+        let previousUrl = document.referrer;
+        if (previousUrl) {
+          if (previousUrl.includes("survey-result")){
+            // Avoid redirecting back to this page to prevent an infinite loop
+            // Only creator can see the status of a survey
+            previousUrl = '/start-creator/';       
+          }
+          window.location.href = previousUrl;
+        } else {
+          // Fallback if referrer is empty
+          // This simulates the user pressing the back button
+          window.history.back();
+        }
+      }
+  </script>
 </html>
 

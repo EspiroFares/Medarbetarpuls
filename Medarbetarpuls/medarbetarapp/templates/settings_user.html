@@ -11,6 +11,15 @@
   <body>
     <div class="main-container">
       {% include "topbar.html" with pagetitle=pagetitle %}
+      <!-- Go back button-->
+      <button class="image-button" onclick="navigateBack('{{user.user_role}}')">
+        <img
+          src="{% static 'images/go-back-btn.png' %}"
+          alt="Gå Tillbaka"
+          class="back-icon"
+        />
+      </button>
+
       <!-- Change later, if time, so user.profile_pic shows here (or default) -->
       <div class="info-table">
         <div class="table-header">Inloggningsuppgifter</div>
@@ -83,6 +92,15 @@
             hx-trigger="submit"
             hx-swap="outerHTML"
           >
+            <!-- For showing error messages -->
+            <div
+              id="name-error-box"
+              class="error-msg"
+              style="color: red; font-weight: bold"
+            >
+              {{ message }}
+            </div>
+
             <span class="close-button" onclick="closeEditName()">&times;</span>
             {% csrf_token %}
             <label for="name">Ditt nya namn:</label>
@@ -94,14 +112,7 @@
               required
             />
             <input type="hidden" name="from_settings" value="true" />
-            <!-- This line will reload the page after 100 ms (after the form is submitted) -->
-            <button
-              type="submit"
-              onclick="setTimeout(() => location.reload(), 100);"
-              class="delete-button"
-            >
-              Byt namn
-            </button>
+            <button type="submit" class="delete-button">Byt namn</button>
           </form>
         </div>
       </div>
@@ -161,16 +172,23 @@
     <script>
       // Error handling
       document.body.addEventListener("htmx:afterRequest", function (event) {
-        const errorBox = document.getElementById("error-box");
+        const form = event.target;
+
+        // Find the nearest error box *inside that form*
+        const errorBox = form.querySelector(".error-msg");
+
+        // Safety check
+        if (!errorBox) return;
 
         if (event.detail.successful) {
-          errorBox.innerHTML = "Lösenordet har ändrats";
+          errorBox.innerHTML = "Ändringen lyckades";
           errorBox.style.color = "green";
           errorBox.style.display = "block";
           // Close the popup for the user
           setTimeout(() => location.reload(), 1000);
         } else {
-          errorBox.innerHTML = event.detail.xhr.responseText || "Fel lösenord";
+          errorBox.innerHTML =
+            event.detail.xhr.responseText || "Något gick fel";
           errorBox.style.color = "red";
           errorBox.style.display = "block";
         }
@@ -197,6 +215,26 @@
 
       function closeEditPass() {
         document.getElementById("edit-pass-popup").style.display = "none";
+      }
+
+      function navigateBack(user_role) {
+        // The previous URL that linked to this page
+        let previousUrl = document.referrer;
+        if (previousUrl) {
+          if (previousUrl.includes("settings")) {
+            // Avoid redirecting back to this page to prevent an infinite loop
+            if (user_role == "surveycreator") {
+              previousUrl = "/start-creator/";
+            } else {
+              previousUrl = "/start-user/";
+            }
+          }
+          window.location.href = previousUrl;
+        } else {
+          // Fallback if referrer is empty
+          // This simulates the user pressing the back button
+          window.history.back();
+        }
       }
     </script>
   </body>

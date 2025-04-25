@@ -11,6 +11,18 @@
   <body>
     <div class="main-container">
       {% include "topbar.html" with pagetitle=pagetitle %}
+      <!-- Go back button-->
+      <button
+        class="image-button"
+        onclick="navigateBack()"
+      >
+        <img
+          src="{% static 'images/go-back-btn.png' %}"
+          alt="Gå Tillbaka"
+          class="back-icon"
+        />
+      </button>
+
       <!-- Change later, if time, so user.profile_pic shows here (or default)  -->
       <div class=pagetitle>
         <h2>Administratör för<br>{{organization.name}}</h2>
@@ -80,13 +92,20 @@
           hx-trigger="submit"
           hx-swap="outerHTML"
           >
+           <!-- For showing error messages -->
+           <div
+           id="name-error-box"
+           class="error-msg"
+           style="color: red; font-weight: bold"
+           >
+           {{ message }}
+         </div>
           <span class="close-button" onclick="closeEditName()">&times;</span>
           {% csrf_token %}
               <label for="name">Ditt nya namn:</label>
               <input type="name" id="name" name="name" placeholder="Namn" required > 
               <input type="hidden" name="from_settings" value="true">
-              <!-- This line will reload the page after 100 ms (after the form is submitted) -->
-              <button type="submit" onclick="setTimeout(() => location.reload(), 100);" class="delete-button">Byt namn</button>
+              <button type="submit"  class="delete-button">Byt namn</button>
         </form>
       </div>
   </div>
@@ -118,7 +137,6 @@
               <input type="password" id="pass_new" name="pass_new" placeholder="Nytt lösenord" required >
               <label for="password">Repetera ditt nya lösenord:</label>
               <input type="password" id="pass_check" name="pass_check" placeholder="Repetera lösenord" required >
-              <!-- Must reload after 500ms in order for this form to submit (slower) --> 
               <button type="submit"  class="delete-button">Byt lösenord</button>
         </form>
       </div>
@@ -168,6 +186,21 @@
 
       function closeEditPass() {
           document.getElementById("edit-pass-popup").style.display = "none";
+      }
+      function navigateBack() {
+        // The previous URL that linked to this page
+        let previousUrl = document.referrer;
+        if (previousUrl) {
+          if (previousUrl.includes("settings")){
+            // Avoid redirecting back to this page to prevent an infinite loop
+            previousUrl = '/start-admin/';
+          }
+          window.location.href = previousUrl;
+        } else {
+          // Fallback if referrer is empty
+          // This simulates the user pressing the back button
+          window.history.back();
+        }
       }
   </script>
   </body>

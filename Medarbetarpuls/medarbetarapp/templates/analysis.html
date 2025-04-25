@@ -14,6 +14,18 @@
   <body>
     <div class="main-container">
       {% include "topbar.html" with pagetitle="Analys"%}
+      <!-- Go back button-->
+      <button
+        class="image-button"
+        onclick="navigateBack()"
+      >
+        <img
+          src="{% static 'images/go-back-btn.png' %}"
+          alt="Gå Tillbaka"
+          class="back-icon"
+        />
+      </button>
+
       <div class="analysis-title">
         <div class="filter-container">
           <!-- Filter for work-group -->
@@ -94,6 +106,11 @@
         //initPieChart("enpsChart", pieLabels, pieData, pieColors);
         initBarChart("enpsChart", pieLabels, pieData, pieColors);
     });
+
+    function navigateBack() {
+      // This simulates the user pressing the back button
+      window.history.back();
+    }
     </script>
   </body>
 </html>

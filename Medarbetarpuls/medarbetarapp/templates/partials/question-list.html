@@ -1,0 +1,63 @@
+{% load static %}
+<div class="grid-container" id="question-list">
+  <!-- Make all of this dynamic -->
+  {% for question in survey_temp.get_ordered_questions %}
+  <a
+    href="{% url 'edit_question' survey_temp.id question.question_format question.id %}"
+    class="grid-item blue"
+  >
+    <div class="question-title">
+      <h1>Fråga {{forloop.counter}}</h1>
+      <form
+        hx-post="{% url 'delete_question' question.id survey_temp.id %}"
+        hx-trigger="submit"
+        hx-confirm="Är du säker att du vill ta bort den här frågan?"
+        hx-swap="none"
+      >
+        {% csrf_token %}
+        <button class="question-remove-button" type="submit">Ta bort</button>
+      </form>
+    </div>
+
+    <div class="question-background">
+      <p>{{question.question}}</p>
+    </div>
+
+    <div class="question-result">
+      <form
+        hx-post="{% url 'move_question_left' survey_temp.id question.id %}"
+        hx-trigger="submit"
+        hx-target="#question-list"
+        hx-swap="outerHTML"
+        class="px-2"
+      >
+        {% csrf_token %}
+        <button type="submit">&larr;</button>
+      </form>
+
+      <img
+        src="{% static 'images/' %}{{ question.question_format }}.png"
+        alt="{{ question.question_format.label }} image"
+        class="question-icon"
+      />
+
+      <form
+        hx-post="{% url 'move_question_right' survey_temp.id question.id %}"
+        hx-trigger="submit"
+        hx-target="#question-list"
+        hx-swap="outerHTML"
+        class="px-2"
+      >
+        {% csrf_token %}
+        <button type="submit">&rarr;</button>
+      </form>
+    </div>
+  </a>
+  {% endfor %}
+
+  <a href="{% url 'create_question' survey_temp.id %}" class="add-button-link">
+    <div class="add-button">
+      <span>+</span>
+    </div>
+  </a>
+</div>

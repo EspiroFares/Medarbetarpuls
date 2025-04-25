@@ -13,6 +13,17 @@
     <!-- To test this, switch to authentication_org.html in views.py -->
     <div class="main-container">
       <div class="create-container">
+        <!-- Go back button-->
+        <button
+          class="image-button"
+          onclick="window.location.href='{% url 'create_org' %}'"
+        >
+          <img
+            src="{% static 'images/go-back-btn.png' %}"
+            alt="Gå Tillbaka"
+            class="back-icon"
+          />
+        </button>
         <h1>Skapa din nya organisation</h1>
         <h2>En kod har skickats till din mejladress</h2>
         <!-- This form sends the input data to the server using a POST request -->
@@ -35,12 +46,14 @@
             required
           />
 
-          <button type="submit">Fortsätt</button>
-        </form>
-        <div class="account-help-links">
-          <!-- Replace # later with actual path -->
-          <a href="#">Fick du ingen kod? Klicka här för att skicka igen</a>
-        </div>
+        <button type="submit">Fortsätt</button>
+      </form>
+      <div class="account-help-links">
+        <!-- Replace # later with actual path -->
+        <a href="#"
+        hx-post="/resend-authentication-code-acc/"
+        hx-swap="none"
+        hx-vals='{"csrfmiddlewaretoken": "{{ csrf_token }}", "source": "from_org"}'>Fick du ingen kod? Klicka här för att skicka igen</a>
       </div>
     </div>
   </body>

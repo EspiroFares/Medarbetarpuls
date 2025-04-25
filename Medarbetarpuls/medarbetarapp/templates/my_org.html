@@ -6,14 +6,25 @@
     <script src="https://unpkg.com/htmx.org@1.8.4"></script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Inställningar</title>
+    <title>Min organisation</title>
     <link rel="stylesheet" href="{% static 'css/main.css' %}" />
   </head>
   <body>
     <div class="main-container">
-      {% include "topbar.html" with pagetitle="Min organisation" %}
+      {% include "topbar.html" with pagetitle=pagetitle %}
       <div class="my-org-container">
-        <h1>{{ organization.name }}</h1>
+      <h1>{{ organization.name }}</h1>
+      <!-- Go back button-->
+      <button
+        class="image-button"
+        onclick="navigateBack()"
+      >
+        <img
+          src="{% static 'images/go-back-btn.png' %}"
+          alt="Gå Tillbaka"
+          class="back-icon"
+        />
+      </button>
 
         <div class="search-container">
           <!-- Form för att trigga sökning via HTMX -->
@@ -41,7 +52,9 @@
               <tr>
                 <th>Namn</th>
                 <th>Mejladress</th>
-                <th>Grupp</th>
+                <th>Medarbetargrupp</th>
+                <th>Roll</th>
+                <th>Enkätgrupp</th>
                 <th></th>
                 <th></th>
                 <!-- Empty column for removal symbol -->
@@ -56,14 +69,20 @@
                 <td>{{ employee.email }}</td>
                 <td>
                   {% for group in employee.employee_groups.all %}
-                  <!---->
-                  {{ group.name}}
-                  <!---->
-                  {% if not forloop.last %}, {% endif %}
-                  <!---->
+                    {{ group.name}}{% if not forloop.last %},{% endif %} 
                   {% endfor %}
                 </td>
-
+                <td>{{employee.user_role}}</td>
+                {% if employee.user_role == "surveycreator" %}
+                <td>
+                  {% for group in employee.survey_groups.all %}
+                    {{ group.name}}{% if not forloop.last %},{% endif %}
+                  {% endfor %}
+                </td>
+                {% else %}
+                <td>Fel roll</td>
+                {% endif %}
+                
                 <td>
                   <!-- Delete employee popup -->
                   <div
@@ -91,8 +110,8 @@
                         {% csrf_token %}
                         <input
                           type="hidden"
-                          name="user_id"
-                          value="{{ employee.id }}"
+                          name="delete_user_email"
+                          id="delete_user_email"
                         />
                         <button type="submit" class="delete-button">
                           Ta bort medarbetaren
@@ -100,7 +119,7 @@
                       </form>
                     </div>
                   </div>
-                  <button onclick="openConfirmDelete()" class="trashcan-button">
+                  <button onclick="openConfirmDelete('{{ employee.email }}')" class="trashcan-button">
                     <img
                       src="{% static 'images/trashcan.png' %}"
                       alt="Delete"
@@ -110,75 +129,105 @@
                 </td>
                 <td>
                   <div class="value">
-                    <a href="#" onclick="openEditUser()">
-                      <span class="edit-icon">✏️</span></a
-                    >
+                    <a href="#" onclick="openEditUser('{{ employee.email }}','{{ employee.user_role }}')">
+                      <span class="edit-icon">✏️</span></a>
+
+                    </form>
                   </div>
                 </td>
-
                 {% endif %}
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-        <a href="{% url 'add_employee' %}">
-          <button class="button">Lägg till medarbetare</button>
-        </a>
+              
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
+      <a href="{% url 'add_employee' %}">
+        <button class="button">Lägg till medarbetare</button>
+      </a>
     </div>
     <!-- Edit user Popup -->
     <div id="edit-user-popup" class="popup-overlay" style="display: none">
       <div id="content" class="popup-content messages">
         <form
           class="edit-pass-form"
-          hx-post="/add-employee/"
+          hx-post="/edit-employee/"
           hx-trigger="submit"
           hx-swap="none"
         >
           <span class="close-button" onclick="closeEditUser()">&times;</span>
           {% csrf_token %}
           <label for="medarbetare">Bekräfta mejl för medarbetare: </label>
-          <!-- FIX username shows -->
           <input
             type="medarbetare"
-            id="employee"
-            name="employee"
-            placeholder="Mejl"
-            required
+            id="email"
+            name="email"
+            readonly
           />
-          <label for="medarbetargrupp">Lägg till ny medarbetargrupp: </label>
-          <!-- FIX username shows -->
+          <label for="new_employee_group">Lägg till ny medarbetargrupp: </label>
           <input
-            type="medarbetargrupp"
+            type="employeeGroup"
             id="new_employee_group"
             name="new_employee_group"
             placeholder="Medarbetargrupp"
-            required
           />
+          <label for="edit_user_role">Ändra roll: </label>
+          <select
+          id="edit_user_role"
+          name="edit_user_role">
+            <option value="surveyresponder">EnkätSvarare</option>
+            <option value="surveycreator">EnkätSkapare</option>
+          </select>
+
+
+          <label id="new_survey_group_label" for="new_survey_group" style="display: block; margin-top: 10px;">Lägg till ny Utskicksgrupp: </label>
+          <input
+            type="surveyGroup"
+            id="new_survey_group"
+            name="new_survey_group"
+            placeholder="Utskicksgrupp"
+          />
+
           <input
             type="hidden"
             name="edit_employee"
             id="edit_employee"
             value="true"
           />
-          <div id="popup-error" style="color: red; margin-top: 10px"></div>
-          <button type="submit" class="delete-button">Lägg till</button>
+          <div id="popup-error" style="color: red; margin-top: 10px; font-weight: bold;"></div>
+          <button
+            type="submit">
+            Lägg till
+          </button>
         </form>
       </div>
     </div>
   </body>
   <script>
-    function openEditUser() {
+    function openEditUser(userEmail,userRole) {
       document.getElementById("edit-user-popup").style.display = "flex";
+      document.getElementById("email").value = userEmail
+      document.getElementById("edit_user_role").value = userRole
+
+      if(userRole==="surveycreator"){
+        document.getElementById("new_survey_group").style.visibility = "visible"
+        document.getElementById("new_survey_group_label").style.visibility = "visible"
+      }else{
+        document.getElementById("new_survey_group").style.visibility = "hidden"
+        document.getElementById("new_survey_group_label").style.visibility = "hidden"
+      }
+
+
     }
 
     function closeEditUser() {
       document.getElementById("edit-user-popup").style.display = "none";
     }
 
-    function openConfirmDelete() {
+    function openConfirmDelete(user_email) {
       document.getElementById("delete-employee-popup").style.display = "flex";
+      document.getElementById("delete_user_email").value = user_email
+
     }
 
     function closeConfirmDelete() {
@@ -191,18 +240,41 @@
 
       //if (!popup || !errorBox) return;
 
-      if (event.detail.xhr.status === 200) {
-        // if success reload the page after a short delay
-        setTimeout(function () {
-          location.reload();
-        }, 200);
-      } else if (!event.detail.xhr.ok) {
-        // if error show returned message or "Fel"
-        const message = event.detail.xhr.responseText || "Fel";
-        popup.classList.remove("hidden");
-        errorBox.textContent = message;
-        errorBox.style.display = "block";
-      }
+    if (event.detail.xhr.status === 200) {
+      // if success reload the page after a short delay
+      setTimeout(function() {
+        location.reload();
+      }, 200);
+    }else if (!event.detail.xhr.ok) {
+      // if error show returned message or "Fel"
+      const message = event.detail.xhr.responseText;
+      popup.classList.remove("hidden");
+      errorBox.textContent = message;
+      errorBox.style.display = "block";
+    } 
+     // Hide error box when user focuses on any input field
+     document.querySelectorAll("input").forEach((input) => {
+      input.addEventListener("focus", () => {
+        if (errorBox) {
+          errorBox.style.display = "none";
+        }
+      });
     });
+  });
+  function navigateBack() {
+      // The previous URL that linked to this page
+      let previousUrl = document.referrer;
+      if (previousUrl) {
+        if (previousUrl.includes("add-employee")){
+          // Avoid redirecting back to this page to prevent an infinite loop
+          previousUrl = '/start-admin/';
+        }
+        window.location.href = previousUrl;
+      } else {
+        // Fallback if referrer is empty
+        // This simulates the user pressing the back button
+        window.history.back();
+      }
+    }
   </script>
 </html>

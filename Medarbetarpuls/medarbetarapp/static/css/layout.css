@@ -63,7 +63,7 @@
   background-color: var(--white);
   /* white; */
   width: 100%;
-  max-width: 550px;
+  max-width: 800px;
   padding: 30px;
   flex-direction: column;
   border-radius: 10px;
@@ -342,7 +342,7 @@
 
 .table-container {
   display: flex;
-  max-width: 600px;
+  width: 100%;
   margin: 0 auto;
   border-radius: 10px;
   overflow-y: auto;
