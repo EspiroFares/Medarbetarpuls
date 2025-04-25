@@ -9,6 +9,7 @@ from django.contrib.auth.models import (
 import logging
 from typing import cast
 
+# from .analysis_handler import AnalysisHandler
 
 logger = logging.getLogger(__name__)
 
@@ -443,6 +444,20 @@ class Answer(models.Model):
     )  # Stores a list of booleans
     yes_no_answer = models.BooleanField(null=True, blank=True)  # pyright: ignore
     slider_answer = models.FloatField(null=True, blank=True)
+
+    @property
+    def answer(self):
+        if self.question:
+            if self.question.question_format == QuestionFormat.MULTIPLE_CHOICE:
+                return self.multiple_choice_answer
+            elif self.question.question_format == QuestionFormat.YES_NO:
+                return self.yes_no_answer
+            elif self.question.question_format == QuestionFormat.TEXT:
+                return self.free_text_answer
+            elif self.question.question_format == QuestionFormat.SLIDER:
+                return self.slider_answer
+
+        return None
 
     @property
     def answer_format(self) -> QuestionFormat | None:

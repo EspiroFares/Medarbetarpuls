@@ -34,11 +34,9 @@ class AnalysisHandler:
         """Retrieve a specific SurveyUserResult."""
         return SurveyUserResult.objects.filter(published_survey=survey)
 
-    def get_question(self, question_txt: str) -> Question:
-        """Fetch the question object by text. Assumes there is only one question phrased the same way."""
-        # Right now the question is fetched by an exact match,
-        # use question__icontains= instead of question= for a more flexible match.
-        return Question.objects.filter(question__icontains=question_txt).first()
+    def get_question(self, question_id: int) -> Question:
+        """Fetch the question object by id."""
+        return Question.objects.filter(id=question_id).first()
 
     def get_answers(
         self,
@@ -54,6 +52,22 @@ class AnalysisHandler:
             filters["survey__in"] = results
 
         return Answer.objects.filter(**filters)
+
+    def get_comments(
+        self,
+        question: Question,
+        survey: Survey | None = None,
+    ):
+        """Returns all comments from a question, optionaly question and survey."""
+        filters = {"question": question, "is_answered": True, "comment__isnull": False}
+
+        if survey:
+            results = self.get_survey_result(survey)
+            filters["survey__in"] = results
+
+        return Answer.objects.filter(**filters).exclude(
+            comment=""
+        )  # only returns comments non empty comments
 
     # --------- SLIDER-QUESTION FUNCTIONALITY -------------
     def calculate_enps_data(self, answers) -> tuple[int, int, int]:
@@ -87,21 +101,23 @@ class AnalysisHandler:
 
         With survey_id set to None you get all the answers from an eNPS question.
         """
-        survey = self.get_survey(survey)
+        survey = self.get_survey(survey_id)
         question_txt = (
             "How likely are you to recommend this company as a place to work?"
         )
-        question = self.get_question(question_txt)
-        print(question)
+
+        question = Question.objects.filter(question__icontains=question_txt).first()
         answers = self.get_answers(question, survey)
         # answers = self.get_answers(question)
         promoters, passives, detractors = self.calculate_enps_data(answers)
-        print(promoters, passives, detractors)
         score = self.calculate_enps_score(promoters, passives, detractors)
         distribution = self.get_response_distribution_slider(answers)
         standard_deviation = self.calculate_standard_deviation(answers)
         variation_coefficient = self.calculate_variation_coefficient(answers)
+        comments = self.get_comments(question, survey)
         return {
+            "question": question,
+            "comments": comments,
             "score": score,
             "labels": ["Promoters", "Passives", "Detractors"],
             "data": [promoters, passives, detractors],
@@ -148,7 +164,7 @@ class AnalysisHandler:
 
     def get_slider_summary(
         self,
-        question_txt: str,
+        question_id: int,
         survey_id: int,
     ):
         """
@@ -158,16 +174,21 @@ class AnalysisHandler:
         With survey_id set to None you get all the answers from the question.
         """
         survey = self.get_survey(survey_id)
-        question = self.get_question(question_txt)
+        question = self.get_question(question_id)
         answers = self.get_answers(question, survey)
         distribution = self.get_response_distribution_slider(answers)
         standard_deviation = self.calculate_standard_deviation(answers)
         variation_coefficient = self.calculate_variation_coefficient(answers)
+        comments = self.get_comments(question, survey)
+        mean = self.calculate_mean(answers)
         return {
+            "question": question,
+            "comments": comments,
             "slider_values": list(range(1, 11)),
             "distribution": distribution,
             "standard_deviation": standard_deviation,
             "variation_coefficient": variation_coefficient,
+            "mean": mean,
         }
 
     # ---------------- MULTIPLE CHOICE ------------
@@ -188,17 +209,19 @@ class AnalysisHandler:
 
     def get_multiple_choice_summary(
         self,
-        question_txt: str,
+        question_id: int,
         survey_id: int,
     ):
         survey = self.get_survey(survey_id)
-        question = self.get_question(question_txt)
-        answer_options = question.specific_question.options
+        question = self.get_question(question_id)
+        answer_options = question.multiple_choice_question.options
         answers = self.get_answers(question, survey)
         distribution = self.get_response_distribution_mc(answers, answer_options)
+        comments = self.get_comments(question, survey)
         return {
-            "question": question_txt,
+            "question": question,
             "answer_options": answer_options,
+            "comments": comments,
             "distribution": distribution,
         }
 
@@ -208,45 +231,118 @@ class AnalysisHandler:
 
         yes_count = sum(1 for a in answers if a.yes_no_answer is True)
         no_count = sum(1 for a in answers if a.yes_no_answer is False)
-        return [no_count, yes_count]
+        return [yes_count, no_count]
 
     def get_yes_no_summary(
         self,
-        question_txt: str,
+        question_id: int,
         survey_id: int,
     ):
         survey = self.get_survey(survey_id)
-        question = self.get_question(question_txt)
+        question = self.get_question(question_id)
         answer_options = [
             "YES",
             "NO",
         ]
         answers = self.get_answers(question, survey)
         distribution = self.get_response_distribution_yes_no(answers)
+        answer_count = answers.count()
+        yes_count = answers.filter(yes_no_answer=True).count()
+        no_count = answers.filter(yes_no_answer=False).count()
+        if answer_count == 0:
+            yes_percentage = 0
+            no_percentage = 0
+        else:
+            yes_percentage = round((yes_count / answer_count) * 100, 1)
+            no_percentage = round((no_count / answer_count) * 100, 1)
+        comments = self.get_comments(question, survey)
         return {
             "question": question,
+            "comments": comments,
             "answer_options": answer_options,
             "distribution": distribution,
+            "yes_percentage": yes_percentage,
+            "no_percentage": no_percentage,
         }
 
-    def survey_result_summary(self, survey_id):
+    # -------------------- FREE TEXT -----------------
+    def get_free_text_summary(self, question_id: int, survey_id: int):
+        survey = self.get_survey(survey_id)
+        question = self.get_question(question_id)
+        answers = self.get_answers(question, survey)
+        answer_count = answers.count()
+
+        answer_list = list(answers)
+        text_answers = []
+        for answer_ in answer_list:
+            text_answers.append(answer_.free_text_answer)
+
+        comments = self.get_comments(question, survey)
+        filters = {
+            "question": question,
+            "is_answered": True,
+        }
+
+        return {
+            "question": question,
+            "answers": text_answers,
+            "answer_count": answer_count,
+            "comments": comments,
+        }
+
+    # ------------------- FULL SURVEY -----------------
+
+    def survey_result_summary(self, survey_id, answers=None):
+        """
+        This function returns a summary in the form of a context for a whole survey.
+
+        question_summary = {
+                        "question" : question
+                        "comment" : comment
+                        "answer" : answer
+                        ...
+                    }
+
+        Returns summary = {
+                            "survey: survey
+                            "summaries: [(list of question_summary)]
+                        }
+        """
         survey = Survey.objects.filter(id=survey_id).first()
 
-        summary = {}
+        summary = {
+            "survey": survey,
+            "summaries": [],
+        }
+
         questions = Question.objects.filter(connected_surveys__id=survey_id)
 
         for question in questions:
             if question.question_format == QuestionFormat.MULTIPLE_CHOICE:
                 question_summary = self.get_multiple_choice_summary(
-                    question.question, survey.id
+                    question.id, survey.id
                 )
             elif question.question_format == QuestionFormat.YES_NO:
-                question_summary = self.get_yes_no_summary(question.question, survey.id)
+                question_summary = self.get_yes_no_summary(question.id, survey.id)
             elif question.question_format == QuestionFormat.TEXT:
-                pass
+                question_summary = self.get_free_text_summary(question.id, survey.id)
             elif question.question_format == QuestionFormat.SLIDER:
-                question_summary = self.get_slider_summary(question.question, survey.id)
-            summary[question] = question_summary
+                question_summary = self.get_slider_summary(question.id, survey.id)
+            elif question.question_type == QuestionType.ENPS:
+                question_summary = self.get_enps_summary(survey.id)
+
+            if answers:
+                question = question_summary["question"]
+                question_summary["answer"] = answers.filter(question=question).first()
+            else:
+                question_summary["answer"] = None
+
+            question_summary["summaries"] = {
+                "question_text": question.question,
+                "question_format": question.question_format,
+                "summary": question_summary,
+            }
+            summary["summaries"].append(question_summary)
 
         return summary
 
@@ -255,11 +351,11 @@ class AnalysisHandler:
     def enps_history_distribution(self):
         # TO DO: Add time filters
         # TO DO: add employeegroup option
-        question_txt = (
+        question_txt = Question.objects.get(
             "How likely are you to recommend this company as a place to work?"
         )
 
-        question = self.get_question(question_txt)
+        question = Question.objects.filter(question__icontains=question_txt).first()
         surveys = Survey.objects.order_by("sending_date")
         history = []
 

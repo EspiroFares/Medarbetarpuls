@@ -21,8 +21,8 @@ from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 
 
-
 logger = logging.getLogger(__name__)
+
 
 @csrf_protect
 def create_acc(request):
@@ -44,25 +44,31 @@ def create_acc(request):
         correct_form_name = correct_name(name)
         if not correct_form_name:
             # Did not enter both firstname and lastname
-             return HttpResponse("Vänligen ange ditt namn på formen: Förnamn Efternamn", status=400)
+            return HttpResponse(
+                "Vänligen ange ditt namn på formen: Förnamn Efternamn", status=400
+            )
 
         email = request.POST.get("email")
         password = request.POST.get("password")
         from_settings = request.POST.get("from_settings") == "true"
 
         user = models.CustomUser.objects.filter(email=email).exists()
-        if user: 
+        if user:
             active_user = models.CustomUser.objects.get(email=email)
             if active_user.is_active == True:
                 # There already exists an user with this email
-                return HttpResponse("Det existerar redan en användare med denna mejladress", status=400)
+                return HttpResponse(
+                    "Det existerar redan en användare med denna mejladress", status=400
+                )
 
         org = find_organization_by_email(email=email)
         if not org:
             logger.error("This email is not authorized for registration.")
-            return HttpResponse("Denna mejladress tillhör ej någon organisation", status=400)
+            return HttpResponse(
+                "Denna mejladress tillhör ej någon organisation", status=400
+            )
 
-        code = 123456   # make random later, just test now
+        code = 123456  # make random later, just test now
         cache.set(f"verify_code_{email}", code, timeout=300)
 
         send_mail(
@@ -95,8 +101,9 @@ def create_acc(request):
         else:
             return render(request, "create_acc.html")
 
+
 @login_required
-@csrf_protect      
+@csrf_protect
 def edit_employee_view(request):
     if request.method == "POST":
         if request.headers.get("HX-Request"):
@@ -109,7 +116,7 @@ def edit_employee_view(request):
             edit_user = models.CustomUser.objects.get(email=email)
             edit_user.user_role = user_role
             edit_user.save()
-            if(employee_group):
+            if employee_group:
                 if models.EmployeeGroup.objects.filter(name=employee_group).exists():
                     group = models.EmployeeGroup.objects.get(name=employee_group)
                 else:
@@ -117,8 +124,8 @@ def edit_employee_view(request):
                     group = models.EmployeeGroup(name=employee_group, organization=org)
                     group.save()
                 edit_user.employee_groups.add(group)
-            
-            if(survey_group):
+
+            if survey_group:
                 if models.EmployeeGroup.objects.filter(name=survey_group).exists():
                     group = models.EmployeeGroup.objects.get(name=survey_group)
                 else:
@@ -128,9 +135,8 @@ def edit_employee_view(request):
                     group.save()
                 edit_user.survey_groups.add(group)
 
-
             return HttpResponse(status=200)
-        
+
     return HttpResponse(status=400)
 
 
@@ -167,7 +173,7 @@ def add_employee_view(request):
                     email_instance = models.EmailList(email=email, org=org)
                     email_instance.save()
                     email_instance.employee_groups.add(group)
-                    #user.survey_groups.add(group) should not be used anymore 
+                    # user.survey_groups.add(group) should not be used anymore
                 else:
                     logger.error("Existing user already have an active account")
                     pass
@@ -183,7 +189,7 @@ def add_employee_view(request):
                 email_instance = models.EmailList(email=email, org=org)
                 email_instance.save()
                 email_instance.employee_groups.add(group)
-                #user.survey_groups.add(group) should not be used anymore
+                # user.survey_groups.add(group) should not be used anymore
             return HttpResponse(status=204)
 
     return render(
@@ -200,59 +206,65 @@ def analysis_view(request):
 
 @login_required
 @csrf_protect
-def answer_survey_view(request, survey_result_id: int, question_index: int = 0) -> HttpResponse:
+def answer_survey_view(
+    request, survey_result_id: int, question_index: int = 0
+) -> HttpResponse:
     """
-    Makes it possible for the user to answer all questions of a survey. 
-    Page is navigated using its question index which is then used to 
-    save and display a unique Answer object for each Question. 
+    Makes it possible for the user to answer all questions of a survey.
+    Page is navigated using its question index which is then used to
+    save and display a unique Answer object for each Question.
 
     Args:
-        request: The input from the various answer fields 
+        request: The input from the various answer fields
         survey_result_id (int): The id of the SurveyResult being answered
-        question_index (int): The index of the question which should be displayed 
+        question_index (int): The index of the question which should be displayed
 
     Returns:
-        HttpResponse: Redirects to next or previous question, then unanswered surveys 
+        HttpResponse: Redirects to next or previous question, then unanswered surveys
         page after survey completion, otherwise status 400 on errors
     """
     user: models.CustomUser = request.user
-    survey_result: models.SurveyUserResult = get_object_or_404(SurveyUserResult, pk=survey_result_id, user=user)
+    survey_result: models.SurveyUserResult = get_object_or_404(
+        SurveyUserResult, pk=survey_result_id, user=user
+    )
     questions: list[models.Question] = survey_result.published_survey.questions.all()
     answers: list[models.Answer] = survey_result.answers.all()
     answer: models.Answer = models.Answer()
-    
+
     # Calculate question navigation indexes
-    if question_index - 1 < 0: 
+    if question_index - 1 < 0:
         prev_question_index: int = 0
-    else: 
+    else:
         prev_question_index: int = question_index - 1
-    
-    if question_index + 1 >= len(questions): 
-        next_question_index: int = len(questions) - 1 
-    else: 
+
+    if question_index + 1 >= len(questions):
+        next_question_index: int = len(questions) - 1
+    else:
         next_question_index: int = question_index + 1
 
     question: models.Question = questions[question_index]
 
-    # Create a new answer if none exists for this question 
-    if question_index >= len(answers): 
+    # Create a new answer if none exists for this question
+    if question_index >= len(answers):
         question_format: models.QuestionFormat = question.question_format
         if question_format is not None:
-            if question_format == models.QuestionFormat.SLIDER: 
-                answer = models.Answer(survey=survey_result, question=question, slider_answer=5.0)
-            elif question_format == models.QuestionFormat.TEXT: 
+            if question_format == models.QuestionFormat.SLIDER:
+                answer = models.Answer(
+                    survey=survey_result, question=question, slider_answer=5.0
+                )
+            elif question_format == models.QuestionFormat.TEXT:
                 answer = models.Answer(survey=survey_result, question=question)
-            elif question_format == models.QuestionFormat.YES_NO: 
+            elif question_format == models.QuestionFormat.YES_NO:
                 answer = models.Answer(survey=survey_result, question=question)
-            elif question_format == models.QuestionFormat.MULTIPLE_CHOICE: 
+            elif question_format == models.QuestionFormat.MULTIPLE_CHOICE:
                 answer = models.Answer(survey=survey_result, question=question)
-            else: 
+            else:
                 return HttpResponse(status=400)
-                       
+
             answer.save()
-    # Otherwise get the existing question 
-    else: 
-        answer = answers[question_index] 
+    # Otherwise get the existing question
+    else:
+        answer = answers[question_index]
 
     if request.method == "POST":
         if request.headers.get("HX-Request"):
@@ -262,15 +274,15 @@ def answer_survey_view(request, survey_result_id: int, question_index: int = 0) 
 
             # Save the format specific answer
             if question_format is not None:
-                if question_format == "slider": 
-                    answer.slider_answer = request.POST.get("slider") 
-                elif question_format == "text": 
+                if question_format == "slider":
+                    answer.slider_answer = request.POST.get("slider")
+                elif question_format == "text":
                     answer.free_text_answer = request.POST.get("text")
-                elif question_format == "yesno": 
+                elif question_format == "yesno":
                     answer.yes_no_answer = request.POST.get("yesno")
-                elif question_format == "multiplechoice": 
+                elif question_format == "multiplechoice":
                     selected: list[str] = request.POST.getlist("multiplechoice")
-                    all_options: list[str] = question.multiple_choice_question.options 
+                    all_options: list[str] = question.multiple_choice_question.options
                     bool_list: list[bool] = [opt in selected for opt in all_options]
                     answer.multiple_choice_answer = bool_list
 
@@ -278,91 +290,113 @@ def answer_survey_view(request, survey_result_id: int, question_index: int = 0) 
                 answer.comment = request.POST.get("comment")
                 answer.is_answered = True
                 answer.save()
-            
+
                 # All questions answered, submit answers and redirect
-                if submit_answers == "submit": 
+                if submit_answers == "submit":
                     survey_result.is_answered = True
-                    survey_result.published_survey.collected_answer_count += 1 
+                    survey_result.published_survey.collected_answer_count += 1
                     survey_result.published_survey.save()
                     survey_result.save()
 
                     # Redirect to unanswered surveys page after completion
-                    return HttpResponse(headers={"HX-Redirect": "/unanswered-surveys/"})  
-                
+                    return HttpResponse(headers={"HX-Redirect": "/unanswered-surveys/"})
+
                 if action == "previous":
                     # Redirect to previous question
-                    return HttpResponse(headers={"HX-Redirect": "/survey/" + str(survey_result.id) + "/question/" + str(prev_question_index)})  
+                    return HttpResponse(
+                        headers={
+                            "HX-Redirect": "/survey/"
+                            + str(survey_result.id)
+                            + "/question/"
+                            + str(prev_question_index)
+                        }
+                    )
                 elif action == "next":
                     # Redirect to next question
-                    return HttpResponse(headers={"HX-Redirect": "/survey/" + str(survey_result.id) + "/question/" + str(next_question_index)})  
-            
+                    return HttpResponse(
+                        headers={
+                            "HX-Redirect": "/survey/"
+                            + str(survey_result.id)
+                            + "/question/"
+                            + str(next_question_index)
+                        }
+                    )
+
             return HttpResponse(status=400)
 
-    # This is added so a "double" loop can be used to go through 
+    # This is added so a "double" loop can be used to go through
     # which boxes should be checked
-    if question.multiple_choice_question is not None: 
-        # Edge case where no answer yet exists, but we still 
+    if question.multiple_choice_question is not None:
+        # Edge case where no answer yet exists, but we still
         # want to display the options...
-        if not answer.multiple_choice_answer: 
-            zipped = zip(question.multiple_choice_question.options, 
-                         [False for _ in question.multiple_choice_question.options])
-        else: 
-            zipped = zip(question.multiple_choice_question.options, answer.multiple_choice_answer)
-    else: 
+        if not answer.multiple_choice_answer:
+            zipped = zip(
+                question.multiple_choice_question.options,
+                [False for _ in question.multiple_choice_question.options],
+            )
+        else:
+            zipped = zip(
+                question.multiple_choice_question.options, answer.multiple_choice_answer
+            )
+    else:
         zipped = None
 
     # Calculate amount of "answered" answers
     # Start at 1 because the last question always gets a saved answer
     # that is not counted
     total_answers: int = 1
-    for ans in answers: 
-        if ans.is_answered:  
+    for ans in answers:
+        if ans.is_answered:
             total_answers += 1
 
-    # Sometimes the extra one added at the begining will cause this to 
+    # Sometimes the extra one added at the begining will cause this to
     # be bigger than amount of questions, do not wory about it :)
-    if total_answers > len(questions): 
+    if total_answers > len(questions):
         total_answers = len(questions)
 
-    return render(request, "answer_survey.html", {
-        "question": question,
-        "question_index": question_index,
-        "total": len(questions),
-        "total_answers": total_answers, 
-        "survey_result_id": survey_result.id,
-        "prev_question_index": prev_question_index,
-        "next_question_index": next_question_index,
-        "slider_answer": answer.slider_answer,
-        "text_answer": answer.free_text_answer, 
-        "yes_no_answer": answer.yes_no_answer,
-        "multiple_choice_pairs": zipped,
-        "comment": answer.comment,
-    })
+    return render(
+        request,
+        "answer_survey.html",
+        {
+            "question": question,
+            "question_index": question_index,
+            "total": len(questions),
+            "total_answers": total_answers,
+            "survey_result_id": survey_result.id,
+            "prev_question_index": prev_question_index,
+            "next_question_index": next_question_index,
+            "slider_answer": answer.slider_answer,
+            "text_answer": answer.free_text_answer,
+            "yes_no_answer": answer.yes_no_answer,
+            "multiple_choice_pairs": zipped,
+            "comment": answer.comment,
+        },
+    )
+
 
 @csrf_exempt
 def resend_authentication_code_acc(request):
     if request.method == "POST":
         source = request.POST.get("source")
         email = "not_defined"
-        if(source=="from_account"):
+        if source == "from_account":
             email = request.session.get("email_two_factor_code")
-        elif(source=="from_org"):
+        elif source == "from_org":
             email = request.session.get("email_two_factor_code_org")
         if email == "not_defined":
             return HttpResponse("No email defined", 404)
-        code = 654321 # make random later, just test now
-        cache.set(f'verify_code_{email}', code, timeout=300)
+        code = 654321  # make random later, just test now
+        cache.set(f"verify_code_{email}", code, timeout=300)
 
-        #Send email with the code to the user
+        # Send email with the code to the user
         send_mail(
-            subject='Your Verification Code',
-            message=f'Your verification code is: {code}',
-            from_email='medarbetarpuls@gmail.com',
+            subject="Your Verification Code",
+            message=f"Your verification code is: {code}",
+            from_email="medarbetarpuls@gmail.com",
             recipient_list=[email],
             fail_silently=False,
         )
         return HttpResponse("Sent", 200)
-
 
 
 @csrf_exempt
@@ -384,9 +418,9 @@ def authentication_acc_view(request):
         expected_code = cache.get(f"verify_code_{email}")
 
         if str(auth_code) == str(expected_code):
-            data = request.session.get('user_data')
-            name=data['name']
-            password=data['password']
+            data = request.session.get("user_data")
+            name = data["name"]
+            password = data["password"]
 
             # Delete everything saved in session and cache - data not needed anymore
             del request.session["user_data"]
@@ -443,7 +477,7 @@ def authentication_acc_view(request):
         else:
             logger.error("Wrong authentication code")
             return HttpResponse(status=400)
-    
+
     return render(request, "authentication_acc.html")
 
 
@@ -507,7 +541,8 @@ def authentication_org_view(request):
 
     return render(request, "authentication_org.html")
 
-def create_question(request, survey_id: int) -> HttpResponse: 
+
+def create_question(request, survey_id: int) -> HttpResponse:
     """
     Makes it possible to create a question with predefined formats.
     This function is reachable from create_survey.
@@ -536,11 +571,12 @@ def create_question(request, survey_id: int) -> HttpResponse:
         },
     )
 
+
 @csrf_protect
 def create_org(request) -> HttpResponse:
     """
     Initiates organization creation by generating
-    a verification code, sending it via email, 
+    a verification code, sending it via email,
     saving form data in the session, and redirecting
     to the authentication page
     (supports HTMX and standard requests).
@@ -549,12 +585,12 @@ def create_org(request) -> HttpResponse:
         request: The HTTP request containing org_name, name, email, and password.
 
     Returns:
-        HttpResponse: For POST, sends HX-Redirect header or standard redirect to "/authentication-org/"; 
+        HttpResponse: For POST, sends HX-Redirect header or standard redirect to "/authentication-org/";
         for GET, sends HX-Redirect header or renders "create_org.html". If this organization/admin account already exists, return error responese 400.
     """
-    
+
     if request.method == "POST":
-        #Get data from the forum
+        # Get data from the forum
         org_name = request.POST.get("org_name")
         name = request.POST.get("name")
         email = request.POST.get("email")
@@ -563,45 +599,48 @@ def create_org(request) -> HttpResponse:
         correct_form_name = correct_name(name)
         if not correct_form_name:
             # Did not enter both firstname and lastname
-             return HttpResponse("Vänligen ange ditt namn på formen: Förnamn Efternamn", status=400)
+            return HttpResponse(
+                "Vänligen ange ditt namn på formen: Förnamn Efternamn", status=400
+            )
 
-        code = 123456 # make random later, just test now
-        cache.set(f'verify_code_{email}', code, timeout=300)
+        code = 123456  # make random later, just test now
+        cache.set(f"verify_code_{email}", code, timeout=300)
 
         user = models.CustomUser.objects.filter(email=email).exists()
-        if user: 
+        if user:
             # There already exists an user with this email
-            return HttpResponse("Det existerar redan en användare med denna mejladress", status=400)
-            
-        #Send email with the code to the user
+            return HttpResponse(
+                "Det existerar redan en användare med denna mejladress", status=400
+            )
+
+        # Send email with the code to the user
         send_mail(
-            subject='Din verifieringskod',
-            message=f'Din verifieringskod är: {code}',
-            from_email='medarbetarpuls@gmail.com',
+            subject="Din verifieringskod",
+            message=f"Din verifieringskod är: {code}",
+            from_email="medarbetarpuls@gmail.com",
             recipient_list=[email],
             fail_silently=False,
         )
 
         # Save potential user account data in session
-        request.session['user_org_data'] = {
-            'org_name': org_name,
-            'name': name,
-            'password': password,
+        request.session["user_org_data"] = {
+            "org_name": org_name,
+            "name": name,
+            "password": password,
         }
         # Save the mail where the two factor code is sent
-        request.session['email_two_factor_code_org'] = email
+        request.session["email_two_factor_code_org"] = email
 
         # Redirect to authentication
         if request.headers.get("HX-Request"):
             return HttpResponse(headers={"HX-Redirect": "/authentication-org/"})
         return redirect("/authentication-org/")
-    
+
     else:
         # GET-request: render or redirect to create_org
         if request.headers.get("HX-Request"):
             return HttpResponse(headers={"HX-Redirect": "/create_org/"})
         return render(request, "create_org.html")
-    
 
 
 @csrf_protect
@@ -640,16 +679,21 @@ def move_question_left(request, survey_temp_id: int, question_id: int) -> HttpRe
         survey_temp_id (int): The id of the opened survey
         question_id (int): The id of the clicked question
     Returns:
-        HttpResponse: Renders a copy of the question-list 
+        HttpResponse: Renders a copy of the question-list
     """
-    survey_temp: models.SurveyTemplate = get_object_or_404(models.SurveyTemplate, pk=survey_temp_id)
-    q_order: models.QuestionOrder = get_object_or_404(models.QuestionOrder, survey_temp=survey_temp, question_id=question_id)
+    survey_temp: models.SurveyTemplate = get_object_or_404(
+        models.SurveyTemplate, pk=survey_temp_id
+    )
+    q_order: models.QuestionOrder = get_object_or_404(
+        models.QuestionOrder, survey_temp=survey_temp, question_id=question_id
+    )
 
     # Find the immediate predecessor
     prev: models.QuestionOrder = (
-        models.QuestionOrder.objects
-        .filter(survey_temp=survey_temp, order__lt=q_order.order)
-        .order_by('-order')
+        models.QuestionOrder.objects.filter(
+            survey_temp=survey_temp, order__lt=q_order.order
+        )
+        .order_by("-order")
         .first()
     )
 
@@ -658,12 +702,12 @@ def move_question_left(request, survey_temp_id: int, question_id: int) -> HttpRe
         q_order.order, prev.order = prev.order, q_order.order
         q_order.save()
         prev.save()
-    
+
     context = {
-        'survey_temp': survey_temp,
+        "survey_temp": survey_temp,
     }
 
-    return render(request, 'partials/question-list.html', context)
+    return render(request, "partials/question-list.html", context)
 
 
 @csrf_protect
@@ -676,16 +720,21 @@ def move_question_right(request, survey_temp_id: int, question_id: int) -> HttpR
         survey_temp_id (int): The id of the opened survey
         question_id (int): The id of the clicked question
     Returns:
-        HttpResponse: Renders a copy of the question-list 
+        HttpResponse: Renders a copy of the question-list
     """
-    survey_temp: models.SurveyTemplate = get_object_or_404(models.SurveyTemplate, pk=survey_temp_id)
-    q_order: models.QuestionOrder = get_object_or_404(models.QuestionOrder, survey_temp=survey_temp, question_id=question_id)
+    survey_temp: models.SurveyTemplate = get_object_or_404(
+        models.SurveyTemplate, pk=survey_temp_id
+    )
+    q_order: models.QuestionOrder = get_object_or_404(
+        models.QuestionOrder, survey_temp=survey_temp, question_id=question_id
+    )
 
     # Find the immediate successor
     nxt: models.QuestionOrder = (
-        models.QuestionOrder.objects
-        .filter(survey_temp=survey_temp, order__gt=q_order.order)
-        .order_by('order')
+        models.QuestionOrder.objects.filter(
+            survey_temp=survey_temp, order__gt=q_order.order
+        )
+        .order_by("order")
         .first()
     )
     if nxt:
@@ -694,10 +743,10 @@ def move_question_right(request, survey_temp_id: int, question_id: int) -> HttpR
         nxt.save()
 
     context = {
-        'survey_temp': survey_temp,
+        "survey_temp": survey_temp,
     }
 
-    return render(request, 'partials/question-list.html', context)
+    return render(request, "partials/question-list.html", context)
 
 
 def create_survey_view(request, survey_id: int | None = None) -> HttpResponse:
@@ -774,8 +823,8 @@ def edit_question_view(
         HttpResponse: Redirects to create_survey or renders edit_question_view
     """
     user: models.CustomUser = request.user
-    options = None # Use later to show options
-    
+    options = None  # Use later to show options
+
     # Get the survey from given id
     survey_temp: models.SurveyTemplate = user.survey_templates.filter(
         id=survey_id
@@ -793,17 +842,19 @@ def edit_question_view(
 
                 # Figure out the current max order for this survey
                 current_max = (
-                    models.QuestionOrder.objects
-                    .filter(survey_temp=survey_temp)
-                    .aggregate(m=Max('order'))
-                    .get('m') or 0
+                    models.QuestionOrder.objects.filter(survey_temp=survey_temp)
+                    .aggregate(m=Max("order"))
+                    .get("m")
+                    or 0
                 )
 
                 # The new questions order is one higher
                 next_order = current_max + 1
 
                 # Use through_defaults to set the right order
-                survey_temp.questions.add(question, through_defaults={'order': next_order})
+                survey_temp.questions.add(
+                    question, through_defaults={"order": next_order}
+                )
             else:
                 question = survey_temp.questions.filter(id=question_id).first()
 
@@ -814,17 +865,19 @@ def edit_question_view(
                 return HttpResponse("Invalid question type", status=404)
 
             # Specify question format
-            question.question_format = question_format 
+            question.question_format = question_format
             question.save()
 
             # Add testcase for multiplechoice questions
-            if question_format == models.QuestionFormat.MULTIPLE_CHOICE: 
-                options = request.POST.getlist('options')
+            if question_format == models.QuestionFormat.MULTIPLE_CHOICE:
+                options = request.POST.getlist("options")
                 for option in options:
                     if not option:
                         options.remove(option)
                 # This is kinda fucked and can maybe be re-written better
-                question.multiple_choice_question = models.MultipleChoiceQuestion(question_format=question_format)
+                question.multiple_choice_question = models.MultipleChoiceQuestion(
+                    question_format=question_format
+                )
                 question.multiple_choice_question.save()
                 question.multiple_choice_question.options.extend(options)
                 question.multiple_choice_question.save()
@@ -838,16 +891,36 @@ def edit_question_view(
             survey_temp.last_edited = timezone.now()
             survey_temp.save()
 
-            return HttpResponse(headers={"HX-Redirect": "/create-survey/" + str(survey_id)})  
+            return HttpResponse(
+                headers={"HX-Redirect": "/create-survey/" + str(survey_id)}
+            )
 
     # Checks if there is a specific question text to be displayed
     question_text: str | None = None
     if question_id is not None:
         question_text = models.Question.objects.filter(id=question_id).first().question
-        if models.Question.objects.filter(id=question_id).first().multiple_choice_question:
-            options = models.Question.objects.filter(id=question_id).first().multiple_choice_question.options
+        if (
+            models.Question.objects.filter(id=question_id)
+            .first()
+            .multiple_choice_question
+        ):
+            options = (
+                models.Question.objects.filter(id=question_id)
+                .first()
+                .multiple_choice_question.options
+            )
 
-    return render(request, "edit_question.html", {"survey_temp": survey_temp, "question_format": question_format, "question_id": question_id, "question_text": question_text, "options": options})
+    return render(
+        request,
+        "edit_question.html",
+        {
+            "survey_temp": survey_temp,
+            "question_format": question_format,
+            "question_id": question_id,
+            "question_text": question_text,
+            "options": options,
+        },
+    )
 
 
 def publish_survey(request, survey_id: int) -> HttpResponse:
@@ -931,9 +1004,7 @@ def publish_survey(request, survey_id: int) -> HttpResponse:
                     return render(
                         request,
                         "partials/error_message.html",
-                        {
-                            "message": "Publiceringsdatum måste vara från och med idag"
-                        },
+                        {"message": "Publiceringsdatum måste vara från och med idag"},
                         status=200,
                     )
             else:
@@ -992,11 +1063,11 @@ def login_view(request):
 
     Args:
         request: The HTTP request with user login credentials.
-    
+
     Returns:
         HttpResponse: Redirects to the appropriate page on success or renders the login page on failure.
     """
-    
+
     # maybe implement sesion timer so you dont get logged out??
     # if request.user.is_authenticated:
     # logger.debug("User %e is already logged in.", request.user)
@@ -1013,11 +1084,11 @@ def login_view(request):
             if user.is_active:
                 login(request, user)
                 response = HttpResponse(status=200)
-                if user.user_role == models.UserRole.ADMIN: 
+                if user.user_role == models.UserRole.ADMIN:
                     response["HX-Redirect"] = "/start-admin/"
                     logger.debug("Admin %e successfully logged in.", email)
                     return response
-                elif user.user_role == models.UserRole.SURVEY_RESPONDER: 
+                elif user.user_role == models.UserRole.SURVEY_RESPONDER:
                     response["HX-Redirect"] = "/start-user/"
                     logger.debug("User %e successfully logged in.", email)
                     return response
@@ -1045,7 +1116,7 @@ def my_org_view(request):
 
     Args:
         request: The HTTP request with employee removal or search parameters.
-    
+
     Returns:
         HttpResponse: Renders the organization page or redirects after a removal.
     """
@@ -1068,8 +1139,8 @@ def my_org_view(request):
             for group in all_groups:
                 if group != group_to_keep:
                     employee_to_remove.employee_groups.remove(group)
-                    
-            employee_to_remove.save()               
+
+            employee_to_remove.save()
             models.EmailList.objects.filter(email=employee_to_remove.email).delete()
         return redirect("my_org")
     # Retrieve all employee groups associated with this organization
@@ -1119,7 +1190,7 @@ def my_results_view(request):
 
     Args:
         request: The HTTP request with the authenticated user.
-    
+
     Returns:
         HttpResponse: Renders the survey results page.
     """
@@ -1156,7 +1227,7 @@ def delete_survey_template(request, survey_id: int) -> HttpResponse:
     Returns:
         HttpResponse: Redirects to "/templates_and_drafts/" on success or returns status 400 on failure.
     """
-    if request.method == "POST":  
+    if request.method == "POST":
         if request.headers.get("HX-Request"):
             survey_temp = get_object_or_404(
                 models.SurveyTemplate, id=survey_id, creator=request.user
@@ -1240,7 +1311,7 @@ def settings_admin_view(request):
     Returns:
         HttpResponse: Redirects to home on success or renders the settings page.
     """
-    #Leave over account to new admin function
+    # Leave over account to new admin function
     # if pressed leave over account
     if request.method == "POST":
         if request.headers.get("HX-Request"):
@@ -1302,13 +1373,13 @@ def settings_user_view(request):
 
     Args:
         request: The HTTP request with the password for account deletion.
-    
+
     Returns:
         HttpResponse: Redirects to home on deletion or returns status 400 if authentication fails.
     """
-    
+
     # FIX - needs to fix so when wrong password is written the popup doesnt dissappear and a message is sent
-    #Delete user function
+    # Delete user function
     # if pressed delete user
     if request.method == "POST":
         if request.headers.get("HX-Request"):
@@ -1333,8 +1404,10 @@ def settings_user_view(request):
 @login_required
 def start_creator_view(request):
     return render(
-        request, "start_creator.html", {"pagetitle": f"Välkommen<br>{request.user.name}"}
-    )  
+        request,
+        "start_creator.html",
+        {"pagetitle": f"Välkommen<br>{request.user.name}"},
+    )
 
 
 @login_required
@@ -1355,7 +1428,9 @@ def settings_change_name(request):
         correct_form_name = correct_name(new_name)
         if not correct_form_name:
             # Did not enter both firstname and lastname
-             return HttpResponse("Vänligen ange ditt namn på formen: Förnamn Efternamn", status=400)
+            return HttpResponse(
+                "Vänligen ange ditt namn på formen: Förnamn Efternamn", status=400
+            )
         email = request.user.email
         user = models.CustomUser.objects.filter(email=email).first()
         user.name = correct_form_name
@@ -1441,6 +1516,7 @@ def start_user_view(request):
         request, "start_user.html", {"pagetitle": f"Välkommen<br>{request.user.name}"}
     )
 
+
 @login_required
 def start_admin_view(request):
     return render(
@@ -1449,14 +1525,39 @@ def start_admin_view(request):
 
 
 def survey_result_view(request, survey_id):
-    survey_results = SurveyUserResult.objects.filter(id=survey_id).first()
+    survey = models.Survey.objects.filter(id=survey_id).first()
+
+    if survey is None:
+        # This survey has no answers (should not even be displayed to the user then)
+        return HttpResponse(400)
+
+    # TODO : Ändra så att analysis handler fås från organization
+    analysis_handler = AnalysisHandler()
+
+    user = request.user
+
+    # Retrievs all survey results of this survey
+    survey_results = survey.survey_results.all()
+    # Retrieve the survey result connected to the user
+    survey_result = survey_results.filter(user=user).first()
+
+    if survey_result:  # Lägg till "... and survey_result.is_answered"
+        answers = survey_result.answers.all()
+    else:
+        answers = None
+
+    summary_context = analysis_handler.survey_result_summary(survey.id, answers)
 
     if survey_results is None:
         # This survey has no answers (should not even be displayed to the user then)
         return HttpResponse(400)
 
     # Proceed to render the survey results
-    return render(request, "survey_result.html", {"survey_result": result}) #result ??
+    return render(
+        request,
+        "survey_result.html",
+        summary_context,
+    )
 
 
 @login_required
@@ -1492,29 +1593,31 @@ def unanswered_surveys_view(request):
             "unanswered_surveys": unanswered_surveys,
             "pagetitle": "Obesvarade enkäter",
             "current_time": current_time,
-            "user_role": user.user_role
+            "user_role": user.user_role,
         },
     )
+
 
 def find_organization_by_email(email: str) -> models.Organization | None:
     org = models.EmailList.objects.filter(email=email).exists()
     if not org:
         # No organization found
-        return None  
+        return None
     email_entry = get_object_or_404(models.EmailList, email=email)
     return email_entry.org  # Follow the ForeignKey to Organization
 
+
 def correct_name(name: str) -> Boolean | str:
     """
-        Checks if the given name is on the correct form
-        firstname lastname, i.e. with a blank space in between,
-        and returns the name on the form Firstname Lastname (str), or
-        False if the name is not correct.
+    Checks if the given name is on the correct form
+    firstname lastname, i.e. with a blank space in between,
+    and returns the name on the form Firstname Lastname (str), or
+    False if the name is not correct.
     """
     res = ""
     # Split on the blank space
-    first_last_name = name.split(' ') 
-    if len(first_last_name) == 1 or first_last_name[1] == '':
+    first_last_name = name.split(" ")
+    if len(first_last_name) == 1 or first_last_name[1] == "":
         # No blank space found or a blank space not followed by a last name
         return False
     else:
@@ -1523,6 +1626,7 @@ def correct_name(name: str) -> Boolean | str:
             res += name.capitalize() + " "
         # Return the name with the correct form
         return res
+
 
 def chart_view(request):
     SURVEY_ID = 3  # Choose which survey to show here

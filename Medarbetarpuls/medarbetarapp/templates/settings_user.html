@@ -12,10 +12,7 @@
     <div class="main-container">
       {% include "topbar.html" with pagetitle=pagetitle %}
       <!-- Go back button-->
-      <button
-        class="image-button"
-        onclick="navigateBack('{{user.user_role}}')"
-      >
+      <button class="image-button" onclick="navigateBack('{{user.user_role}}')">
         <img
           src="{% static 'images/go-back-btn.png' %}"
           alt="Gå Tillbaka"
@@ -27,111 +24,150 @@
       <div class="info-table">
         <div class="table-header">Inloggningsuppgifter</div>
         <div class="table-row">
-            <div class="label">Namn</div>
-            <div class="value"> 
-              {{ user.name }} <a href="#" onclick="openEditName()"><span class="edit-icon">✏️</span></a>
-            </div>
+          <div class="label">Namn</div>
+          <div class="value">
+            {{ user.name }}
+            <a href="#" onclick="openEditName()"
+              ><span class="edit-icon">✏️</span></a
+            >
           </div>
+        </div>
         <div class="table-row">
           <div class="label">Lösenord</div>
           <div class="value">
-            **************** <a href="#" onclick="openEditPass()"><span class="edit-icon">✏️</span></a>
+            ****************
+            <a href="#" onclick="openEditPass()"
+              ><span class="edit-icon">✏️</span></a
+            >
           </div>
         </div>
         <div class="table-row">
-            <div class="label">Mailadress</div>
-            <div class="value">
-              {{ user.email }} 
-            </div>
-          </div>
+          <div class="label">Mailadress</div>
+          <div class="value">{{ user.email }}</div>
         </div>
-      <button class="delete-button"onclick="openDelete()">Radera konto</button>
-      
+      </div>
+      <button class="delete-button" onclick="openDelete()">Radera konto</button>
+
       <!-- Delete Confirmation Popup -->
-    <div id="delete-popup" class="popup-overlay" style="display: none;">
-        <div id= "content" class="popup-content messages">
-          <form 
+      <div id="delete-popup" class="popup-overlay" style="display: none">
+        <div id="content" class="popup-content messages">
+          <form
             class="delete-acc-form"
             hx-post="/settings-user/"
             hx-target="#content"
             hx-trigger="submit"
             hx-swap="outerHTML"
-            >
-            
-              <span class="close-button" onclick="closeDelete()">&times;</span> <!-- &times multiplication symbol -->
-              <h2>OBS!</h2>
-              <p>Är du säker på att du vill ta bort ditt konto?</p>
-              <p>Detta kommer genast logga ut dig och du kommer inte kunna logga in igen.</p>
-              
-              {% csrf_token %}
-              <label for="password">Lösenord:</label>
-              <input type="password" id="password" name="password" placeholder="*************" required > <!--fix-->
-              <button type="submit" class="delete-button">Radera konto</button>
+          >
+            <span class="close-button" onclick="closeDelete()">&times;</span>
+            <!-- &times multiplication symbol -->
+            <h2>OBS!</h2>
+            <p>Är du säker på att du vill ta bort ditt konto?</p>
+            <p>
+              Detta kommer genast logga ut dig och du kommer inte kunna logga in
+              igen.
+            </p>
+
+            {% csrf_token %}
+            <label for="password">Lösenord:</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              placeholder="*************"
+              required
+            />
+            <!--fix-->
+            <button type="submit" class="delete-button">Radera konto</button>
           </form>
         </div>
-    </div>
-
-    <!-- Edit name Popup -->
-    <div id="edit-name-popup" class="popup-overlay" style="display: none;">
-      <div id= "content" class="popup-content messages">
-        <form 
-          class="edit-name-form"
-          hx-post="/settings-name/"
-          hx-target="#content"
-          hx-trigger="submit"
-          hx-swap="outerHTML"
-          >
-          <!-- For showing error messages -->
-          <div
-          id="name-error-box"
-          class="error-msg"
-          style="color: red; font-weight: bold"
-          >
-          {{ message }}
-          </div>
-
-          <span class="close-button" onclick="closeEditName()">&times;</span>
-          {% csrf_token %}
-              <label for="name">Ditt nya namn:</label>
-              <input type="name" id="name" name="name" placeholder="Namn" required > 
-              <input type="hidden" name="from_settings" value="true">
-              <button type="submit" class="delete-button">Byt namn</button>
-        </form>
       </div>
-  </div>
 
-    <!-- Edit password Popup -->
-    <div id="edit-pass-popup" class="popup-overlay" style="display: none;">
-      <div id= "content" class="popup-content messages">
-        <form class="edit-pass-form"
-          hx-post="/settings-pass/"
-          hx-trigger="submit"
-          hx-target="#error-box"
-          hx-swap="none"
-        >
-          {% csrf_token %}
-          <!-- For showing error messages -->
-          <div
-            id="error-box"
-            class="error-msg"
-            style="color: red; font-weight: bold"
+      <!-- Edit name Popup -->
+      <div id="edit-name-popup" class="popup-overlay" style="display: none">
+        <div id="content" class="popup-content messages">
+          <form
+            class="edit-name-form"
+            hx-post="/settings-name/"
+            hx-target="#content"
+            hx-trigger="submit"
+            hx-swap="outerHTML"
+          >
+            <!-- For showing error messages -->
+            <div
+              id="name-error-box"
+              class="error-msg"
+              style="color: red; font-weight: bold"
             >
-            {{ message }}
-          </div>
-          
-          <span class="close-button" onclick="closeEditPass();">&times;</span>
-          {% csrf_token %}
-              <label for="password">Ditt nuvarande lösenord:</label>
-              <input type="password" id="pass_old" name="pass_old" placeholder="Nuvarande lösenord" required > 
-              <label for="password">Ditt nya lösenord:</label>
-              <input type="password" id="pass_new" name="pass_new" placeholder="Nytt lösenord" required >
-              <label for="password">Repetera ditt nya lösenord:</label>
-              <input type="password" id="pass_check" name="pass_check" placeholder="Repetera lösenord" required >
-              <!-- Must reload after 500ms in order for this form to submit (slower) --> 
-              <button type="submit"  class="delete-button">Byt lösenord</button>
-        </form>
+              {{ message }}
+            </div>
+
+            <span class="close-button" onclick="closeEditName()">&times;</span>
+            {% csrf_token %}
+            <label for="name">Ditt nya namn:</label>
+            <input
+              type="name"
+              id="name"
+              name="name"
+              placeholder="Namn"
+              required
+            />
+            <input type="hidden" name="from_settings" value="true" />
+            <button type="submit" class="delete-button">Byt namn</button>
+          </form>
+        </div>
       </div>
-    </div> 
+
+      <!-- Edit password Popup -->
+      <div id="edit-pass-popup" class="popup-overlay" style="display: none">
+        <div id="content" class="popup-content messages">
+          <form
+            class="edit-pass-form"
+            hx-post="/settings-pass/"
+            hx-trigger="submit"
+            hx-target="#error-box"
+            hx-swap="none"
+          >
+            {% csrf_token %}
+            <!-- For showing error messages -->
+            <div
+              id="error-box"
+              class="error-msg"
+              style="color: red; font-weight: bold"
+            >
+              {{ message }}
+            </div>
+
+            <span class="close-button" onclick="closeEditPass();">&times;</span>
+            {% csrf_token %}
+            <label for="password">Ditt nuvarande lösenord:</label>
+            <input
+              type="password"
+              id="pass_old"
+              name="pass_old"
+              placeholder="Nuvarande lösenord"
+              required
+            />
+            <label for="password">Ditt nya lösenord:</label>
+            <input
+              type="password"
+              id="pass_new"
+              name="pass_new"
+              placeholder="Nytt lösenord"
+              required
+            />
+            <label for="password">Repetera ditt nya lösenord:</label>
+            <input
+              type="password"
+              id="pass_check"
+              name="pass_check"
+              placeholder="Repetera lösenord"
+              required
+            />
+            <!-- Must reload after 500ms in order for this form to submit (slower) -->
+            <button type="submit" class="delete-button">Byt lösenord</button>
+          </form>
+        </div>
+      </div>
     </div>
     <script>
       // Error handling
@@ -144,54 +180,53 @@
         // Safety check
         if (!errorBox) return;
 
-
         if (event.detail.successful) {
-        errorBox.innerHTML = "Ändringen lyckades";
-        errorBox.style.color = "green";
-        errorBox.style.display = "block";
-        // Close the popup for the user
-        setTimeout(() => location.reload(), 1000);
-      } else {
-        errorBox.innerHTML = event.detail.xhr.responseText || "Något gick fel";
-        errorBox.style.color = "red";
-        errorBox.style.display = "block";
-      }
+          errorBox.innerHTML = "Ändringen lyckades";
+          errorBox.style.color = "green";
+          errorBox.style.display = "block";
+          // Close the popup for the user
+          setTimeout(() => location.reload(), 1000);
+        } else {
+          errorBox.innerHTML =
+            event.detail.xhr.responseText || "Något gick fel";
+          errorBox.style.color = "red";
+          errorBox.style.display = "block";
+        }
       });
       function openDelete() {
-          document.getElementById("delete-popup").style.display = "flex";
+        document.getElementById("delete-popup").style.display = "flex";
       }
 
       function closeDelete() {
-          document.getElementById("delete-popup").style.display = "none";
+        document.getElementById("delete-popup").style.display = "none";
       }
 
       function openEditName() {
-          document.getElementById("edit-name-popup").style.display = "flex";
+        document.getElementById("edit-name-popup").style.display = "flex";
       }
 
       function closeEditName() {
-          document.getElementById("edit-name-popup").style.display = "none";
+        document.getElementById("edit-name-popup").style.display = "none";
       }
 
       function openEditPass() {
-          document.getElementById("edit-pass-popup").style.display = "flex";
+        document.getElementById("edit-pass-popup").style.display = "flex";
       }
 
       function closeEditPass() {
-          document.getElementById("edit-pass-popup").style.display = "none";
+        document.getElementById("edit-pass-popup").style.display = "none";
       }
 
       function navigateBack(user_role) {
         // The previous URL that linked to this page
         let previousUrl = document.referrer;
         if (previousUrl) {
-          if (previousUrl.includes("settings")){
+          if (previousUrl.includes("settings")) {
             // Avoid redirecting back to this page to prevent an infinite loop
-            if (user_role == "surveycreator"){
-                previousUrl = '/start-creator/';
-            }               
-            else{
-                previousUrl = '/start-user/';
+            if (user_role == "surveycreator") {
+              previousUrl = "/start-creator/";
+            } else {
+              previousUrl = "/start-user/";
             }
           }
           window.location.href = previousUrl;
@@ -201,6 +236,6 @@
           window.history.back();
         }
       }
-  </script>
+    </script>
   </body>
 </html>
