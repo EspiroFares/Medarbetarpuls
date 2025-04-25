@@ -437,7 +437,7 @@ def authentication_acc_view(request):
                 org = find_organization_by_email(email)
                 if org is None:
                     logger.error("This email is not authorized for registration.")
-                    return HttpResponse(status=400)
+                    return HttpResponse("Denna mejladress tillhör ej någon organisation", status=400)
                 existing_user.is_active = True
                 existing_user.name = name
                 existing_user.user_role = models.UserRole.SURVEY_RESPONDER
@@ -449,14 +449,14 @@ def authentication_acc_view(request):
                 # add group to employee
                 existing_user.employee_groups.add(*group)
                 existing_user.save()
-                return HttpResponse(headers={"HX-Redirect": "/"})
+                return HttpResponse("Konto skapat. Nu kan du logga in.", status=200)
                 # check for basegroup??
             else:
                 # Check that email is registrated to an org
                 org = find_organization_by_email(email)
                 if org is None:
                     logger.error("This email is not authorized for registration.")
-                    return HttpResponse(status=400)
+                    return HttpResponse("Denna mejladress tillhör ej någon organisation", status=400)
                 # Create user
                 new_user = models.CustomUser.objects.create_user(email, name, password)
                 # get the email and get the correct employeegroups
@@ -477,11 +477,11 @@ def authentication_acc_view(request):
                     )
                     return HttpResponse(status=400)
 
-                return HttpResponse(headers={"HX-Redirect": "/"})
+                return HttpResponse("Konto skapat. Nu kan du logga in.", status=200)
         else:
             logger.error("Wrong authentication code")
-            return HttpResponse(status=400)
-
+            return HttpResponse("Felaktig kod", status=400)
+    
     return render(request, "authentication_acc.html")
 
 
@@ -538,10 +538,10 @@ def authentication_org_view(request):
             base_group.managers.add(admin_account)
             base_group.save()
 
-            return HttpResponse(headers={"HX-Redirect": "/"})
+            return HttpResponse("Konto skapat. Nu kan du logga in.", status=200)
         else:
             logger.error("Wrong authentication code")
-            return HttpResponse(status=400)
+            return HttpResponse("Felaktig kod", status=400)
 
     return render(request, "authentication_org.html")
 
@@ -1488,7 +1488,7 @@ def settings_change_name(request):
                 "user": request.user,
                 "organization": request.user.admin,
                 "pagetitle": "Inställningar",
-            },
+            }, status=200
         )
     else:
         return render(
@@ -1498,7 +1498,7 @@ def settings_change_name(request):
                 "user": request.user,
                 "organization": request.user.admin,
                 "pagetitle": "Inställningar",
-            },
+            }, status=200
         )
 
 

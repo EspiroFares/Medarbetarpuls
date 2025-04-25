@@ -25,13 +25,23 @@
           />
         </button>
         <h1>Skapa din nya organisation</h1>
+        
+        <!-- For showing messages -->
+        <div
+        id="message-box"
+        class="error-msg"
+        style="color: red; font-weight: bold"
+        >
+        {{ message }}
+        </div>
+
         <h2>En kod har skickats till din mejladress</h2>
         <!-- This form sends the input data to the server using a POST request -->
         <form
           class="create-form"
           hx-post="/authentication-org/"
           hx-trigger="submit"
-          hx-target=".create-form"
+          hx-target="#message-box"
           hx-swap="innerHTML"
         >
           {% csrf_token %}
@@ -57,4 +67,32 @@
       </div>
     </div>
   </body>
+  <script>
+    // Error handling
+    document.body.addEventListener("htmx:afterRequest", function (event) {
+      const messageBox = document.getElementById("message-box");
+      if (event.detail.xhr.status === 200) {
+        messageBox.innerHTML = "Organisation skapad. Nu kan du logga in.";
+        messageBox.style.color = "green";
+        messageBox.style.display = "block";
+        // Display the message to the user for a short while before redirecting
+        setTimeout(() =>  window.location.href = '/', 1500);
+      } else {
+        messageBox.innerHTML = event.detail.xhr.responseText || "Felaktig kod";
+        messageBox.style.color = "red";
+        messageBox.style.display = "block";
+      }
+
+    });
+
+    // Hide error message when user focuses on any input field
+    document.querySelectorAll("input").forEach((input) => {
+      input.addEventListener("focus", () => {
+        const messageBox = document.getElementById("message-box");
+        if (messageBox) {
+          messageBox.style.display = "none";
+        }
+      });
+    });
+  </script>
 </html>
