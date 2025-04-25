@@ -1345,6 +1345,10 @@ def settings_admin_view(request):
             # get old admin and the organisation
             user = request.user
             org = user.admin
+            if(new_admin_email==user.email):
+                return HttpResponse(
+                    "Du kan inte lämna över konto till dig själv", status=400
+                )
 
             # check if new email exist and then switch roles and save
             if models.EmailList.objects.filter(email=new_admin_email).exists():
@@ -1353,6 +1357,7 @@ def settings_admin_view(request):
                 user.admin = None
                 user.user_role = models.UserRole.SURVEY_RESPONDER
                 user.save()"""
+                models.EmailList.objects.filter(email=user.email).delete()
                 user.delete()  # maybe not right because we want the users answers to be saved still
                 new_admin = models.CustomUser.objects.get(email=new_admin_email)
                 new_admin.is_superuser = True
@@ -1371,6 +1376,8 @@ def settings_admin_view(request):
                 # models.EmailList.objects.filter(email = newAdminEmail, org=org).delete() MAYBE should delete this from emaillist because the account is now admin
                 new_admin.save()
                 logout(request)
+                request.session.flush()  # Make sure session is cleared
+
                 return HttpResponse(headers={"HX-Redirect": "/"})
             else:
                 logger.error(" The mail entered is not an available user ")
@@ -1417,9 +1424,10 @@ def settings_user_view(request):
                 # set user to inactive and save then logout the user
                 # user.is_active = False
                 # user.save()
-
+                models.EmailList.objects.filter(email=user.email).delete()
                 user.delete()  # maybe not right because we want the users answers to be saved still
                 logout(request)
+                request.session.flush()  # Make sure session is cleared
                 return HttpResponse(headers={"HX-Redirect": "/"})
             else:
                 logger.error("Wrong password entered")
