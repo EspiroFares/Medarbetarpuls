@@ -180,7 +180,7 @@ class AnalysisHandler:
         standard_deviation = self.calculate_standard_deviation(answers)
         variation_coefficient = self.calculate_variation_coefficient(answers)
         comments = self.get_comments(question, survey)
-        mean = self.calculate_mean(answers)
+        mean = round(self.calculate_mean(answers), 2)
         return {
             "question": question,
             "comments": comments,

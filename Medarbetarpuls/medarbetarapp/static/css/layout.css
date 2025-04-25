@@ -242,20 +242,22 @@
 }
 
 .question-result {
-  display: flex;
+  display: block;
   justify-content: center;
   align-items: center;
   margin-top: 5px;
   font-weight: bold;
   gap: 20px;
+  overflow: auto;
 }
+
 .result-text {
-  align-self: flex-start;
+  margin: 5px;
+  /* align-self: flex-start; 
   text-align: left;
   width: 100%;
-  margin-top: 2px;
-  gap:0;
-  word-break: break-word;   
+  gap: 5px; */
+  word-break: break-word;
   overflow-wrap: break-word;
 }
 
@@ -578,5 +580,3 @@
   height: 400px;
   padding-right: 0.5rem;
 }
-
-
