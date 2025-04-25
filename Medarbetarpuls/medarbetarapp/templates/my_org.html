@@ -27,7 +27,7 @@
       </button>
 
         <div class="search-container">
-        <!-- Form för att trigga sökning via HTMX -->
+          <!-- Form för att trigga sökning via HTMX -->
           <form
             id="searchForm"
             hx-get="{% url 'my_org' %}"
@@ -61,7 +61,9 @@
               </tr>
             </thead>
             <tbody id="employeeTable">
-              {% for employee in employees %} {% if employee.is_active %}
+              {% for employee in employees %}
+              <!---->
+              {% if employee.is_active %}
               <tr>
                 <td>{{ employee.name }}</td>
                 <td>{{ employee.email }}</td>
@@ -93,8 +95,9 @@
                         Är du säker på att du vill ta bort den här medarbetaren?
                       </h3>
                       <p>
-                        Kontot kommer att raderas, och om personen vill återvända
-                        till organisationen måste du bjuda in hen på nytt.
+                        Kontot kommer att raderas, och om personen vill
+                        återvända till organisationen måste du bjuda in hen på
+                        nytt.
                       </p>
                       <button type="button" onclick="closeConfirmDelete()">
                         Avbryt
@@ -232,10 +235,10 @@
     }
     // ERROR HANDLING
     document.body.addEventListener("htmx:afterRequest", function (event) {
-    const popup = document.getElementById("edit-user-popup");
-    const errorBox = document.getElementById("popup-error");
+      const popup = document.getElementById("edit-user-popup");
+      const errorBox = document.getElementById("popup-error");
 
-    //if (!popup || !errorBox) return;
+      //if (!popup || !errorBox) return;
 
     if (event.detail.xhr.status === 200) {
       // if success reload the page after a short delay

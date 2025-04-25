@@ -15,13 +15,13 @@
         </div>
         <div class="grid-container">
             {% for survey in answered_surveys %}
-                {% if survey.published_survey.deadline <= current_time %} <!-- Check if sending_date exists -->
+                {% if survey.published_survey.deadline >= current_time %} <!-- Check if sending_date exists -->
                     <div class="grid-item green">
                     <p>Genomfördes: {{ survey.published_survey.sending_date }} 
                     - {{ survey.published_survey.deadline }}</p>
                     <p><strong>*{{ survey.published_survey.name }}*</strong></p>
                     <p> {{survey.published_survey.collected_answer_count}} svarade på enkäten</p>
-                    <button class="view-survey-button" onclick="window.location.href='{% url 'survey_result' survey.id %}'"> 
+                    <button class="view-survey-button" onclick="window.location.href='{% url 'survey_result' survey.published_survey.id %}'"> 
                     Se resultat</button>
                     </div>
                 {% else %}

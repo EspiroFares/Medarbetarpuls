@@ -7,6 +7,8 @@ print("Questions:", Question.objects.count())
 print("Surveys:", Survey.objects.count())
 print("SurveyUserResults:", SurveyUserResult.objects.count())
 print("\n")
+print("Admin: ", CustomUser.objects.filter(user_role=UserRole.ADMIN))
+print("SurveyCreator", CustomUser.objects.filter(user_role=UserRole.SURVEY_CREATOR))
 # View some actual entries
 # print("\nSome Answers:")
 # for a in Answer.objects.all()[:5]:
