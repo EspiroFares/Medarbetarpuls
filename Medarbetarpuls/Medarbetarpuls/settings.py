@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "medarbetarapp",
+    "django_celery_beat",
 ]
 
 MIDDLEWARE = [
@@ -178,11 +179,12 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "UTC"
+USE_TZ = True
+TIME_ZONE = 'Europe/Stockholm'
+CELERY_TIMEZONE = 'Europe/Stockholm'
 
 USE_I18N = True
 
-USE_TZ = True
 
 
 # Default primary key field type

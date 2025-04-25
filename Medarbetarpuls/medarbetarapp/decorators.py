@@ -1,4 +1,3 @@
-from django.http import HttpResponseForbidden
 from functools import wraps
 from django.shortcuts import redirect
 
@@ -9,8 +8,6 @@ def allowed_roles(*allowed_roles):
         # the args are to fit in with any view undepending on 
         # what type and how many args that view takes
         def _wrapped_view(request, *args, **kwargs):
-            print("Allowed: ", *allowed_roles)
-            print("User: ", request.user.user_role,)
             if request.user.user_role not in allowed_roles:
                 if(request.user.user_role == 'admin'):
                     return redirect('/start-admin/')
