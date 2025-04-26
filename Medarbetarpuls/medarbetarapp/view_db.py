@@ -56,3 +56,7 @@ for q in Question.objects.all():
 #    survey__in=results, question=enps_question, is_answered=True
 # )
 # print("ENPS Answers Count:", answers.count())
+
+print(CustomUser.objects.filter(user_role=UserRole.ADMIN))
+print(CustomUser.objects.filter(user_role=UserRole.SURVEY_CREATOR))
+print(EmployeeGroup.objects.all())
