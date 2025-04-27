@@ -3,3 +3,4 @@ Django==5.1.7
 psycopg2==2.9.10
 python-json-logger==3.3.0
 sqlparse==0.5.3
+django-celery-beat==2.8.0

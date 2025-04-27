@@ -969,7 +969,7 @@ def publish_survey(request, survey_id: int) -> HttpResponse:
                 return render(
                     request,
                     "partials/error_message.html",
-                    {"message": "Felaktig arbetsgrupp vald"},
+                    {"message": "Felaktig arbetsgrupp vald"}, status=400
                 )
 
             # Get the dates
@@ -1010,21 +1010,21 @@ def publish_survey(request, survey_id: int) -> HttpResponse:
                         {
                             "message": "Sista svarsdatum måste vara efter publiceringsdatum"
                         },
-                        status=200,
+                        status=400,
                     )
                 if sending_date.date() < current_time.date():
                     return render(
                         request,
                         "partials/error_message.html",
                         {"message": "Publiceringsdatum måste vara från och med idag"},
-                        status=200,
+                        status=400,
                     )
             else:
                 return render(
                     request,
                     "partials/error_message.html",
                     {"message": "Publiceringsdatum och sista svarsdatum måste anges"},
-                    status=200,
+                    status=400,
                 )
 
             # Create a Survey to be send to employess
@@ -1063,8 +1063,11 @@ def publish_survey(request, survey_id: int) -> HttpResponse:
             else:
                 survey.publish_survey()
 
-            return HttpResponse(
-                headers={"HX-Redirect": "/create-survey/" + str(survey_id)}
+            return render(
+                request,
+                    "partials/error_message.html",
+                    {"message": "Enkäten har nu publicerats"},
+                    status=200,
             )
 
     return HttpResponse(status=400)
