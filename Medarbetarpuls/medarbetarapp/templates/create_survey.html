@@ -89,14 +89,14 @@
       </div>
       <button class="button" onclick="openPopup()">Publicera enkät</button>
     </div>
-    <div id="publish-popup" class="popup-overlay" style="display: none">
+    <div id="publish-popup" class="popup-overlay" style="display: none"  data-survey-id="{{ survey_temp.id }}">
       <div class="popup-content">
         <h2>Publicera enkät</h2>
 
         <form
           hx-post="{% url 'publish_survey' survey_temp.id %}"
           hx-trigger="submit"
-          hx-confirm="Are you sure you want to publish this survey?"
+          hx-confirm="Är du säker på att du vill publicera denna enkät?"
           hx-target="#error-box"
           hx-swap="innerHTML"
         >
@@ -296,6 +296,24 @@
           openPopup();
         }
       });
+
+      // Error handling
+    document.body.addEventListener("htmx:afterRequest", function (event) {
+      // To get survey id from the popup
+      const surveyId = document.getElementById("publish-popup").dataset.surveyId;
+      const errorBox = document.getElementById("error-box");
+      if (event.detail.xhr.status === 200) {
+        errorBox.style.color = "green";
+        errorBox.style.display = "block";
+        // Display the message to the user for a short while before redirecting
+        setTimeout(() =>  window.location.href = `/create-survey/${surveyId}/`, 1500);
+      } else {
+        errorBox.innerHTML = event.detail.xhr.responseText || "Något fel har inträffat";
+        errorBox.style.color = "red";
+        errorBox.style.display = "block";
+      }
+
+    });
     </script>
   </body>
 </html>
