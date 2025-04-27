@@ -8,7 +8,7 @@ from django.db.models import Count
 from django.core.cache import cache
 from datetime import datetime, time
 from django.http import HttpResponse
-from .models import SurveyUserResult
+from .models import QuestionType, SurveyUserResult
 from django.core.mail import send_mail
 from .tasks import schedule_notification, publish_survey_async
 from django.utils.timezone import make_aware
@@ -162,7 +162,27 @@ def add_employee_view(request):
         email = request.POST.get("email")
         team = request.POST.get("team")
         user = request.user
-        if user.user_role == models.UserRole.ADMIN and hasattr(user, "admin"):
+        editGroup = request.POST.get("edit_employee")
+        editName = request.POST.get("new_employee_group")
+        editUserMail = request.POST.get("employee")
+        if editGroup == "true":
+            if models.EmailList.objects.filter(email=editUserMail).exists():
+                org = user.admin
+                if models.EmployeeGroup.objects.filter(name=editName).exists():
+                    group = models.EmployeeGroup.objects.get(name=editName)
+                else:
+                    # create new employee group
+                    group = models.EmployeeGroup(name=editName, organization=org)
+                    group.save()
+                editUser = models.CustomUser.objects.get(email=editUserMail)
+                editUser.employee_groups.add(group)
+                user.survey_groups.add(group)
+                return HttpResponse("Successful", status=200)
+
+            else:
+                logger.warning("User does not exist")
+                return HttpResponse("Användaren finns inte", status=400)
+        elif user.user_role == models.UserRole.ADMIN and hasattr(user, "admin"):
             org = user.admin
             existing_user = models.CustomUser.objects.filter(email=email).first()
             if existing_user:
@@ -233,6 +253,10 @@ def answer_survey_view(request, survey_result_id: int, question_index: int = 0) 
     questions: list[models.Question] = survey_result.published_survey.questions.all()
     answers: list[models.Answer] = survey_result.answers.all()
     answer: models.Answer = models.Answer()
+    survey_result = get_object_or_404(
+        SurveyUserResult, pk=survey_result_id, user=request.user
+    )
+    questions = survey_result.published_survey.questions.all()
 
     # Calculate question navigation indexes
     if question_index - 1 < 0:
@@ -1535,7 +1559,7 @@ def settings_change_pass(request):
             user.save()
             # Use this to keep the session alive (avoid being logged out immediately)
             update_session_auth_hash(request, user)
-            print("saved new password")
+            logger.info("saved new password")
         elif not user:
             return HttpResponse("Fel lösenord", status=400)
         else:
@@ -1699,9 +1723,72 @@ def correct_name(name: str) -> Boolean | str:
 def chart_view(request):
     SURVEY_ID = 3  # Choose which survey to show here
 
+def chart_view(request):
+    group_id = request.GET.get("group_id")
     analysisHandler = AnalysisHandler()
-    question_txt = "Did you take enough breaks throughout the day?"
-    context = analysisHandler.survey_result_summary(SURVEY_ID)
+    context: dict = {}
+
+    context["time_periods"] = [
+        ("senaste", "sen"),
+        ("1 mån", "1m"),
+        ("3 mån", "3m"),
+        ("6 mån", "6m"),
+        ("1 år", "1y"),
+    ]
+    if not group_id:
+        return render(request, "analysis.html", context)
+
+    group = get_object_or_404(EmployeeGroup, id=group_id)
+
+    surveys = analysisHandler.get_surveys_for_group(group)
+
+    if not surveys.exists():
+        context["message"] = "Gruppen har inga enkäter ännu."
+        return render(request, "analysis.html", context)
+
+    survey = surveys.latest("sending_date")  # behöver fixas
+
+    summary = analysisHandler.get_survey_summary(
+        survey_id=survey.id,
+        employee_group=group,
+    )
+
+    for i in summary["summaries"]:
+        if i["question"].question_type == QuestionType.ENPS:
+            enps_question = i["question"]
+            context.update(i)
+            break
+
+    # if not context:
+    #   context["message"] = "Ingen eNPS-fråga i den här enkäten."
+    #  return render(request, "analysis.html", context)
+
+    context["deadline"] = summary["survey"].deadline.strftime(
+        "%Y-%m-%d"
+    )  # maybe move this row to get_survey_summary
+
+    context["deadline"] = summary["survey"].deadline.strftime("%Y-%m-%d")
+    context["amount"] = summary["survey"].collected_answer_count
+
+    context.update(
+        analysisHandler.get_participation_metrics(
+            summary["survey"], summary["employee_group"]
+        )
+    )
+
+    filtered_surveys = analysisHandler.get_filtered_surveys(
+        "2024-10-01", "2026-10-01", group
+    )
+    trends = analysisHandler.get_question_trend(
+        enps_question, list(filtered_surveys), group
+    )
+    print(trends)
+    deadlines = [entry["deadline"] for entry in trends]
+    enps_scores = [entry["summary"]["enpsScore"] for entry in trends]
+
+    context["lineLabels"] = deadlines
+    context["lineData"] = enps_scores
+
     return render(request, "analysis.html", context)
 
 
