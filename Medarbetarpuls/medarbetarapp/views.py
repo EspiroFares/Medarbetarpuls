@@ -4,7 +4,6 @@ from . import models
 from django.db.models import Q, Max, Count
 from django.utils import timezone
 from xmlrpc.client import Boolean
-from django.db.models import Count
 from django.core.cache import cache
 from datetime import datetime, time
 from django.http import HttpResponse
@@ -616,7 +615,7 @@ def authentication_org_view(request):
                     question.save()
 
                 question.save()
-            return HttpResponse(headers={"HX-Redirect": "/"})
+            return HttpResponse("Kontot skapat. Nu kan du logga in.", status=200)
         else:
             logger.error("Wrong authentication code")
             return HttpResponse("Felaktig kod", status=400)
