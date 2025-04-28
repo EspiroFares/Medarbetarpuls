@@ -17,7 +17,7 @@
       <!-- Go back button-->
       <button
         class="image-button"
-        onclick="navigateBack()"
+        onclick="navigateBack('{{user.user_role}}')"
       >
         <img
           src="{% static 'images/go-back-btn.png' %}"
@@ -132,9 +132,24 @@
 
 
   <script>
-    function navigateBack() {
-      // This simulates the user pressing the back button
-      window.history.back();
+    function navigateBack(user_role) {
+      // The previous URL that linked to this page
+      let previousUrl = document.referrer;
+        if (previousUrl) {
+          if (previousUrl.includes("analysis")) {
+            // Avoid redirecting back to this page to prevent an infinite loop
+            if (user_role == "surveycreator") {
+              previousUrl = "/start-creator/";
+            } else {
+              previousUrl = "/start-admin/";
+            }
+          }
+          window.location.href = previousUrl;
+        } else {
+          // Fallback if referrer is empty
+          // This simulates the user pressing the back button
+          window.history.back();
+        }
     }
 
     const enpsGaugeData   = {{ enpsScore        |default:"21"  |safe }};
