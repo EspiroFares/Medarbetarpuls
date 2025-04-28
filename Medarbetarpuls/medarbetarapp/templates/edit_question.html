@@ -51,6 +51,22 @@
             <input type="text" name="options" placeholder="Alternativ 2" required />
           </div>
         </div>
+        {% elif bank_question %}
+        <input
+          type="text"
+          id="question"
+          name="question"
+          value="{{ question_text }}"
+          required
+          readonly
+        />
+        <div id="options-container" class="options-container">
+          {% for option in options %}
+          <div class="option-input">
+            <input type="text" name="options" placeholder="Alternativ {{ forloop.counter }}" value="{{ option }}" readonly/>
+          </div>
+          {% endfor %}
+        </div>
         {% else %}
         <input
           type="text"
@@ -68,9 +84,11 @@
         {% endfor %}
       </div>
         {% endif %}
-      
-        <button type="button" class="default-button" id="add-option-btn">Lägg till alternativ</button>
-        <button class="default-button" type="submit">Spara</button>
+        {% if not bank_question%}
+          <button type="default" class="default-button" id="add-option-btn">Lägg till alternativ</button>
+        {% endif %}
+        <button type="submit">Spara</button>
+
         {% else %}
         
           {% csrf_token %}
@@ -81,6 +99,15 @@
             name="question"
             placeholder="Fråga"
             required
+          />
+          {% elif bank_question%}
+          <input
+            type="text"
+            id="question"
+            name="question"
+            value="{{ question_text }}"
+            required
+            readonly
           />
           {% else %}
           <input

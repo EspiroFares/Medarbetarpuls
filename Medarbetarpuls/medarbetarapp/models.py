@@ -317,6 +317,7 @@ class TextQuestion(BaseQuestionDetails):
 
 # What this model does needs to be explained here
 class Question(models.Model):
+    question_title = models.CharField(max_length=32, null=True, blank=True)
     question = models.CharField(max_length=255)
     question_format = models.CharField(
         max_length=15, choices=QuestionFormat.choices, default=QuestionFormat.TEXT
