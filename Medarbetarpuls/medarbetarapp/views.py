@@ -1722,9 +1722,6 @@ def correct_name(name: str) -> Boolean | str:
 @login_required
 @allowed_roles('admin','surveycreator')
 def chart_view(request):
-    SURVEY_ID = 3  # Choose which survey to show here
-
-def chart_view(request):
     group_id = request.GET.get("group_id")
     analysisHandler = AnalysisHandler()
     context: dict = {}
