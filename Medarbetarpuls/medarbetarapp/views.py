@@ -1265,6 +1265,7 @@ def my_results_view(request):
             "answered_surveys": answered_surveys,
             "current_time": current_time,
             "pagetitle": "Resultat på besvarade enkäter",
+            "user_role": user.user_role
         },
     )
 
@@ -1635,7 +1636,7 @@ def survey_result_view(request, survey_id):
     else:
         answers = None
 
-    summary_context = analysis_handler.survey_result_summary(survey.id, answers)
+    summary_context = analysis_handler.get_survey_summary(survey.id, answers)
 
     if survey_results is None:
         # This survey has no answers (should not even be displayed to the user then)
@@ -1738,7 +1739,7 @@ def chart_view(request):
     if not group_id:
         return render(request, "analysis.html", context)
 
-    group = get_object_or_404(EmployeeGroup, id=group_id)
+    group = get_object_or_404(models.EmployeeGroup, id=group_id)
 
     surveys = analysisHandler.get_surveys_for_group(group)
 

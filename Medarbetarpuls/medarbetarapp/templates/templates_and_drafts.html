@@ -98,7 +98,7 @@
         // The previous URL that linked to this page
         let previousUrl = document.referrer;
         if (previousUrl) {
-          if (previousUrl.includes("create-survey")){
+          if (previousUrl.includes("create-survey") || previousUrl.includes("templates_and_drafts")){
             // Avoid redirecting back to this page to prevent an infinite loop
             // Only creator and reponder can see results from one survey
             previousUrl = '/start-creator/';
