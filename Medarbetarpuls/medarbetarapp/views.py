@@ -246,13 +246,6 @@ def add_employee_view(request):
         {"pagetitle": f"Lägg till medarbetare i<br>{request.user.admin.name}"},
     )
 
-
-@login_required
-@allowed_roles('admin','surveycreator')
-def analysis_view(request):
-    return render(request, "analysis.html")
-
-
 @login_required
 @csrf_protect
 @allowed_roles('surveycreator','surveyresponder')
@@ -1768,9 +1761,11 @@ def correct_name(name: str) -> Boolean | str:
         # Return the name with the correct form
         return res
 
+
+
 @login_required
 @allowed_roles('admin','surveycreator')
-def chart_view(request):
+def analysis_view(request):
     group_id = request.GET.get("group_id")
     analysisHandler = AnalysisHandler()
     context: dict = {}
@@ -1835,18 +1830,5 @@ def chart_view(request):
 
     context["lineLabels"] = deadlines
     context["lineData"] = enps_scores
-
-    return render(request, "analysis.html", context)
-
-
-def chart_view_test(request):
-    # If no real data exists, show sample data
-    labels = ["Happy", "Neutral", "Sad"]
-    data = [3, 2, 1]
-
-    context = {
-        "labels": labels,
-        "data": data,
-    }
 
     return render(request, "analysis.html", context)
