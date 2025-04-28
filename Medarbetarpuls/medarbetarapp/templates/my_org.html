@@ -325,17 +325,6 @@
       document.getElementById("edit_user_role").value = userRole
     }
 
-    document.getElementById("edit_user_role").addEventListener("change", function() {
-      const userRole = this.value;
-      if(userRole === "surveycreator") {
-        document.getElementById("new_survey_group").style.display = "block";
-        document.getElementById("new_survey_group_label").style.display = "block";
-      } else {
-        document.getElementById("new_survey_group").style.display = "none";
-        document.getElementById("new_survey_group_label").style.display = "none";
-      }
-    });
-
     function closeEditUser() {
       document.getElementById("edit-user-popup").style.display = "none";
     }

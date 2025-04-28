@@ -429,10 +429,9 @@ def resend_authentication_code_acc(request):
         elif source == "from_org":
             email = request.session.get("email_two_factor_code_org")
         if email == "not_defined":
-            return HttpResponse("No email defined", 404)
+            return HttpResponse("No email defined", status=404)
         code = 654321  # make random later, just test now
         cache.set(f"verify_code_{email}", code, timeout=300)
-
         # Send email with the code to the user
         send_mail(
             subject="Your Verification Code",
@@ -441,7 +440,7 @@ def resend_authentication_code_acc(request):
             recipient_list=[email],
             fail_silently=False,
         )
-        return HttpResponse("Sent", 200)
+        return HttpResponse("Sent", status=204)
 
 
 
