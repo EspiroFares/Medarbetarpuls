@@ -640,7 +640,7 @@ def create_question(request, survey_id: int) -> HttpResponse:
     survey_temp: models.SurveyTemplate = user.survey_templates.filter(
         id=survey_id
     ).first()
-    organization: models.Organization = user.admin
+    organization: models.Organization = find_organization_by_email(email=user.email)
     organization_questions: models.Question = organization.question_bank.all()
     if survey_temp is None:
         # Handle the case where the survey template does not exist
@@ -912,8 +912,9 @@ def edit_question_view(
     """
     user: models.CustomUser = request.user
     options = None  # Use later to show options
+    organization: models.Organization = find_organization_by_email(email=user.email)
 
-    bank_question = user.admin.question_bank.filter(id=question_id).exists()
+    bank_question = organization.question_bank.filter(id=question_id).exists()
 
     # Get the survey from given id
     survey_temp: models.SurveyTemplate = user.survey_templates.filter(
@@ -949,7 +950,7 @@ def edit_question_view(
                 question = survey_temp.questions.filter(id=question_id).first()
 
             if question is None:
-                question = user.admin.question_bank.filter(id=question_id).first()
+                question = organization.question_bank.filter(id=question_id).first()
                 
                 current_max = (
                     models.QuestionOrder.objects.filter(survey_temp=survey_temp)
