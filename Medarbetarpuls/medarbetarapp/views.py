@@ -1,7 +1,7 @@
 import logging
 import platform
 from . import models
-from django.db.models import Q, Max
+from django.db.models import Q, Max, Count
 from django.utils import timezone
 from xmlrpc.client import Boolean
 from django.db.models import Count
@@ -20,6 +20,7 @@ from .decorators import allowed_roles, logout_required
 from django.contrib.auth.decorators import login_required
 from django.db.models import Case, When, IntegerField, Value
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
+from .standard_questions import STANDARD_QUESTIONS
 
 
 logger = logging.getLogger(__name__)
@@ -579,7 +580,43 @@ def authentication_org_view(request):
             base_group.managers.add(admin_account)
             base_group.save()
 
-            return HttpResponse("Konto skapat. Nu kan du logga in.", status=200)
+            # Create and add standard questions to the question bank
+            for question_data in STANDARD_QUESTIONS:
+                question_format = question_data[2]
+                options = question_data[4] if len(question_data) > 4 else None  # Check if options are provided
+
+                
+                question: models.Question = models.Question()
+
+                question.question_title = question_data[0]
+                question.question = question_data[1]
+                question.bank_question = org
+                question.question_format = question_format
+                question.question_type = question_data[3]
+    
+                if question_format == models.QuestionFormat.MULTIPLE_CHOICE and options:
+                    multiple_choice_question = models.MultipleChoiceQuestion(
+                        question_format=question_format,
+                        options = question_data[4],
+                    )
+                    question.multiple_choice_question = multiple_choice_question
+                    question.multiple_choice_question.save()
+                    question.save()
+           
+                elif question_format == models.QuestionFormat.SLIDER and options:
+                    slider_question = models.SliderQuestion(
+                        question_format=question_format,
+                        min_interval= 0,
+                        max_interval= 10,
+                        min_text="Test",
+                        max_text="Test2",
+                    )
+                    question.slider_question = slider_question
+                    question.slider_question.save()
+                    question.save()
+
+                question.save()
+            return HttpResponse(headers={"HX-Redirect": "/"})
         else:
             logger.error("Wrong authentication code")
             return HttpResponse("Felaktig kod", status=400)
@@ -604,6 +641,8 @@ def create_question(request, survey_id: int) -> HttpResponse:
     survey_temp: models.SurveyTemplate = user.survey_templates.filter(
         id=survey_id
     ).first()
+    organization: models.Organization = user.admin
+    organization_questions: models.Question = organization.question_bank.all()
     if survey_temp is None:
         # Handle the case where the survey template does not exist
         return HttpResponse("Survey template not found", status=404)
@@ -613,6 +652,7 @@ def create_question(request, survey_id: int) -> HttpResponse:
         "create_question.html",
         {
             "survey_temp": survey_temp,
+            "organization_questions": organization_questions,
             "QuestionFormat": models.QuestionFormat,
         },
     )
@@ -874,6 +914,8 @@ def edit_question_view(
     user: models.CustomUser = request.user
     options = None  # Use later to show options
 
+    bank_question = user.admin.question_bank.filter(id=question_id).exists()
+
     # Get the survey from given id
     survey_temp: models.SurveyTemplate = user.survey_templates.filter(
         id=survey_id
@@ -906,6 +948,25 @@ def edit_question_view(
                 )
             else:
                 question = survey_temp.questions.filter(id=question_id).first()
+
+            if question is None:
+                question = user.admin.question_bank.filter(id=question_id).first()
+                
+                current_max = (
+                    models.QuestionOrder.objects.filter(survey_temp=survey_temp)
+                    .aggregate(m=Max("order"))
+                    .get("m")
+                    or 0
+                )
+                # The new questions order is one higher
+                next_order = current_max + 1
+
+                # Use through_defaults to set the right order
+                survey_temp.questions.add(
+                    question, through_defaults={"order": next_order}
+                )
+                # Handle the case where the question does not exist
+                
 
             # Check for valid question format
             if question_format not in [
@@ -968,6 +1029,7 @@ def edit_question_view(
             "question_id": question_id,
             "question_text": question_text,
             "options": options,
+            "bank_question": bank_question,
         },
     )
 

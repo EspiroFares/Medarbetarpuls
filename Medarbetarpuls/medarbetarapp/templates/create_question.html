@@ -22,6 +22,7 @@
               alt="{{ type.label }} image"
               class="question-icon"
             />
+            {{type.label}}
             <a href="{% url 'edit_question_new' survey_temp.id type %}">
               <button type="button">Välj</button>
             </a>
@@ -36,32 +37,22 @@
           style="display: none"
         >
           <!-- Replace this with loop when it is possible to save questions to a bank-->
+          {% for question in organization_questions %}
           <li class="question-item">
             <img
-              src="{% static 'images/q1.png' %}"
-              alt="Predefined Question 1"
+              src="{% static 'images/' %}{{ question.question_format }}.png"
+              alt="{{ question.question_format }} image"
               class="question-icon"
             />
-            <p>Fördefinierad fråga 1</p>
+            <p>{{ question.question_title }}</p>
             <a
-              href="{% url 'edit_question_new' survey_temp.id 'predefined_format_1' %}"
+              href="{% url 'edit_question' survey_temp.id question.question_format question.id%}"
             >
               <button type="button">Välj</button>
             </a>
           </li>
-          <li class="question-item">
-            <img
-              src="{% static 'images/q1.png' %}"
-              alt="Predefined Question 2"
-              class="question-icon"
-            />
-            <p>Fördefinierad fråga 2</p>
-            <a
-              href="{% url 'edit_question_new' survey_temp.id 'predefined_format_2' %}"
-            >
-              <button type="button">Välj</button>
-            </a>
-          </li>
+          {% endfor %}
+          
           <!--   ^^   -->
         </ul>
 
@@ -77,7 +68,7 @@
             />
           </button>
           <button id="suggestions" type="button" onclick="openCloseSugg()">
-            Förslag på frågor
+            Organisationens standardfrågor
           </button>
         </div>
       </div>
@@ -95,12 +86,12 @@
           // Show standard questions
           standardQuestions.style.display = "block";
           predefinedQuestions.style.display = "none";
-          suggestionsButton.innerHTML = "Förslag på frågor";
+          suggestionsButton.innerHTML = "Organisationens standardfrågor";
         } else {
           // Show predefined questions
           standardQuestions.style.display = "none";
           predefinedQuestions.style.display = "block";
-          suggestionsButton.innerHTML = "Standard frågor";
+          suggestionsButton.innerHTML = "Skapa ny fråga";
         }
       }
     </script>
