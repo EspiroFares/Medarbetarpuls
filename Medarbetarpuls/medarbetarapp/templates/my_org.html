@@ -69,8 +69,27 @@
                 <td>{{ employee.email }}</td>
                 <td>
                   {% for group in employee.employee_groups.all %}
-                    {{ group.name}}{% if not forloop.last %},{% endif %} 
+                  <!-- Add htmx post request to remove employee group from that user-->
+                <div class="tag">{{ group.name}}
+                   {% if group.name != "Alla" %}
+                   <button 
+                    class="delete-button"
+                    style= "width: 2px; height: 2px;"         
+                    hx-post="/remove-employee-from-employee-group/"
+                    hx-trigger="click"
+                    hx-swap="none" 
+                    hx-vals=
+                    '{"email": "{{ employee.email }}",
+                     "group": "{{group.name}}",
+                     "csrfmiddlewaretoken": "{{ csrf_token }}"}'>x</button>
+                    {% endif %}
+                    </div>
                   {% endfor %}
+                  <button 
+                    class="button"  
+                    onclick = "openAddEmployeeGroup('{{ employee.email }}')"
+                    >+</button>
+
                 </td>
                 <td>
                   {% if employee.user_role == "surveycreator" %}
@@ -82,8 +101,25 @@
                 {% if employee.user_role == "surveycreator" %}
                 <td>
                   {% for group in employee.survey_groups.all %}
-                    {{ group.name}}{% if not forloop.last %},{% endif %}
+                  <div class="tag">{{ group.name}}
+                    <button 
+                     class="delete-button"    
+                     style= "width: 2px; height: 2px;"     
+                     onclick 
+                     hx-post="/remove-employee-from-survey-group/"
+                     hx-trigger="click"
+                     hx-swap="none" 
+                     hx-vals=
+                     '{"email": "{{ employee.email }}",
+                      "group": "{{group.name}}",
+                      "csrfmiddlewaretoken": "{{ csrf_token }}"}'>x</button>
+                     </div>
                   {% endfor %}
+
+                  <button 
+                  class="button"  
+                  onclick = "openAddSurveyGroup('{{ employee.email }}')"
+                   >+</button>
                 </td>
                 {% else %}
                 <td>———</td>
@@ -170,13 +206,6 @@
             name="email"
             readonly
           />
-          <label for="new_employee_group">Lägg till ny medarbetargrupp: </label>
-          <input
-            type="employeeGroup"
-            id="new_employee_group"
-            name="new_employee_group"
-            placeholder="Medarbetargrupp"
-          />
           <label for="edit_user_role">Ändra roll: </label>
           <select
           id="edit_user_role"
@@ -184,15 +213,6 @@
             <option value="surveyresponder">Enkätsvarare</option>
             <option value="surveycreator">Enkätskapare</option>
           </select>
-
-
-          <label id="new_survey_group_label" for="new_survey_group" style="display: block; margin-top: 10px;">Lägg till ny utskicksgrupp: </label>
-          <input
-            type="surveyGroup"
-            id="new_survey_group"
-            name="new_survey_group"
-            placeholder="Utskicksgrupp"
-          />
 
           <input
             type="hidden"
@@ -208,8 +228,97 @@
         </form>
       </div>
     </div>
+
+
+    <!-- Add employee group Popup -->
+    <div id="add-employee-group-popup" class="popup-overlay" style="display: none">
+      <div id="content" class="popup-content messages">
+        <form
+          class="edit-pass-form"
+          hx-post="/edit-employee-group/"
+          hx-trigger="submit"
+          hx-swap="none"
+        >
+          <span class="close-button" onclick="closeAddEmployeeGroup()">&times;</span>
+          {% csrf_token %}
+          <label for="medarbetare">Bekräfta mejl för medarbetare: </label>
+          <input
+            type="medarbetare"
+            id="add-employee-group-email"
+            name="add-employee-group-email"
+            readonly
+          />
+          <label for="new_employee_group">Lägg till ny medarbetargrupp: </label>
+          <input
+            type="employeeGroup"
+            id="new_employee_group"
+            name="new_employee_group"
+            placeholder="Medarbetargrupp"
+          />
+          <div id="popup-error" style="color: red; margin-top: 10px; font-weight: bold;"></div>
+          <button
+            type="submit">
+            Lägg till
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Add survey group Popup -->
+    <div id="add-survey-group-popup" class="popup-overlay" style="display: none">
+      <div id="content" class="popup-content messages">
+        <form
+          class="edit-pass-form"
+          hx-post="/edit-survey-group/"
+          hx-trigger="submit"
+          hx-swap="none"
+        >
+          <span class="close-button" onclick="closeAddSurveyGroup()">&times;</span>
+          {% csrf_token %}
+          <label for="medarbetare">Bekräfta mejl för medarbetare: </label>
+          <input
+            type="medarbetare"
+            id="add-survey-group-email"
+            name="add-survey-group-email"
+            readonly
+          />
+          <label id="new_survey_group_label" for="new_survey_group" style="display: block; margin-top: 10px;">Lägg till ny Utskicksgrupp: </label>
+          <input
+            type="surveyGroup"
+            id="new_survey_group"
+            name="new_survey_group"
+            placeholder="Utskicksgrupp"
+          />
+          <div id="popup-error" style="color: red; margin-top: 10px; font-weight: bold;"></div>
+          <button
+            type="submit">
+            Lägg till
+          </button>
+        </form>
+      </div>
+    </div>
+
   </body>
   <script>
+    function openAddEmployeeGroup(userEmail){
+      document.getElementById("add-employee-group-popup").style.display = "flex";
+      document.getElementById("add-employee-group-email").value = userEmail
+    }
+
+    function closeAddEmployeeGroup(userEmail){
+      document.getElementById("add-employee-group-popup").style.display = "none";
+    }
+
+    function openAddSurveyGroup(userEmail){
+      document.getElementById("add-survey-group-popup").style.display = "flex";
+      document.getElementById("add-survey-group-email").value = userEmail
+    }
+
+    function closeAddSurveyGroup(userEmail){
+      document.getElementById("add-survey-group-popup").style.display = "none";
+    }
+
+
     function openEditUser(userEmail,userRole) {
       document.getElementById("edit-user-popup").style.display = "flex";
       document.getElementById("email").value = userEmail

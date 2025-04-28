@@ -102,6 +102,54 @@ def create_acc(request):
         else:
             return render(request, "create_acc.html")
 
+@login_required
+@csrf_protect   
+@allowed_roles('admin')
+def edit_employee_group_view(request):
+    if request.method == "POST":
+        if request.headers.get("HX-Request"):  
+            email = request.POST.get("add-employee-group-email")
+            employee_group = request.POST.get("new_employee_group")
+            user = request.user
+            org = user.admin
+            edit_user = models.CustomUser.objects.get(email=email)
+            if models.EmployeeGroup.objects.filter(name=employee_group).exists():
+                group = models.EmployeeGroup.objects.get(name=employee_group)
+            else:
+                # create new employee group and tell the admin that they created
+                # a new one and that it will be empty
+                group = models.EmployeeGroup(name=employee_group, organization=org)
+                group.save()
+            edit_user.employee_groups.add(group)
+            edit_user.save()
+            return HttpResponse(status=200)
+
+    return HttpResponse(status=400)
+
+
+@login_required
+@csrf_protect   
+@allowed_roles('admin')
+def edit_survey_group_view(request):
+    if request.method == "POST":
+        if request.headers.get("HX-Request"):  
+            email = request.POST.get("add-survey-group-email")
+            survey_group = request.POST.get("new_survey_group")
+            user = request.user
+            org = user.admin
+            edit_user = models.CustomUser.objects.get(email=email)
+            if models.EmployeeGroup.objects.filter(name=survey_group).exists():
+                group = models.EmployeeGroup.objects.get(name=survey_group)
+            else:
+                # create new employee group and tell the admin that they created
+                # a new one and that it will be empty
+                group = models.EmployeeGroup(name=survey_group, organization=org)
+                group.save()
+            edit_user.survey_groups.add(group)
+            edit_user.save()
+            return HttpResponse(status=200)
+
+    return HttpResponse(status=400)
 
 @login_required
 @csrf_protect   
@@ -111,32 +159,9 @@ def edit_employee_view(request):
         if request.headers.get("HX-Request"):
             email = request.POST.get("email")
             user_role = request.POST.get("edit_user_role")
-            employee_group = request.POST.get("new_employee_group")
-            survey_group = request.POST.get("new_survey_group")
-            user = request.user
-            org = user.admin
             edit_user = models.CustomUser.objects.get(email=email)
             edit_user.user_role = user_role
             edit_user.save()
-            if employee_group:
-                if models.EmployeeGroup.objects.filter(name=employee_group).exists():
-                    group = models.EmployeeGroup.objects.get(name=employee_group)
-                else:
-                    # create new employee group
-                    group = models.EmployeeGroup(name=employee_group, organization=org)
-                    group.save()
-                edit_user.employee_groups.add(group)
-
-            if survey_group:
-                if models.EmployeeGroup.objects.filter(name=survey_group).exists():
-                    group = models.EmployeeGroup.objects.get(name=survey_group)
-                else:
-                    # create new employee group and tell the admin that they created
-                    # a new one and that it will be empty
-                    group = models.EmployeeGroup(name=survey_group, organization=org)
-                    group.save()
-                edit_user.survey_groups.add(group)
-
             return HttpResponse(status=200)
 
     return HttpResponse(status=400)
@@ -1355,6 +1380,30 @@ def templates_and_drafts(request, search_str: str | None = None) -> HttpResponse
 @login_required
 def my_surveys_view(request):
     return render(request, "my_surveys.html")
+
+@csrf_protect
+def remove_employee_from_employee_group_view(request):
+    if request.method == "POST":
+        if request.headers.get("HX-Request"):
+            email = request.POST.get("email")
+            group = request.POST.get("group")
+            user = models.CustomUser.objects.get(email=email)
+            group_to_remove = models.EmployeeGroup.objects.filter(name=group).first()
+            user.employee_groups.remove(group_to_remove)
+            return HttpResponse(status=200)
+    return HttpResponse(status=400)
+
+@csrf_protect
+def remove_employee_from_survey_group_view(request):
+    if request.method == "POST":
+        if request.headers.get("HX-Request"):
+            email = request.POST.get("email")
+            group = request.POST.get("group")
+            user = models.CustomUser.objects.get(email=email)
+            group_to_remove = models.EmployeeGroup.objects.filter(name=group).first()
+            user.survey_groups.remove(group_to_remove)
+            return HttpResponse(status=200)
+    return HttpResponse(status=400)
 
 @allowed_roles('admin')
 def settings_admin_view(request):
