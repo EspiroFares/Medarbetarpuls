@@ -1751,12 +1751,10 @@ def survey_result_view(request, survey_id):
     # TODO : Ändra så att analysis handler fås från organization
     analysis_handler = AnalysisHandler()
 
-    user = request.user
-
     # Retrievs all survey results of this survey
     survey_results = survey.survey_results.all()
 
-    summary_context = analysis_handler.get_survey_summary(survey.id, user=user)
+    summary_context = analysis_handler.get_survey_summary(survey.id)
 
     if survey_results is None:
         # This survey has no answers (should not even be displayed to the user then)

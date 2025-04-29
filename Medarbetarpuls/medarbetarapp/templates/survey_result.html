@@ -67,7 +67,7 @@
             <p>{{ summary.no_percentage }}%</p>
             {% elif summary.question.question_format == "text" %}
             <div
-              x-data="{ answers: {{ summary.answers|safe }}, answer_count: {{ summary.answer_count }} }"
+              x-data="{ answers: {{ summary.text_answers|safe }}, answer_count: {{ summary.answer_count }} }"
             >
               <table>
                 <tr>
