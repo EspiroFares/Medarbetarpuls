@@ -371,8 +371,10 @@
 
 .question-list {
     list-style-type: none;
+    overflow-y: auto;
     padding: 0;
     margin: 0;
+    max-height: 500px;
 }
 
 .question-item {
