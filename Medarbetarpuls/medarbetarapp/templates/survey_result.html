@@ -47,16 +47,53 @@
       <div class="grid-container">
         {% for summary in summaries %}
 
-        <div class="grid-item result green">
+        <div
+          class="grid-item result green"
+          x-data="{
+                STATES: {
+                    ANSWER: 'answer',
+                    COMMENT: 'comment',
+                    PERSONAL_ANSWER: 'personal_answer'
+                },
+                show_state : 'answer',
+                
+                toggle_answer(state) { 
+                    if (this.show_state === state) {
+                        this.show_state = this.STATES.ANSWER;
+                    } else {
+                        this.show_state = state;
+                    }
+                }
+            }"
+        >
+          <button @click="toggle_answer(STATES.PERSONAL_ANSWER)">Svar</button>
           <div class="question-title result">
             <h1>Fråga {{ forloop.counter }}</h1>
           </div>
+          <button @click="toggle_answer(STATES.COMMENT)">
+            Visa Kommentarer
+          </button>
 
           <div class="question-background result">
             <p>{{ summary.question.question }}</p>
           </div>
 
-          <div class="question-result" x-data="{ index: 0 }">
+          <div class="question-result" x-show="show_state === STATES.COMMENT">
+            {% with list_=summary.text_comments %}
+            <!---->
+            {% include "step_thru_text.html" with list_=list_ is_answer=False %}
+            <!---->
+            {% endwith %}
+          </div>
+
+          <div
+            class="question-result"
+            x-show="show_state === STATES.PERSONAL_ANSWER"
+          >
+            <p>Personligt svar ....</p>
+          </div>
+
+          <div class="question-result" x-show="show_state === STATES.ANSWER">
             {% if summary.question.question_format == "yesno" %}
             <p>{{ summary.yes_percentage }}%</p>
             <img
@@ -65,49 +102,15 @@
               class="question-icon result"
             />
             <p>{{ summary.no_percentage }}%</p>
+
             {% elif summary.question.question_format == "text" %}
-            <div
-              x-data="{ answers: {{ summary.text_answers|safe }}, answer_count: {{ summary.answer_count }} }"
-            >
-              <table>
-                <tr>
-                  <td>
-                    <button
-                      @click="if(index > 0) index--"
-                      :disabled="index === 0"
-                    >
-                      Föregående
-                    </button>
-                  </td>
-
-                  <td>
-                    <p x-text="`${index+1}/${answer_count}`"></p>
-                  </td>
-
-                  <td>
-                    <img
-                      src="{% static 'images/' %}{{ summary.question.question_format }}.png"
-                      alt="{{ summary.question.question_format }}"
-                      class="question-icon result"
-                    />
-                  </td>
-
-                  <td>
-                    <button
-                      @click="if(index < answer_count - 1) index++"
-                      :disabled="index === answer_count - 1"
-                    >
-                      Nästa
-                    </button>
-                  </td>
-                </tr>
-              </table>
-
-              <p
-                x-text="answer_count > 0 ? answers[index] : 'Inga svar finns'"
-                class="result-text"
-              ></p>
-            </div>
+            <!---->
+            {% with list_=summary.text_answers %}
+            <!---->
+            {% include "step_thru_text.html" with list_=list_ is_answer=True %}
+            <!---->
+            {% endwith %}
+            <!---->
 
             {% elif summary.question.question_format == "multiplechoice" %}
             <div class="graph-container">

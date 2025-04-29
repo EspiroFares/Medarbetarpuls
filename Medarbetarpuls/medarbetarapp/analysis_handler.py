@@ -168,6 +168,21 @@ class AnalysisHandler:
             comment=""
         )  # only returns comments non empty comments, do we want empty comments?
 
+    def get_text_comments(self, answers: QuerySet):
+        """
+        Returns list of comment text from the given Answer-Queryset
+
+        Args:
+            comment (Queryset of Answer): The Queryset that will give the comment-text list
+
+        Returns:
+            List[CharField]: A list of the comment texts.
+        """
+        text_comments = []
+        for answer in answers:
+            text_comments.append(answer.comment)
+        return text_comments
+
     def get_participation_metrics(
         self, survey: Survey, employee_group: EmployeeGroup
     ) -> Dict[str, float]:
@@ -285,6 +300,7 @@ class AnalysisHandler:
             "answers": answers,
             "enpsScore": score,
             "comments": comments,
+            "text_comments": self.get_text_comments(comments),
             "enpsPieLabels": ["Detractors", "Passives", "Promoters"],
             "enpsPieData": [detractors, passives, promoters],
             "slider_values": [str(i) for i in range(1, 11)],
@@ -365,6 +381,7 @@ class AnalysisHandler:
             "answers": answers,
             "slider_values": [str(i) for i in range(1, 11)],
             "comments": comments,
+            "text_comments": self.get_text_comments(comments),
             "distribution": distribution,
             "standard_deviation": standard_deviation,
             "variation_coefficient": variation_coefficient,
@@ -403,6 +420,7 @@ class AnalysisHandler:
                 "question": question,
                 "answers": [],
                 "comments": [],
+                "text_comments": [],
                 "answer_options": [],
                 "distribution": [],
             }
@@ -417,8 +435,8 @@ class AnalysisHandler:
             "question": question,
             "answers": answers,
             "comments": comments,
+            "text_comments": self.get_text_comments(comments),
             "answer_options": answer_options,
-            "comments": comments,
             "distribution": distribution,
         }
 
@@ -460,6 +478,7 @@ class AnalysisHandler:
         return {
             "question": question,
             "comments": comments,
+            "text_comments": self.get_text_comments(comments),
             "answer_options": answer_options,
             "distribution": distribution,
             "yes_percentage": yes_percentage,
@@ -479,9 +498,8 @@ class AnalysisHandler:
         answers = self.get_answers(
             question, survey, user=user, employee_group=employee_group
         )
-        answer_list = list(answers)
         text_answers = []
-        for answer in answer_list:
+        for answer in answers:
             text_answers.append(answer.free_text_answer)
 
         comments = self.get_comments(question, survey)
@@ -493,6 +511,7 @@ class AnalysisHandler:
             "text_answers": text_answers,
             "answer_count": answer_count,
             "comments": comments,
+            "text_comments": self.get_text_comments(comments),
         }
 
     # --------------- FULL SURVEY SUMMARY -----------
