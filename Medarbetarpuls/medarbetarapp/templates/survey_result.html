@@ -37,11 +37,11 @@
       <div class="title-background">
         <button
           class="title-back-button"
-          onclick="window.location.href='{% url 'survey_status' %}'"
+          onclick="window.location.href='{% url 'my_results' %}'"
         >
           Tillbaka
         </button>
-        <h2>{{ survey.published_survey.name }} Name </h2>
+        <h2>{{ survey.published_survey.name }} Name</h2>
       </div>
 
       <div class="grid-container">
@@ -56,66 +56,58 @@
             <p>{{ summary.question.question }}</p>
           </div>
 
-          <div
-            class="question-result"
-            x-data="{ index: 0, answer_count: {{ summary.answer_count }} }"
-          >
+          <div class="question-result" x-data="{ index: 0 }">
             {% if summary.question.question_format == "yesno" %}
             <p>{{ summary.yes_percentage }}%</p>
             <img
               src="{% static 'images/' %}{{ summary.question.question_format }}.png"
               alt="{{ summary.question.question_format }}"
-              class="question-icon"
+              class="question-icon result"
             />
             <p>{{ summary.no_percentage }}%</p>
             {% elif summary.question.question_format == "text" %}
-            <div x-data="{ index: 0, answers: {{ summary.answers|safe }} }">
-            
-              <!-- Allt på en rad: knappar, 1/1, ikon -->
-              <table >
+            <div
+              x-data="{ answers: {{ summary.answers|safe }}, answer_count: {{ summary.answer_count }} }"
+            >
+              <table>
                 <tr>
                   <td>
                     <button
                       @click="if(index > 0) index--"
                       :disabled="index === 0"
-                      x-show="index > 0"
                     >
                       Föregående
                     </button>
                   </td>
-            
+
                   <td>
-                    <p x-text="`${index+1}/${answers.length}`"></p>
+                    <p x-text="`${index+1}/${answer_count}`"></p>
                   </td>
-            
+
                   <td>
                     <img
                       src="{% static 'images/' %}{{ summary.question.question_format }}.png"
                       alt="{{ summary.question.question_format }}"
-                      class="question-icon"
+                      class="question-icon result"
                     />
                   </td>
-            
+
                   <td>
                     <button
-                      @click="if(index < answers.length - 1) index++"
-                      :disabled="index === answers.length - 1"
-                      x-show="index < answers.length - 1"
+                      @click="if(index < answer_count - 1) index++"
+                      :disabled="index === answer_count - 1"
                     >
                       Nästa
                     </button>
                   </td>
                 </tr>
               </table>
-            
-              
-              <h6 x-text="answers.length > 0 ? answers[index] : 'Inga svar finns'"
-                class = " question result result-text">
-            
-              </h6>
-            
+
+              <p
+                x-text="answer_count > 0 ? answers[index] : 'Inga svar finns'"
+                class="result-text"
+              ></p>
             </div>
-            
 
             {% elif summary.question.question_format == "multiplechoice" %}
             <div class="graph-container">
