@@ -66,13 +66,17 @@
                 }
             }"
         >
-          <button @click="toggle_answer(STATES.PERSONAL_ANSWER)">Svar</button>
+          <button
+            @click="toggle_answer(STATES.PERSONAL_ANSWER)"
+            x-text="show_state === STATES.PERSONAL_ANSWER ? 'Stäng svar' : 'Visa svar'"
+          ></button>
           <div class="question-title result">
             <h1>Fråga {{ forloop.counter }}</h1>
           </div>
-          <button @click="toggle_answer(STATES.COMMENT)">
-            Visa Kommentarer
-          </button>
+          <button
+            @click="toggle_answer(STATES.COMMENT)"
+            x-text="show_state === STATES.COMMENT ? 'Stäng kommentar' : 'Visa kommentarer'"
+          ></button>
 
           <div class="question-background result">
             <p>{{ summary.question.question }}</p>
