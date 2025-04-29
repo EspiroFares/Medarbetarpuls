@@ -9,12 +9,53 @@
     <link rel="stylesheet" href="{% static 'css/main.css' %}" />
   </head>
   <body>
-    <!-- To test this, switch to start.html in views.py -->
-    <!-- Does not check if user logged in and have access-->
     <div class="main-container">
       {% include "topbar.html" with pagetitle=pagetitle %}
+
+      <div class ="analysis-bar">
+        <div class="analysis-bar-container">
+          <div class="analysis-bar-item"> 
+            <img
+              src="{% static 'images/chat_box.png' %}"
+              class="analysis-bar-icon"
+            />
+            Svarsfrekvens: PLACEHOLDER PLACEHOLDER_CHANGE
+          </div>
+          <div class="analysis-bar-item">  
+            <img
+              src="{% static 'images/graph_icon.png' %}"
+              class="analysis-bar-icon"
+            />
+            eNPS: PLACEHOLDER PLACEHOLDER_CHANGE
+          </div>
+          <div class="analysis-bar-item"> 
+            <img
+              src="{% static 'images/people_icon.png' %}"
+              class="analysis-bar-icon"
+            />
+            EEI: PLACEHOLDER PLACEHOLDER_CHANGE
+          </div>
+        </div>   
+      </div>
+    
       <div class="grid-container">
+        {% if unanswered_count > 0 %}
+        <div class="notification-container">
+          Du har en ny enkät som väntar på att besvaras!
+          <p>Gå till "Obesvarade enkäter" för att se den.</p>
+          <button class="notification-button" onclick="window.location.href='{% url 'unanswered_surveys' %}'">Obesvarade enkäter</button>
+        </div>
+        {% endif %}
+
         <a href="{% url 'unanswered_surveys' %}" class="grid-item yellow">
+          {% if unanswered_count > 0 %}
+          <div class="notification-icon">
+            <img
+              src="{% static 'images/notification.png' %}"
+              style="width: 100%; height: 100%"
+            />
+          </div>
+          {% endif %}
           <img
                 src="{% static 'images/unanswered.png' %}"
                 class="start-icon"

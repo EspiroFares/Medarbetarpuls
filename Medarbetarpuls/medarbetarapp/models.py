@@ -8,6 +8,7 @@ from django.contrib.auth.models import (
 )
 import logging
 from typing import cast
+from django.utils import timezone
 
 # from .analysis_handler import AnalysisHandler
 
@@ -131,7 +132,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):  # pyright: ignore
 
     # To see how many surveys this user has unanswered
     def count_unanswered_surveys(self):
-        return self.survey_results.filter(is_answered=False).count()
+        return self.survey_results.filter(is_answered=False, published_survey__deadline__gt=timezone.now()).count()
 
     # To see how many surveys this user has answered
     def count_answered_surveys(self):
@@ -139,7 +140,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):  # pyright: ignore
 
     # To get all unanswered surveys for this user
     def get_unanswered_surveys(self):
-        return self.survey_results.filter(is_answered=False)
+        return self.survey_results.filter(is_answered=False, published_survey__deadline__gt=timezone.now())
 
     # To get all answered surveys for this user
     def get_answered_surveys(self):
@@ -187,6 +188,7 @@ class Survey(models.Model):
     sending_date = (
         models.DateTimeField()
     )  # stores both date and time (e.g., YYYY-MM-DD HH:MM:SS)
+    last_notification = models.DateTimeField() 
     collected_answer_count = models.IntegerField(default=0)  # pyright: ignore
     published_count = models.IntegerField(default=0)  # pyright: ignore
     is_viewable = models.BooleanField(default=True)  # pyright: ignore
@@ -194,7 +196,7 @@ class Survey(models.Model):
 
     def __str__(self) -> str:
         return f"{self.name} ({self.creator})"
-
+    
     def publish_survey(self):
         """
         Publishes the survey to all employees in all
@@ -214,6 +216,7 @@ class Survey(models.Model):
 
         # Saves the amount of users this survey has been sent to
         self.published_count = count
+        self.last_notification = timezone.now() 
         self.save()
 
         # Send email to notify
@@ -314,6 +317,7 @@ class TextQuestion(BaseQuestionDetails):
 
 # What this model does needs to be explained here
 class Question(models.Model):
+    question_title = models.CharField(max_length=32, null=True, blank=True)
     question = models.CharField(max_length=255)
     question_format = models.CharField(
         max_length=15, choices=QuestionFormat.choices, default=QuestionFormat.TEXT
@@ -329,6 +333,7 @@ class Question(models.Model):
     bank_question = models.ForeignKey(
         Organization, on_delete=models.CASCADE, related_name="question_bank", null=True
     )
+    bank_question_tag = models.IntegerField(null=True, blank=True)
 
     # All questions tyoe possible
     slider_question = models.OneToOneField(
@@ -355,7 +360,7 @@ class Question(models.Model):
             data = {
                 f.name: getattr(self, f.name)
                 for f in self._meta.fields
-                if f.name not in ('id', 'pk')
+                if f.name not in ('id', 'pk', 'bank_question')
             }
             # Remove any fields referring to child OneToOne we will handle those separately
             for rel_name in (
@@ -374,26 +379,20 @@ class Question(models.Model):
             # Add link to survey:
             new_q.connected_surveys.set([survey])
 
-            # Copy each OneToOne “child” model if present:
-            one_to_one_fields = {
-                'slider_question': SliderQuestion,
-                'multiple_choice_question': MultipleChoiceQuestion,
-                'yes_no_question': YesNoQuestion,
-                'text_question': TextQuestion,
-            }
-            for field_name, model_cls in one_to_one_fields.items():
-                child = getattr(self, field_name, None)
-                if child is not None:
-                    # Build child data dict
-                    child_data = {
-                        f.name: getattr(child, f.name)
-                        for f in child._meta.fields
-                        if f.name not in ('id', 'pk', field_name) 
-                    }
-                    # Set the back‐reference to new_q
-                    child_data[field_name.replace('_question','')] = new_q
-                    # Create the cloned child
-                    model_cls.objects.create(**child_data)
+            # First, save the new Question so it has an ID
+            new_q.save()
+
+            # Then create and assign the specific child object based on the format
+            if self.question_format == QuestionFormat.MULTIPLE_CHOICE:
+                mcq = MultipleChoiceQuestion.objects.create(
+                    options=self.multiple_choice_question.options
+                )
+                new_q.multiple_choice_question = mcq
+                new_q.save()  # Link them
+
+            if self.bank_question is not None:
+                new_q.bank_question_tag = self.id
+                new_q.save()
 
             return new_q
 

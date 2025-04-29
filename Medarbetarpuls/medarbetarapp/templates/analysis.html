@@ -17,7 +17,7 @@
       <!-- Go back button-->
       <button
         class="image-button"
-        onclick="navigateBack()"
+        onclick="navigateBack('{{user.user_role}}')"
       >
         <img
           src="{% static 'images/go-back-btn.png' %}"
@@ -27,15 +27,45 @@
       </button>
 
       <div class="analysis-title">
-        <div class="filter-container">
           <!-- Filter for work-group -->
-          Filter:
-        </div>
-        <div class="time-period-container">
-          <!-- Filter for time period -->
-          Time period
+
+          <div id="filterBar">
+            <strong>Filter:</strong>
+            <span id="pillContainer"></span>
+            <form method="get" action="{% url 'analysis' %}">
+              <select id="groupDropdown" name="group_id" onchange="this.form.submit()">
+                <option value="">— Välj grupp —</option>
+                {% for group in user.survey_groups.all %}
+                  <option value="{{ group.id }}" {% if group.id|stringformat:"s" == request.GET.group_id %}selected{% endif %}>
+                    {{ group.name }}
+                  </option>
+                {% endfor %}
+              </select>
+            </form>
+          </div>
+      
+      
+      <!-- Filter for time period -->
+      <div class="time-period-container">
+        <strong>Time period:</strong>
+          <div
+            class="flex space-x-2 bg-gray-100 p-2 rounded-md"
+            id="time-filter"
+          >
+            {% for label, value in time_periods %}
+            <button
+              hx-get="?period={{ value }}"
+              hx-target="#filtered-content"
+              hx-swap="outerHTML"
+              class="px-3 py-1 rounded-md text-sm font-medium {% if value == selected_period %} bg-blue-500 text-white {% else %} bg-blue-100 text-blue-900 {% endif %}"
+            >
+              {{ label }}
+            </button>
+            {% endfor %}
+          </div>
         </div>
       </div>
+
 
       <div class="analysis-container">
         <div class="analysis-item ratio-5-1">
@@ -48,69 +78,117 @@
           <div class="graph-container">
             <canvas id="enpsBar"></canvas>
           </div>
-          
         </div>
 
         <div class="analysis-item ratio-1-1">
           <div class="analysis-item-title">
             <h2><b>Svarsfrekvens</b></h2>
-          </div>  
+          </div>
           <div class="graph-container">
             <canvas id="canvas" width="400" height="400"></canvas>
           </div>
         </div>
-        
+
         <div class="analysis-item ratio-2-1">
           <div class="analysis-item-title">
             <h2><b>Analysera fråga</b></h2>
           </div>
-          <div class="graph-container" style="height: 90%;">
-            <canvas id="enpsChart"></canvas>
+          <div class="graph-container" style="height: 90%">
+            <canvas id="trendChart"></canvas>
           </div>
         </div>
-  
       </div>
-      
-    </div>
     
 
     <script>
-
-      //Data for the enpsGauge, replace with data from database
-      const enpsGaugeData = 21
-      const enpsDataDataChange = -10
-      const enpsDate = "2023-10-01" // Replace with the most recent date that changed the eNPS score
-
-      //Data for the enpsBar, replace with data from database
-      const enpsBarLabels = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
-      const enpsBarData = [5, 2, 3, 30, 56, 55, 40, 20, 10, 5, 10]
-
-      //Data for the answer frequency, replace with data from database
-      const answerData = 51
-      const dataAnswerChange = 0
-
-      //Data for the pie chart, replace with data from database
-      const pieLabels = ['Promoters', 'Passives', 'Detractors']
-      const pieData = [70, 20, 10]
-      const pieColors = [
-        'rgb(140, 214, 16)',
-        'rgb(16, 23, 214)',
-        'rgb(16, 191, 214)'
-      ];
-
-      document.addEventListener("DOMContentLoaded", function() {
-
-        initEnpsGauge("enpsGauge", enpsGaugeData, enpsDataDataChange, enpsDate);
-        initEnpsBar("enpsBar", enpsBarLabels, enpsBarData);
-        initAnswerFrequency("canvas", answerData, dataAnswerChange);
-        //initPieChart("enpsChart", pieLabels, pieData, pieColors);
-        initBarChart("enpsChart", pieLabels, pieData, pieColors);
-    });
-
-    function navigateBack() {
-      // This simulates the user pressing the back button
-      window.history.back();
-    }
+      document
+        .getElementById("groupDropdown")
+        .addEventListener("change", function () {
+          const select = this;
+          const val = select.value;
+          const text = select.options[select.selectedIndex].text;
+          if (!val) return; // första “Välj grupp”
+          // Skippa om redan valt
+          if (document.getElementById("pill-" + val)) {
+            select.value = "";
+            return;
+          }
+          // Bygg piller‐span
+          const pill = document.createElement("span");
+          pill.id = "pill-" + val;
+          pill.textContent = text + " ";
+          // kryss‐knapp
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.textContent = "×";
+          btn.onclick = () => pill.remove();
+          pill.appendChild(btn);
+          // lägg in i containern
+          document.getElementById("pillContainer").appendChild(pill);
+          // nollställ dropdown
+          select.value = "";
+        });
     </script>
+
+
+  <script>
+    function navigateBack(user_role) {
+      // The previous URL that linked to this page
+      let previousUrl = document.referrer;
+        if (previousUrl) {
+          if (previousUrl.includes("analysis")) {
+            // Avoid redirecting back to this page to prevent an infinite loop
+            if (user_role == "surveycreator") {
+              previousUrl = "/start-creator/";
+            } else {
+              previousUrl = "/start-admin/";
+            }
+          }
+          window.location.href = previousUrl;
+        } else {
+          // Fallback if referrer is empty
+          // This simulates the user pressing the back button
+          window.history.back();
+        }
+    }
+
+    const enpsGaugeData   = {{ enpsScore        |default:"21"  |safe }};
+    const enpsBarLabels   = {{ slider_values    |default:"['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10']" |safe }};
+    const enpsBarData     = {{ enpsDistribution |default:"[5, 2, 3, 30, 56, 55, 40, 20, 10, 5, 10]" |safe }};
+    const pieLabels       = {{ enpsPieLabels    |default:"['Detractors', 'Passives', 'Promoters']" |safe }};
+    const pieData         = {{ enpsPieData      |default:"[4,4,3]" |safe }};
+    const enpsDate        = "{{ deadline|default:'2023-10-01' }}";
+    const answerData     = {{ answer_pct|default:"90" |safe }};
+    
+    const enpsDataChange  = 10;            // Hur ska detta hämtas??
+    const answerChange    = 3;              // placeholder
+    const pieColors       = ["rgb(140,214,16)","rgb(16,23,214)","rgb(16,191,214)"];
+
+    const lineLabels = {{ lineLabels    |default:"['2023-10-01', '2024-10-01', '2025-10-01']" |safe }};
+    const lineData = {{ lineData      |default:"[4,4,5]" |safe }};
+    const lineColors = ["rgb(140,214,16)","rgb(16,23,214)"];
+    
+    function safeInit(fn, id, ...args) {
+      const canvas = document.getElementById(id);
+      if (!canvas) return;                       // canvas saknas (t.ex. ingen data)
+      if (canvas._chartInstance) {               // chart finns – ta bort
+          canvas._chartInstance.destroy();
+          canvas._chartInstance = null;
+      }
+      const chart = fn(id, ...args); 
+      canvas._chartInstance = chart;
+    }
+    
+    document.addEventListener("DOMContentLoaded", function () {
+      if (enpsBarLabels.length === 0) return;
+    
+      safeInit(initEnpsGauge, "enpsGauge", enpsGaugeData, enpsDataChange, enpsDate);
+      safeInit(initEnpsBar,   "enpsBar",   enpsBarLabels, enpsBarData);
+      safeInit(initAnswerFrequency, "canvas", answerData, answerChange);
+      //safeInit(initBarChart,  "enpsChart", pieLabels, pieData, pieColors);
+      safeInit(initLineChart, "trendChart", lineLabels, lineData, lineColors);
+    });
+    </script>
+  
   </body>
 </html>

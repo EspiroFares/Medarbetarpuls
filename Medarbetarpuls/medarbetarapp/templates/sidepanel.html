@@ -22,18 +22,20 @@ This template is designed to be used by including it and was specifically design
   <a href={% url 'unanswered_surveys' %}>Obesvarade enkäter</a>
   <a href={% url 'templates_and_drafts' %}>Mallar & Utkast</a>
   <a href={% url 'create_survey' %}>Skapa enkät</a>
+  <a href={% url 'survey_status' %}>Mina publicerade enkäter</a>
   <a href={% url 'my_results' %}>Se resultat</a>
   <a href={% url 'analysis' %}>Analys</a>
   <a href={% url 'settings_user' %}>Inställningar</a>
   {% endif %}
-  <button class="image-button logout" onclick="window.location.href='{% url 'login' %}'"
-  >
-    <img
+
+  <form method="post" hx-post="{% url 'logout' %}" hx-target="body" hx-swap="outerHTML">
+    {% csrf_token %}
+    <button class="image-button logout" type="submit"> <img
       src="{% static 'images/logout-btn.png' %}"
       alt="Go Back"
       class="image-button logout"
-    />
-  </button>
+    /></button>
+  </form>
 </div>
 
 <script>

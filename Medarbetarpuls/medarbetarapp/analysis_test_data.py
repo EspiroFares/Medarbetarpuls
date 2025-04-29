@@ -121,6 +121,8 @@ def createSurveys(amount: int, surveyCreator: CustomUser):
             deadline=deadlines[i],
             sending_date="2025-01-01 10:00:00",
         )
+        target_group = EmployeeGroup.objects.get(name="IT")  # hämta IT‑gruppen
+        survey.employee_groups.add(target_group)
         surveys.append(survey)
     return surveys
 
@@ -129,7 +131,9 @@ def createSurveyUserResult(amount: int, survey: Survey, user: CustomUser):
     results = []
     for i in range(amount):
         result = SurveyUserResult.objects.create(
-            published_survey=survey, user_id=user.id
+            published_survey=survey,
+            user_id=user.id,
+            is_answered=True,
         )
         results.append(result)
     return results

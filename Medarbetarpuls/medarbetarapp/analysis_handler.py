@@ -1,17 +1,20 @@
-from getpass import getuser
-from django.db import models
-from django.db.models.query import QuerySet
-from django.db.models.manager import BaseManager
-from django.contrib.auth.models import (
-    AbstractBaseUser,
-    BaseUserManager,
-    PermissionsMixin,
-)
-import logging
 import math
-from typing import cast
-import time
-from .models import *
+import logging
+from django.db import models
+from django.db.models import QuerySet
+from typing import Any, Dict, List, Union, Optional
+from .models import (
+    Survey,
+    SurveyUserResult,
+    Question,
+    Answer,
+    EmployeeGroup,
+    CustomUser,
+    QuestionFormat,
+    QuestionType,
+)
+
+logger = logging.getLogger(__name__)
 
 
 class DiagramType(models.TextChoices):
@@ -27,52 +30,187 @@ class AnalysisHandler:
     """
 
     def get_survey(self, survey_id: int) -> Survey:
-        """Retrieve a survey by its id."""
+        """
+        Retrieve a specific survey by its ID.
+
+        Args:
+            survey_id (int): The ID of the survey to retrieve.
+
+        Returns:
+            Survey: The Survey instance matching the given ID."""
         return Survey.objects.get(id=survey_id)
 
-    def get_survey_result(self, survey):
-        """Retrieve a specific SurveyUserResult."""
+    def get_survey_result(self, survey: Survey) -> QuerySet[SurveyUserResult]:
+        """
+        Retrieve all user results associated with a given survey.
+
+        Args:
+            survey (Survey): The survey instance for which to fetch results.
+
+        Returns:
+            QuerySet[SurveyUserResult]: A queryset of SurveyUserResult objects
+            filtered by the provided survey.
+        """
         return SurveyUserResult.objects.filter(published_survey=survey)
 
-    def get_question(self, question_id: int) -> Question:
-        """Fetch the question object by id."""
+    def get_question(self, question_id: int) -> Optional[Question]:
+        """
+        Retrieve a question by its ID, returning the first match or None.
+
+        Args:
+            question_id (int): The ID of the question to retrieve.
+
+        Returns:
+            Optional[Question]: The Question instance if found; otherwise, None.
+        """
+        # Right now the question is fetched by an exact match,
+        # use question__icontains= instead of question= for a more flexible match.
         return Question.objects.filter(id=question_id).first()
+
+    def get_surveys_for_group(self, employee_group: EmployeeGroup) -> QuerySet[Survey]:
+        """
+        Retrieve all unique surveys associated with a specific employee group.
+
+        Args:
+            employee_group (EmployeeGroup): The employee group for which to fetch surveys.
+
+        Returns:
+            QuerySet[Survey]: A distinct queryset of Survey objects linked to the given group.
+        """
+        return Survey.objects.filter(employee_groups=employee_group).distinct()
 
     def get_answers(
         self,
         question: Question,
         survey: Survey | None = None,
-    ):
-        """Get answers for a given question, optionally filtered to a specific survey/result."""
+        user: CustomUser | None = None,
+        employee_group: EmployeeGroup | None = None,
+    ) -> QuerySet[Answer]:
+        """
+        Retrieve answered responses for a given question, optionally filtered by survey, user, or employee group.
 
+        Args:
+            question (Question): The question for which to fetch answers.
+            survey (Survey, optional): Limit answers to those from this survey.
+            user (CustomUser, optional): Limit answers to those submitted by this user.
+            employee_group (EmployeeGroup, optional): Limit answers to those from members of this group.
+
+        Returns:
+            QuerySet[Answer]: A queryset of Answer objects matching the provided filters, or an empty queryset if none found.
+        """
         filters = {"question": question, "is_answered": True}
 
         if survey:
-            results = self.get_survey_result(survey)
+            results = SurveyUserResult.objects.filter(published_survey=survey)
             filters["survey__in"] = results
 
-        return Answer.objects.filter(**filters)
+        if user:
+            if (
+                user == survey.creator
+            ):  # tycker vi bör ha hanterat detta någon annanstans
+                logger.info(
+                    "No answers available for %s", user or employee_group or survey
+                )
+                return Answer.objects.none()
+            filters["survey__user"] = user
+
+        elif employee_group:
+            filters["survey__user__in"] = employee_group.employees.all()
+
+        answers = Answer.objects.filter(**filters)
+
+        if not answers.exists():
+            if user:
+                logger.info(
+                    "No answers available for %s", user or survey or employee_group
+                )
+                return Answer.objects.none()
+            logger.info("No answers available.")
+            return Answer.objects.none()
+
+        return answers
 
     def get_comments(
         self,
         question: Question,
         survey: Survey | None = None,
-    ):
-        """Returns all comments from a question, optionaly question and survey."""
+        user: CustomUser | None = None,
+        employee_group: EmployeeGroup | None = None,
+    ) -> QuerySet[Answer]:
+        """
+        Retrieve all non-empty comments for a given question, optionally filtered by survey, user, or employee group.
+
+        Args:
+            question (Question): The question for which to fetch comments.
+            survey (Survey, optional): Limit comments to those from this survey.
+            user (CustomUser, optional): Limit comments to those submitted by this user.
+            employee_group (EmployeeGroup, optional): Limit comments to those from members of this group.
+
+        Returns:
+            QuerySet[Answer]: A queryset of Answer objects with non-empty comments matching the provided filters.
+        """
         filters = {"question": question, "is_answered": True, "comment__isnull": False}
 
         if survey:
             results = self.get_survey_result(survey)
             filters["survey__in"] = results
 
+        if user:
+            if user == survey.creator:
+                logger.info("No comments available for the creator of the survey.")
+                return Answer.objects.none()
+            filters["survey__user"] = user
+
+        elif employee_group:
+            filters["survey__user__in"] = employee_group.employees.all()
+
         return Answer.objects.filter(**filters).exclude(
             comment=""
-        )  # only returns comments non empty comments
+        )  # only returns comments non empty comments, do we want empty comments?
+
+    def get_participation_metrics(
+        self, survey: Survey, employee_group: EmployeeGroup
+    ) -> Dict[str, float]:
+        """
+        Calculate participation metrics for a given survey and employee group.
+
+        Args:
+            survey (Survey): The survey for which to compute metrics.
+            employee_group (EmployeeGroup): The group of employees whose participation is measured.
+
+        Returns:
+            Dict[str, float]: A dictionary containing:
+            participant_count (float): Total number of employees in the group.
+            answered_count (float): Number of users in the group who have answered the survey.
+            answer_pct (float): Percentage of participants who answered (rounded to 1 decimal).
+        """
+        total_participants = employee_group.employees.count()
+        answered_count = SurveyUserResult.objects.filter(
+            published_survey=survey,
+            user__in=employee_group.employees.all(),
+            is_answered=True,
+        ).count()
+        answer_pct = round((answered_count / total_participants) * 100, 1)
+        return {
+            "participant_count": total_participants,
+            "answered_count": answered_count,
+            "answer_pct": answer_pct,
+        }
 
     # --------- SLIDER-QUESTION FUNCTIONALITY -------------
     def calculate_enps_data(self, answers) -> tuple[int, int, int]:
-        """Categorize responses into promoters, passives, and detractors."""
+        """
+        Calculate the counts of promoters, passives, and detractors from slider answers.
 
+        Args:
+            answers (QuerySet[Answer]): A queryset of Answer objects with a `slider_answer` field.
+
+        Returns:
+            tuple[int, int, int]:
+            promoters (int): Number of answers with slider_answer >= 9.
+            passives (int): Number of answers with 7 <= slider_answer < 9.
+            detractors (int): Number of answers with slider_answer < 7.
+        """
         promoters = answers.filter(slider_answer__gte=9).count()
         passives = answers.filter(slider_answer__gte=7, slider_answer__lt=9).count()
         detractors = answers.filter(slider_answer__lt=7).count()
@@ -81,6 +219,18 @@ class AnalysisHandler:
     def calculate_enps_score(
         self, promoters: int, passives: int, detractors: int
     ) -> int:
+        """
+        Calculate the employee Net Promoter Score (eNPS) as an integer percentage.
+
+        Args:
+            promoters (int): Number of promoter responses.
+            passives (int): Number of passive responses.
+            detractors (int): Number of detractor responses.
+
+        Returns:
+            int: eNPS score computed as floor((promoters – detractors) / total * 100),
+            or 0 if there are no responses.
+        """
         # Compute eNPS score.
         total = promoters + passives + detractors
         return (
@@ -88,13 +238,23 @@ class AnalysisHandler:
         )  # if statement needed because we can get zero division error otherwise
 
     def get_response_distribution_slider(self, answers) -> list[int]:
-        """Count how many respondents picked each value (1-10)."""
+        """
+        Retrieve the distribution of slider responses for values 1 through 10.
+
+        Args:
+            answers (QuerySet[Answer]): A queryset of Answer objects containing a `slider_answer` field.
+
+        Returns:
+            list[int]: A list of 10 integers where the element at index i-1 is the count of responses with `slider_answer == i` for i from 1 to 10.
+        """
         return [answers.filter(slider_answer=i).count() for i in range(1, 11)]
 
     def get_enps_summary(
         self,
         survey_id: int,
-    ):
+        user: CustomUser | None = None,
+        employee_group: EmployeeGroup | None = None,
+    ) -> Dict[str, Any]:
         """
         Get all data needed to render ENPS analysis:
         standard deviation, variation coefficient, score, labels, data distribution, raw responses.
@@ -105,30 +265,45 @@ class AnalysisHandler:
         question_txt = (
             "How likely are you to recommend this company as a place to work?"
         )
-
-        question = Question.objects.filter(question__icontains=question_txt).first()
-        answers = self.get_answers(question, survey)
+        question = Question.objects.filter(
+            question__icontains=question_txt
+        ).first()  # maybe change this way of getting the question later...
+        answers = self.get_answers(
+            question, survey, user=user, employee_group=employee_group
+        )
         # answers = self.get_answers(question)
         promoters, passives, detractors = self.calculate_enps_data(answers)
         score = self.calculate_enps_score(promoters, passives, detractors)
         distribution = self.get_response_distribution_slider(answers)
         standard_deviation = self.calculate_standard_deviation(answers)
         variation_coefficient = self.calculate_variation_coefficient(answers)
-        comments = self.get_comments(question, survey)
+        comments = self.get_comments(
+            question, survey, user=user, employee_group=employee_group
+        )
         return {
             "question": question,
+            "answers": answers,
+            "enpsScore": score,
             "comments": comments,
-            "score": score,
-            "labels": ["Promoters", "Passives", "Detractors"],
-            "data": [promoters, passives, detractors],
-            "slider_values": list(range(1, 11)),
-            "distribution": distribution,
+            "enpsPieLabels": ["Detractors", "Passives", "Promoters"],
+            "enpsPieData": [detractors, passives, promoters],
+            "slider_values": [str(i) for i in range(1, 11)],
+            "enpsDistribution": distribution,
             "standard_deviation": standard_deviation,
             "variation_coefficient": variation_coefficient,
         }
 
     def calculate_mean(self, answers) -> float:
-        "Calculates mean for slider answers."
+        """
+        Calculate the average slider answer from a set of responses.
+
+        Args:
+            answers (QuerySet[Answer] or Iterable[Answer]): A collection of Answer objects
+            with a `slider_answer` attribute.
+
+        Returns:
+            float: The mean of all non-null `slider_answer` values, or 0.0 if there are none.
+        """
         values = [a.slider_answer for a in answers if a.slider_answer is not None]
         n = len(values)
         if n == 0:
@@ -166,7 +341,9 @@ class AnalysisHandler:
         self,
         question_id: int,
         survey_id: int,
-    ):
+        user: CustomUser | None = None,
+        employee_group: EmployeeGroup | None = None,
+    ) -> Dict[str, Any]:
         """
         Get all data needed to render slider analysis:
         standard deviation, variation coefficient, data distribution, raw responses.
@@ -175,7 +352,9 @@ class AnalysisHandler:
         """
         survey = self.get_survey(survey_id)
         question = self.get_question(question_id)
-        answers = self.get_answers(question, survey)
+        answers = self.get_answers(
+            question, survey, user=user, employee_group=employee_group
+        )
         distribution = self.get_response_distribution_slider(answers)
         standard_deviation = self.calculate_standard_deviation(answers)
         variation_coefficient = self.calculate_variation_coefficient(answers)
@@ -183,8 +362,9 @@ class AnalysisHandler:
         mean = round(self.calculate_mean(answers), 2)
         return {
             "question": question,
+            "answers": answers,
+            "slider_values": [str(i) for i in range(1, 11)],
             "comments": comments,
-            "slider_values": list(range(1, 11)),
             "distribution": distribution,
             "standard_deviation": standard_deviation,
             "variation_coefficient": variation_coefficient,
@@ -211,15 +391,32 @@ class AnalysisHandler:
         self,
         question_id: int,
         survey_id: int,
-    ):
+        user: CustomUser | None = None,
+        employee_group: EmployeeGroup | None = None,
+    ) -> Dict[str, Any]:
         survey = self.get_survey(survey_id)
         question = self.get_question(question_id)
-        answer_options = question.multiple_choice_question.options
-        answers = self.get_answers(question, survey)
+
+        if not question or not question.specific_question:
+            # Om question eller specific_question inte finns
+            return {
+                "question": question,
+                "answers": [],
+                "comments": [],
+                "answer_options": [],
+                "distribution": [],
+            }
+
+        answer_options = question.specific_question.options
+        answers = self.get_answers(
+            question, survey, user=user, employee_group=employee_group
+        )
         distribution = self.get_response_distribution_mc(answers, answer_options)
         comments = self.get_comments(question, survey)
         return {
             "question": question,
+            "answers": answers,
+            "comments": comments,
             "answer_options": answer_options,
             "comments": comments,
             "distribution": distribution,
@@ -237,14 +434,18 @@ class AnalysisHandler:
         self,
         question_id: int,
         survey_id: int,
-    ):
+        user: CustomUser | None = None,
+        employee_group: EmployeeGroup | None = None,
+    ) -> Dict[str, Any]:
         survey = self.get_survey(survey_id)
         question = self.get_question(question_id)
         answer_options = [
             "YES",
             "NO",
         ]
-        answers = self.get_answers(question, survey)
+        answers = self.get_answers(
+            question, survey, user=user, employee_group=employee_group
+        )
         distribution = self.get_response_distribution_yes_no(answers)
         answer_count = answers.count()
         yes_count = answers.filter(yes_no_answer=True).count()
@@ -265,116 +466,165 @@ class AnalysisHandler:
             "no_percentage": no_percentage,
         }
 
-    # -------------------- FREE TEXT -----------------
-    def get_free_text_summary(self, question_id: int, survey_id: int):
+    # ---------------- FREE TEXT -------------
+    def get_free_text_summary(
+        self,
+        question_id: int,
+        survey_id: int,
+        user: CustomUser | None = None,
+        employee_group: EmployeeGroup | None = None,
+    ) -> Dict[str, Any]:
         survey = self.get_survey(survey_id)
         question = self.get_question(question_id)
-        answers = self.get_answers(question, survey)
-        answer_count = answers.count()
-
-        answer_list = list(answers)
-        text_answers = []
-        for answer_ in answer_list:
-            text_answers.append(answer_.free_text_answer)
-
+        answers = self.get_answers(
+            question, survey, user=user, employee_group=employee_group
+        )
         comments = self.get_comments(question, survey)
-        filters = {
-            "question": question,
-            "is_answered": True,
-        }
+        answer_count = answers.count() if answers else 0
 
         return {
             "question": question,
-            "answers": text_answers,
+            "answers": answers,
             "answer_count": answer_count,
             "comments": comments,
         }
 
-    # ------------------- FULL SURVEY -----------------
-
-    def survey_result_summary(self, survey_id, answers=None):
+    # --------------- FULL SURVEY SUMMARY -----------
+    def get_survey_summary(
+        self,
+        survey_id: int,
+        user: CustomUser | None = None,
+        employee_group: EmployeeGroup | None = None,
+    ) -> Dict[str, Any]:
         """
-        This function returns a summary in the form of a context for a whole survey.
-
-        question_summary = {
-                        "question" : question
-                        "comment" : comment
-                        "answer" : answer
-                        ...
-                    }
-
-        Returns summary = {
-                            "survey: survey
-                            "summaries: [(list of question_summary)]
-                        }
+        This function returns a summary for a whole survey. Optionally filtered to a specific user or an employee_group.
         """
         survey = Survey.objects.filter(id=survey_id).first()
 
         summary = {
             "survey": survey,
+            "user": user,
+            "employee_group": employee_group,
             "summaries": [],
         }
-
         questions = Question.objects.filter(connected_surveys__id=survey_id)
 
         for question in questions:
             if question.question_format == QuestionFormat.MULTIPLE_CHOICE:
                 question_summary = self.get_multiple_choice_summary(
-                    question.id, survey.id
+                    question_id=question.id,
+                    survey_id=survey.id,
+                    user=user,
+                    employee_group=employee_group,
                 )
             elif question.question_format == QuestionFormat.YES_NO:
-                question_summary = self.get_yes_no_summary(question.id, survey.id)
+                question_summary = self.get_yes_no_summary(
+                    question_id=question.id,
+                    survey_id=survey.id,
+                    user=user,
+                    employee_group=employee_group,
+                )
             elif question.question_format == QuestionFormat.TEXT:
-                question_summary = self.get_free_text_summary(question.id, survey.id)
-            elif question.question_format == QuestionFormat.SLIDER:
-                question_summary = self.get_slider_summary(question.id, survey.id)
+                question_summary = self.get_free_text_summary(
+                    question_id=question.id,
+                    survey_id=survey.id,
+                    user=user,
+                    employee_group=employee_group,
+                )
             elif question.question_type == QuestionType.ENPS:
-                question_summary = self.get_enps_summary(survey.id)
+                question_summary = self.get_enps_summary(
+                    survey_id=survey.id,
+                    user=user,
+                    employee_group=employee_group,
+                )
+            elif question.question_format == QuestionFormat.SLIDER:
+                question_summary = self.get_slider_summary(
+                    question_id=question.id,
+                    survey_id=survey.id,
+                    user=user,
+                    employee_group=employee_group,
+                )
 
-            if answers:
-                question = question_summary["question"]
-                question_summary["answer"] = answers.filter(question=question).first()
-            else:
-                question_summary["answer"] = None
-
-            question_summary["summaries"] = {
-                "question_text": question.question,
-                "question_format": question.question_format,
-                "summary": question_summary,
-            }
             summary["summaries"].append(question_summary)
 
         return summary
 
     # ----------------------- HISTORY ----------------------
 
-    def enps_history_distribution(self):
-        # TO DO: Add time filters
-        # TO DO: add employeegroup option
-        question_txt = Question.objects.get(
-            "How likely are you to recommend this company as a place to work?"
-        )
+    def get_filtered_surveys(
+        self,
+        start: str,
+        end: str,
+        employee_group: EmployeeGroup | None = None,
+    ):
+        """
+        Returns a list of surveys within the timespan start, end. Optionally filtered to a specific employeegroup.
+        """
+        surveys = Survey.objects.all()
+        surveys = surveys.filter(deadline__gte=start)
+        surveys = surveys.filter(deadline__lte=end)
 
-        question = Question.objects.filter(question__icontains=question_txt).first()
-        surveys = Survey.objects.order_by("sending_date")
-        history = []
+        if employee_group:
+            surveys = surveys.filter(employee_groups=employee_group)
 
-        for s in surveys:
-            answers = self.get_answers(question, s)
-            promoters, passives, detractors = self.calculate_enps_data(answers)
-            score = self.calculate_enps_score(promoters, passives, detractors)
-            history.append(
+        return surveys.order_by("deadline")
+
+    def get_question_trend(
+        self,
+        question: Question,
+        surveys: list[Survey],
+        employee_group: EmployeeGroup | None = None,
+        user: CustomUser | None = None,
+    ):
+        """
+        Returns a trend over time for a single question across multiple surveys.
+
+        """
+        trend = []
+
+        for survey in sorted(surveys, key=lambda s: s.deadline):
+            if question.question_format == QuestionFormat.MULTIPLE_CHOICE:
+                question_summary = self.get_multiple_choice_summary(
+                    question_id=question.id,
+                    survey_id=survey.id,
+                    user=user,
+                    employee_group=employee_group,
+                )
+            elif question.question_format == QuestionFormat.YES_NO:
+                question_summary = self.get_yes_no_summary(
+                    question_id=question.id,
+                    survey_id=survey.id,
+                    user=user,
+                    employee_group=employee_group,
+                )
+            elif question.question_format == QuestionFormat.TEXT:
+                # cant show any trends on text questions, should we show participation metrics here instead?
+                question_summary = self.get_free_text_summary(
+                    question_id=question.id,
+                    survey_id=survey.id,
+                    user=user,
+                    employee_group=employee_group,
+                )
+            elif question.question_type == QuestionType.ENPS:
+                question_summary = self.get_enps_summary(
+                    survey_id=survey.id,
+                    user=user,
+                    employee_group=employee_group,
+                )
+            elif question.question_format == QuestionFormat.SLIDER:
+                question_summary = self.get_slider_summary(
+                    question_id=question.id,
+                    survey_id=survey.id,
+                    user=user,
+                    employee_group=employee_group,
+                )
+
+            trend.append(
                 {
-                    "survey_id": s.id,
-                    "deadline": s.deadline.strftime("%Y-%m-%d"),
-                    "score": score,
+                    "survey_id": survey.id,
+                    "deadline": survey.deadline.strftime("%Y-%m-%d"),
+                    "summary": question_summary,
                 }
             )
-        # survey_ids = [item["survey_id"] for item in history]
-        enps_scores = [item["score"] for item in history]
-        survey_deadlines = [item["deadline"] for item in history]
 
-        return {
-            "deadlines": survey_deadlines,
-            "scores": enps_scores,
-        }
+        return trend
