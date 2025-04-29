@@ -10,8 +10,16 @@ urlpatterns = [
         views.answer_survey_view,
         name="answer_survey",
     ),
-    path("remove-employee-from-employee-group/", views.remove_employee_from_employee_group_view, name="remove_employee_from_employee_group"),
-    path("remove-employee-from-survey-group/",views.remove_employee_from_survey_group_view, name="remove_employee_from_survey_group"),
+    path(
+        "remove-employee-from-employee-group/",
+        views.remove_employee_from_employee_group_view,
+        name="remove_employee_from_employee_group",
+    ),
+    path(
+        "remove-employee-from-survey-group/",
+        views.remove_employee_from_survey_group_view,
+        name="remove_employee_from_survey_group",
+    ),
     path(
         "authentication-acc/", views.authentication_acc_view, name="authentication_acc"
     ),
@@ -21,7 +29,11 @@ urlpatterns = [
         name="resend_authentication_code_acc",
     ),
     path("edit-survey-group/", views.edit_survey_group_view, name="edit_survey_group"),
-    path("edit-employee-group/", views.edit_employee_group_view, name="edit_employee_group"),
+    path(
+        "edit-employee-group/",
+        views.edit_employee_group_view,
+        name="edit_employee_group",
+    ),
     path(
         "authentication-org/", views.authentication_org_view, name="authentication_org"
     ),
