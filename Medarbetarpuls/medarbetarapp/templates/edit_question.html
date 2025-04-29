@@ -85,7 +85,7 @@
       </div>
         {% endif %}
         {% if not bank_question%}
-          <button type="default" class="default-button" id="add-option-btn">Lägg till alternativ</button>
+          <button type="button" class="default-button" id="add-option-btn">Lägg till alternativ</button>
         {% endif %}
         <button type="submit">Spara</button>
 
@@ -153,6 +153,7 @@
       newOption.appendChild(input);
       optionsContainer.appendChild(newOption);
       optionCount++;
+      optionsContainer.scrollTop = optionsContainer.scrollHeight;
     });
   });
 

@@ -641,7 +641,8 @@ def create_question(request, survey_id: int) -> HttpResponse:
         id=survey_id
     ).first()
     organization: models.Organization = find_organization_by_email(email=user.email)
-    organization_questions: models.Question = organization.question_bank.all()
+    organization_questions: models.Question = organization.question_bank.all()  
+
     if survey_temp is None:
         # Handle the case where the survey template does not exist
         return HttpResponse("Survey template not found", status=404)
