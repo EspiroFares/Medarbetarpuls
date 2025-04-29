@@ -479,12 +479,18 @@ class AnalysisHandler:
         answers = self.get_answers(
             question, survey, user=user, employee_group=employee_group
         )
+        answer_list = list(answers)
+        text_answers = []
+        for answer in answer_list:
+            text_answers.append(answer.free_text_answer)
+
         comments = self.get_comments(question, survey)
         answer_count = answers.count() if answers else 0
 
         return {
             "question": question,
             "answers": answers,
+            "text_answers": text_answers,
             "answer_count": answer_count,
             "comments": comments,
         }
