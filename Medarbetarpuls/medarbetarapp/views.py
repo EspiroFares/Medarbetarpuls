@@ -1755,6 +1755,10 @@ def survey_result_view(request, survey_id):
     survey_results = survey.survey_results.all()
 
     summary_context = analysis_handler.get_survey_summary(survey.id)
+    summary_context_myresult = analysis_handler.get_survey_summary(survey.id, user=request.user)
+    for i, q_summary in enumerate(summary_context["summaries"]):
+        my_result = summary_context_myresult["summaries"][i].get("my_result")
+        q_summary["my_result"] = my_result
 
     if survey_results is None:
         # This survey has no answers (should not even be displayed to the user then)
@@ -1764,7 +1768,7 @@ def survey_result_view(request, survey_id):
     return render(
         request,
         "survey_result.html",
-        summary_context,
+        summary_context
     )
 
 
@@ -1868,6 +1872,7 @@ def analysis_view(request):
     summary = analysisHandler.get_survey_summary(
         survey_id=survey.id,
         employee_group=group,
+        
     )
 
     for i in summary["summaries"]:
