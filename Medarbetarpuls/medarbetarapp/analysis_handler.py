@@ -12,6 +12,7 @@ from .models import (
     CustomUser,
     QuestionFormat,
     QuestionType,
+    Organization,
 )
 
 logger = logging.getLogger(__name__)
@@ -251,7 +252,8 @@ class AnalysisHandler:
 
     def get_enps_summary(
         self,
-        survey_id: int,
+        survey: Survey,
+        question: Question,
         user: CustomUser | None = None,
         employee_group: EmployeeGroup | None = None,
     ) -> Dict[str, Any]:
@@ -261,16 +263,10 @@ class AnalysisHandler:
 
         With survey_id set to None you get all the answers from an eNPS question.
         """
-        survey = self.get_survey(survey_id)
-        question_txt = (
-            "How likely are you to recommend this company as a place to work?"
-        )
-        question = Question.objects.filter(
-            question__icontains=question_txt
-        ).first()  # maybe change this way of getting the question later...
         answers = self.get_answers(
             question, survey, user=user, employee_group=employee_group
         )
+
         # answers = self.get_answers(question)
         promoters, passives, detractors = self.calculate_enps_data(answers)
         score = self.calculate_enps_score(promoters, passives, detractors)
@@ -339,8 +335,8 @@ class AnalysisHandler:
 
     def get_slider_summary(
         self,
-        question_id: int,
-        survey_id: int,
+        question: Question,
+        survey: Survey,
         user: CustomUser | None = None,
         employee_group: EmployeeGroup | None = None,
     ) -> Dict[str, Any]:
@@ -350,16 +346,17 @@ class AnalysisHandler:
 
         With survey_id set to None you get all the answers from the question.
         """
-        survey = self.get_survey(survey_id)
-        question = self.get_question(question_id)
+
         answers = self.get_answers(
             question, survey, user=user, employee_group=employee_group
         )
         distribution = self.get_response_distribution_slider(answers)
         standard_deviation = self.calculate_standard_deviation(answers)
         variation_coefficient = self.calculate_variation_coefficient(answers)
-        comments = self.get_comments(question, survey)
-        mean = round(self.calculate_mean(answers), 2)
+        comments = self.get_comments(
+            question, survey, user=user, employee_group=employee_group
+        )
+        mean = self.calculate_mean(answers)
         return {
             "question": question,
             "answers": answers,
@@ -389,13 +386,11 @@ class AnalysisHandler:
 
     def get_multiple_choice_summary(
         self,
-        question_id: int,
-        survey_id: int,
+        question: Question,
+        survey: Survey,
         user: CustomUser | None = None,
         employee_group: EmployeeGroup | None = None,
     ) -> Dict[str, Any]:
-        survey = self.get_survey(survey_id)
-        question = self.get_question(question_id)
 
         if not question or not question.specific_question:
             # Om question eller specific_question inte finns
@@ -418,7 +413,6 @@ class AnalysisHandler:
             "answers": answers,
             "comments": comments,
             "answer_options": answer_options,
-            "comments": comments,
             "distribution": distribution,
         }
 
@@ -432,13 +426,12 @@ class AnalysisHandler:
 
     def get_yes_no_summary(
         self,
-        question_id: int,
-        survey_id: int,
+        question: Question,
+        survey: Survey,
         user: CustomUser | None = None,
         employee_group: EmployeeGroup | None = None,
     ) -> Dict[str, Any]:
-        survey = self.get_survey(survey_id)
-        question = self.get_question(question_id)
+
         answer_options = [
             "YES",
             "NO",
@@ -448,14 +441,14 @@ class AnalysisHandler:
         )
         distribution = self.get_response_distribution_yes_no(answers)
         answer_count = answers.count()
-        yes_count = answers.filter(yes_no_answer=True).count()
-        no_count = answers.filter(yes_no_answer=False).count()
-        if answer_count == 0:
-            yes_percentage = 0
-            no_percentage = 0
-        else:
-            yes_percentage = round((yes_count / answer_count) * 100, 1)
-            no_percentage = round((no_count / answer_count) * 100, 1)
+
+        yes_percentage = (
+            round((distribution[0] / answer_count) * 100, 1) if answers else 0
+        )
+        no_percentage = (
+            round((distribution[1] / answer_count) * 100, 1) if answers else 0
+        )
+
         comments = self.get_comments(question, survey)
         return {
             "question": question,
@@ -469,13 +462,12 @@ class AnalysisHandler:
     # ---------------- FREE TEXT -------------
     def get_free_text_summary(
         self,
-        question_id: int,
-        survey_id: int,
+        question: Question,
+        survey: Survey,
         user: CustomUser | None = None,
         employee_group: EmployeeGroup | None = None,
     ) -> Dict[str, Any]:
-        survey = self.get_survey(survey_id)
-        question = self.get_question(question_id)
+
         answers = self.get_answers(
             question, survey, user=user, employee_group=employee_group
         )
@@ -518,35 +510,36 @@ class AnalysisHandler:
         for question in questions:
             if question.question_format == QuestionFormat.MULTIPLE_CHOICE:
                 question_summary = self.get_multiple_choice_summary(
-                    question_id=question.id,
-                    survey_id=survey.id,
+                    question=question,
+                    survey=survey,
                     user=user,
                     employee_group=employee_group,
                 )
             elif question.question_format == QuestionFormat.YES_NO:
                 question_summary = self.get_yes_no_summary(
-                    question_id=question.id,
-                    survey_id=survey.id,
+                    question=question,
+                    survey=survey,
                     user=user,
                     employee_group=employee_group,
                 )
             elif question.question_format == QuestionFormat.TEXT:
                 question_summary = self.get_free_text_summary(
-                    question_id=question.id,
-                    survey_id=survey.id,
+                    question=question,
+                    survey=survey,
                     user=user,
                     employee_group=employee_group,
                 )
             elif question.question_type == QuestionType.ENPS:
                 question_summary = self.get_enps_summary(
-                    survey_id=survey.id,
+                    survey=survey,
+                    question = question,
                     user=user,
                     employee_group=employee_group,
                 )
             elif question.question_format == QuestionFormat.SLIDER:
                 question_summary = self.get_slider_summary(
-                    question_id=question.id,
-                    survey_id=survey.id,
+                    question=question,
+                    survey=survey,
                     user=user,
                     employee_group=employee_group,
                 )
@@ -588,32 +581,34 @@ class AnalysisHandler:
         """
         trend = []
 
-        for survey in sorted(surveys, key=lambda s: s.deadline):
+        for survey in sorted(surveys, key=lambda s: s.sending_date):
+            question = survey.questions.filter(question=question.question).first() #fetch the question object corresponding to the same string as the 
             if question.question_format == QuestionFormat.MULTIPLE_CHOICE:
                 question_summary = self.get_multiple_choice_summary(
-                    question_id=question.id,
-                    survey_id=survey.id,
+                    question=question,
+                    survey=survey,
                     user=user,
                     employee_group=employee_group,
                 )
             elif question.question_format == QuestionFormat.YES_NO:
                 question_summary = self.get_yes_no_summary(
-                    question_id=question.id,
-                    survey_id=survey.id,
+                    question=question,
+                    survey=survey,
                     user=user,
                     employee_group=employee_group,
                 )
             elif question.question_format == QuestionFormat.TEXT:
                 # cant show any trends on text questions, should we show participation metrics here instead?
                 question_summary = self.get_free_text_summary(
-                    question_id=question.id,
-                    survey_id=survey.id,
+                    question=question,
+                    survey=survey,
                     user=user,
                     employee_group=employee_group,
                 )
             elif question.question_type == QuestionType.ENPS:
                 question_summary = self.get_enps_summary(
-                    survey_id=survey.id,
+                    question=question,
+                    survey=survey,
                     user=user,
                     employee_group=employee_group,
                 )
@@ -628,7 +623,7 @@ class AnalysisHandler:
             trend.append(
                 {
                     "survey_id": survey.id,
-                    "deadline": survey.deadline.strftime("%Y-%m-%d"),
+                    "sending_date": survey.sending_date.strftime("%Y-%m-%d"),
                     "summary": question_summary,
                 }
             )
