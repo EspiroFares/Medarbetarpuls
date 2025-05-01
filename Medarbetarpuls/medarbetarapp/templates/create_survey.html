@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="sv">
   <head>
     {% load static %}
@@ -89,7 +89,12 @@
       </div>
       <button class="button" onclick="openPopup()">Publicera enkät</button>
     </div>
-    <div id="publish-popup" class="popup-overlay" style="display: none"  data-survey-id="{{ survey_temp.id }}">
+    <div
+      id="publish-popup"
+      class="popup-overlay"
+      style="display: none"
+      data-survey-id="{{ survey_temp.id }}"
+    >
       <div class="popup-content">
         <h2>Publicera enkät</h2>
 
@@ -187,7 +192,7 @@
             <div id="reminder-tags" class="reminder-tags">
               <!-- Tags will dynamically be inserted here -->
             </div>
-          </div>         
+          </div>
 
           <!-- Buttons -->
           <div class="popup-buttons">
@@ -249,7 +254,7 @@
         for (let option of reminderOptions) {
           const tag = document.createElement("div");
           tag.className = "reminder-tag";
-          tag.dataset.days = option.value; // For form submission 
+          tag.dataset.days = option.value; // For form submission
 
           tag.innerHTML = `
             ${option.label}
@@ -271,8 +276,12 @@
       }
 
       // Update reminders whenever date changes
-      document.getElementById("publish-date").addEventListener("change", generateReminderOptions);
-      document.getElementById("end-date").addEventListener("change", generateReminderOptions); 
+      document
+        .getElementById("publish-date")
+        .addEventListener("change", generateReminderOptions);
+      document
+        .getElementById("end-date")
+        .addEventListener("change", generateReminderOptions);
 
       document.addEventListener("DOMContentLoaded", function () {
         // Get today's date
@@ -298,22 +307,26 @@
       });
 
       // Error handling
-    document.body.addEventListener("htmx:afterRequest", function (event) {
-      // To get survey id from the popup
-      const surveyId = document.getElementById("publish-popup").dataset.surveyId;
-      const errorBox = document.getElementById("error-box");
-      if (event.detail.xhr.status === 200) {
-        errorBox.style.color = "green";
-        errorBox.style.display = "block";
-        // Display the message to the user for a short while before redirecting
-        setTimeout(() =>  window.location.href = `/create-survey/${surveyId}/`, 1500);
-      } else {
-        errorBox.innerHTML = event.detail.xhr.responseText || "Något fel har inträffat";
-        errorBox.style.color = "red";
-        errorBox.style.display = "block";
-      }
-
-    });
+      document.body.addEventListener("htmx:afterRequest", function (event) {
+        // To get survey id from the popup
+        const surveyId =
+          document.getElementById("publish-popup").dataset.surveyId;
+        const errorBox = document.getElementById("error-box");
+        if (event.detail.xhr.status === 200) {
+          errorBox.style.color = "green";
+          errorBox.style.display = "block";
+          // Display the message to the user for a short while before redirecting
+          setTimeout(
+            () => (window.location.href = `/create-survey/${surveyId}/`),
+            1500
+          );
+        } else {
+          errorBox.innerHTML =
+            event.detail.xhr.responseText || "Något fel har inträffat";
+          errorBox.style.color = "red";
+          errorBox.style.display = "block";
+        }
+      });
     </script>
   </body>
 </html>
