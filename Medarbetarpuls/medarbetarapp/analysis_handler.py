@@ -12,6 +12,7 @@ from .models import (
     CustomUser,
     QuestionFormat,
     QuestionType,
+    Organization,
 )
 
 logger = logging.getLogger(__name__)
@@ -28,6 +29,10 @@ class AnalysisHandler:
     """
     Handles logic for survey analysis.
     """
+
+    # def __init__(self, organisation: Organization):
+    #   self.organisation = organisation
+
     def get_survey(self, survey_id: int) -> Survey:
         """
         Retrieve a specific survey by its ID.
@@ -39,7 +44,7 @@ class AnalysisHandler:
             Survey: The Survey instance matching the given ID."""
         return Survey.objects.get(id=survey_id)
 
-    def get_survey_result(self, survey: Survey)-> QuerySet[SurveyUserResult]:
+    def get_survey_result(self, survey: Survey) -> QuerySet[SurveyUserResult]:
         """
         Retrieve all user results associated with a given survey.
 
@@ -66,7 +71,7 @@ class AnalysisHandler:
         # use question__icontains= instead of question= for a more flexible match.
         return Question.objects.filter(id=question_id).first()
 
-    def get_surveys_for_group(self, employee_group: EmployeeGroup)-> QuerySet[Survey]:
+    def get_surveys_for_group(self, employee_group: EmployeeGroup) -> QuerySet[Survey]:
         """
         Retrieve all unique surveys associated with a specific employee group.
 
@@ -75,7 +80,7 @@ class AnalysisHandler:
 
         Returns:
             QuerySet[Survey]: A distinct queryset of Survey objects linked to the given group.
-    """
+        """
         return Survey.objects.filter(employee_groups=employee_group).distinct()
 
     def get_answers(
@@ -84,7 +89,7 @@ class AnalysisHandler:
         survey: Survey | None = None,
         user: CustomUser | None = None,
         employee_group: EmployeeGroup | None = None,
-    )-> QuerySet[Answer]:
+    ) -> QuerySet[Answer]:
         """
         Retrieve answered responses for a given question, optionally filtered by survey, user, or employee group.
 
@@ -107,7 +112,9 @@ class AnalysisHandler:
             if (
                 user == survey.creator
             ):  # tycker vi bör ha hanterat detta någon annanstans
-                logger.info("No answers available for %s", user or employee_group or survey)
+                logger.info(
+                    "No answers available for %s", user or employee_group or survey
+                )
                 return Answer.objects.none()
             filters["survey__user"] = user
 
@@ -118,7 +125,9 @@ class AnalysisHandler:
 
         if not answers.exists():
             if user:
-                logger.info("No answers available for %s", user or survey or employee_group)
+                logger.info(
+                    "No answers available for %s", user or survey or employee_group
+                )
                 return Answer.objects.none()
             logger.info("No answers available.")
             return Answer.objects.none()
@@ -131,7 +140,7 @@ class AnalysisHandler:
         survey: Survey | None = None,
         user: CustomUser | None = None,
         employee_group: EmployeeGroup | None = None,
-    )-> QuerySet[Answer]:
+    ) -> QuerySet[Answer]:
         """
         Retrieve all non-empty comments for a given question, optionally filtered by survey, user, or employee group.
 
@@ -163,7 +172,9 @@ class AnalysisHandler:
             comment=""
         )  # only returns comments non empty comments, do we want empty comments?
 
-    def get_participation_metrics(self, survey: Survey, employee_group: EmployeeGroup) ->   Dict[str, float]:
+    def get_participation_metrics(
+        self, survey: Survey, employee_group: EmployeeGroup
+    ) -> Dict[str, float]:
         """
         Calculate participation metrics for a given survey and employee group.
 
@@ -189,22 +200,6 @@ class AnalysisHandler:
             "answered_count": answered_count,
             "answer_pct": answer_pct,
         }
-
-    def get_comments(
-        self,
-        question: Question,
-        survey: Survey | None = None,
-    ):
-        """Returns all comments from a question, optionaly question and survey."""
-        filters = {"question": question, "is_answered": True, "comment__isnull": False}
-
-        if survey:
-            results = self.get_survey_result(survey)
-            filters["survey__in"] = results
-
-        return Answer.objects.filter(**filters).exclude(
-            comment=""
-        )  # only returns comments non empty comments
 
     # --------- SLIDER-QUESTION FUNCTIONALITY -------------
     def calculate_enps_data(self, answers) -> tuple[int, int, int]:
@@ -263,7 +258,7 @@ class AnalysisHandler:
         survey_id: int,
         user: CustomUser | None = None,
         employee_group: EmployeeGroup | None = None,
-    )-> Dict[str, Any]:
+    ) -> Dict[str, Any]:
         """
         Get all data needed to render ENPS analysis:
         standard deviation, variation coefficient, score, labels, data distribution, raw responses.
@@ -307,7 +302,7 @@ class AnalysisHandler:
         Calculate the average slider answer from a set of responses.
 
         Args:
-            answers (QuerySet[Answer] or Iterable[Answer]): A collection of Answer objects 
+            answers (QuerySet[Answer] or Iterable[Answer]): A collection of Answer objects
             with a `slider_answer` attribute.
 
         Returns:
@@ -352,7 +347,7 @@ class AnalysisHandler:
         survey_id: int,
         user: CustomUser | None = None,
         employee_group: EmployeeGroup | None = None,
-    )-> Dict[str, Any]:
+    ) -> Dict[str, Any]:
         """
         Get all data needed to render slider analysis:
         standard deviation, variation coefficient, data distribution, raw responses.
@@ -367,7 +362,10 @@ class AnalysisHandler:
         distribution = self.get_response_distribution_slider(answers)
         standard_deviation = self.calculate_standard_deviation(answers)
         variation_coefficient = self.calculate_variation_coefficient(answers)
-        comments = self.get_comments(question, survey)
+        comments = self.get_comments(
+            question, survey, user=user, employee_group=employee_group
+        )
+        mean = self.calculate_mean(answers)
         return {
             "question": question,
             "answers": answers,
@@ -401,7 +399,7 @@ class AnalysisHandler:
         survey_id: int,
         user: CustomUser | None = None,
         employee_group: EmployeeGroup | None = None,
-    )-> Dict[str, Any]:
+    ) -> Dict[str, Any]:
         survey = self.get_survey(survey_id)
         question = self.get_question(question_id)
 
@@ -426,7 +424,6 @@ class AnalysisHandler:
             "answers": answers,
             "comments": comments,
             "answer_options": answer_options,
-            "comments": comments,
             "distribution": distribution,
         }
 
@@ -444,7 +441,7 @@ class AnalysisHandler:
         survey_id: int,
         user: CustomUser | None = None,
         employee_group: EmployeeGroup | None = None,
-    )-> Dict[str, Any]:
+    ) -> Dict[str, Any]:
         survey = self.get_survey(survey_id)
         question = self.get_question(question_id)
         answer_options = [
@@ -456,14 +453,14 @@ class AnalysisHandler:
         )
         distribution = self.get_response_distribution_yes_no(answers)
         answer_count = answers.count()
-        yes_count = answers.filter(yes_no_answer=True).count()
-        no_count = answers.filter(yes_no_answer=False).count()
-        if answer_count == 0:
-            yes_percentage = 0
-            no_percentage = 0
-        else:
-            yes_percentage = round((yes_count / answer_count) * 100, 1)
-            no_percentage = round((no_count / answer_count) * 100, 1)
+
+        yes_percentage = (
+            round((distribution[0] / answer_count) * 100, 1) if answers else 0
+        )
+        no_percentage = (
+            round((distribution[1] / answer_count) * 100, 1) if answers else 0
+        )
+
         comments = self.get_comments(question, survey)
         return {
             "question": question,
@@ -481,7 +478,7 @@ class AnalysisHandler:
         survey_id: int,
         user: CustomUser | None = None,
         employee_group: EmployeeGroup | None = None,
-    )-> Dict[str, Any]:
+    ) -> Dict[str, Any]:
         survey = self.get_survey(survey_id)
         question = self.get_question(question_id)
         answers = self.get_answers(
@@ -503,7 +500,7 @@ class AnalysisHandler:
         survey_id: int,
         user: CustomUser | None = None,
         employee_group: EmployeeGroup | None = None,
-    )-> Dict[str, Any]:
+    ) -> Dict[str, Any]:
         """
         This function returns a summary for a whole survey. Optionally filtered to a specific user or an employee_group.
         """
