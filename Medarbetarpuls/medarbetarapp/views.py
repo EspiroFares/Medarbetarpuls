@@ -1,10 +1,9 @@
 import logging
 import platform
 from . import models
-from django.db.models import Q, Max
+from django.db.models import Q, Max, Count
 from django.utils import timezone
 from xmlrpc.client import Boolean
-from django.db.models import Count
 from django.core.cache import cache
 from datetime import datetime, time
 from django.http import HttpResponse
@@ -20,6 +19,7 @@ from .decorators import allowed_roles, logout_required
 from django.contrib.auth.decorators import login_required
 from django.db.models import Case, When, IntegerField, Value
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
+from .standard_questions import STANDARD_QUESTIONS
 
 
 logger = logging.getLogger(__name__)
@@ -106,37 +106,64 @@ def create_acc(request):
 @login_required
 @csrf_protect
 @allowed_roles("admin")
+def edit_employee_group_view(request):
+    if request.method == "POST":
+        if request.headers.get("HX-Request"):
+            email = request.POST.get("add-employee-group-email")
+            employee_group = request.POST.get("new_employee_group")
+            user = request.user
+            org = user.admin
+            edit_user = models.CustomUser.objects.get(email=email)
+            if models.EmployeeGroup.objects.filter(name=employee_group).exists():
+                group = models.EmployeeGroup.objects.get(name=employee_group)
+            else:
+                # create new employee group and tell the admin that they created
+                # a new one and that it will be empty
+                group = models.EmployeeGroup(name=employee_group, organization=org)
+                group.save()
+            edit_user.employee_groups.add(group)
+            edit_user.save()
+            return HttpResponse(status=200)
+
+    return HttpResponse(status=400)
+
+
+@login_required
+@csrf_protect
+@allowed_roles("admin")
+def edit_survey_group_view(request):
+    if request.method == "POST":
+        if request.headers.get("HX-Request"):
+            email = request.POST.get("add-survey-group-email")
+            survey_group = request.POST.get("new_survey_group")
+            user = request.user
+            org = user.admin
+            edit_user = models.CustomUser.objects.get(email=email)
+            if models.EmployeeGroup.objects.filter(name=survey_group).exists():
+                group = models.EmployeeGroup.objects.get(name=survey_group)
+            else:
+                # create new employee group and tell the admin that they created
+                # a new one and that it will be empty
+                group = models.EmployeeGroup(name=survey_group, organization=org)
+                group.save()
+            edit_user.survey_groups.add(group)
+            edit_user.save()
+            return HttpResponse(status=200)
+
+    return HttpResponse(status=400)
+
+
+@login_required
+@csrf_protect
+@allowed_roles("admin")
 def edit_employee_view(request):
     if request.method == "POST":
         if request.headers.get("HX-Request"):
             email = request.POST.get("email")
             user_role = request.POST.get("edit_user_role")
-            employee_group = request.POST.get("new_employee_group")
-            survey_group = request.POST.get("new_survey_group")
-            user = request.user
-            org = user.admin
             edit_user = models.CustomUser.objects.get(email=email)
             edit_user.user_role = user_role
             edit_user.save()
-            if employee_group:
-                if models.EmployeeGroup.objects.filter(name=employee_group).exists():
-                    group = models.EmployeeGroup.objects.get(name=employee_group)
-                else:
-                    # create new employee group
-                    group = models.EmployeeGroup(name=employee_group, organization=org)
-                    group.save()
-                edit_user.employee_groups.add(group)
-
-            if survey_group:
-                if models.EmployeeGroup.objects.filter(name=survey_group).exists():
-                    group = models.EmployeeGroup.objects.get(name=survey_group)
-                else:
-                    # create new employee group and tell the admin that they created
-                    # a new one and that it will be empty
-                    group = models.EmployeeGroup(name=survey_group, organization=org)
-                    group.save()
-                edit_user.survey_groups.add(group)
-
             return HttpResponse(status=200)
 
     return HttpResponse(status=400)
@@ -220,12 +247,6 @@ def add_employee_view(request):
         "add_employee.html",
         {"pagetitle": f"Lägg till medarbetare i<br>{request.user.admin.name}"},
     )
-
-
-@login_required
-@allowed_roles("admin", "surveycreator")
-def analysis_view(request):
-    return render(request, "analysis.html")
 
 
 @login_required
@@ -413,10 +434,9 @@ def resend_authentication_code_acc(request):
         elif source == "from_org":
             email = request.session.get("email_two_factor_code_org")
         if email == "not_defined":
-            return HttpResponse("No email defined", 404)
+            return HttpResponse("No email defined", status=404)
         code = 654321  # make random later, just test now
         cache.set(f"verify_code_{email}", code, timeout=300)
-
         # Send email with the code to the user
         send_mail(
             subject="Your Verification Code",
@@ -425,8 +445,7 @@ def resend_authentication_code_acc(request):
             recipient_list=[email],
             fail_silently=False,
         )
-        return HttpResponse("Sent", 200)
-
+        return HttpResponse("Sent", status=204)
 
 @csrf_protect
 def authentication_acc_view(request):
@@ -567,7 +586,44 @@ def authentication_org_view(request):
             base_group.managers.add(admin_account)
             base_group.save()
 
-            return HttpResponse("Konto skapat. Nu kan du logga in.", status=200)
+            # Create and add standard questions to the question bank
+            for question_data in STANDARD_QUESTIONS:
+                question_format = question_data[2]
+                options = (
+                    question_data[4] if len(question_data) > 4 else None
+                )  # Check if options are provided
+
+                question: models.Question = models.Question()
+
+                question.question_title = question_data[0]
+                question.question = question_data[1]
+                question.bank_question = org
+                question.question_format = question_format
+                question.question_type = question_data[3]
+
+                if question_format == models.QuestionFormat.MULTIPLE_CHOICE and options:
+                    multiple_choice_question = models.MultipleChoiceQuestion(
+                        question_format=question_format,
+                        options=question_data[4],
+                    )
+                    question.multiple_choice_question = multiple_choice_question
+                    question.multiple_choice_question.save()
+                    question.save()
+
+                elif question_format == models.QuestionFormat.SLIDER and options:
+                    slider_question = models.SliderQuestion(
+                        question_format=question_format,
+                        min_interval=0,
+                        max_interval=10,
+                        min_text="Test",
+                        max_text="Test2",
+                    )
+                    question.slider_question = slider_question
+                    question.slider_question.save()
+                    question.save()
+
+                question.save()
+            return HttpResponse("Kontot skapat. Nu kan du logga in.", status=200)
         else:
             logger.error("Wrong authentication code")
             return HttpResponse("Felaktig kod", status=400)
@@ -593,6 +649,9 @@ def create_question(request, survey_id: int) -> HttpResponse:
     survey_temp: models.SurveyTemplate = user.survey_templates.filter(
         id=survey_id
     ).first()
+    organization: models.Organization = find_organization_by_email(email=user.email)
+    organization_questions: models.Question = organization.question_bank.all()
+
     if survey_temp is None:
         # Handle the case where the survey template does not exist
         return HttpResponse("Survey template not found", status=404)
@@ -602,6 +661,7 @@ def create_question(request, survey_id: int) -> HttpResponse:
         "create_question.html",
         {
             "survey_temp": survey_temp,
+            "organization_questions": organization_questions,
             "QuestionFormat": models.QuestionFormat,
         },
     )
@@ -863,6 +923,9 @@ def edit_question_view(
     """
     user: models.CustomUser = request.user
     options = None  # Use later to show options
+    organization: models.Organization = find_organization_by_email(email=user.email)
+
+    bank_question = organization.question_bank.filter(id=question_id).exists()
 
     # Get the survey from given id
     survey_temp: models.SurveyTemplate = user.survey_templates.filter(
@@ -896,6 +959,24 @@ def edit_question_view(
                 )
             else:
                 question = survey_temp.questions.filter(id=question_id).first()
+
+            if question is None:
+                question = organization.question_bank.filter(id=question_id).first()
+
+                current_max = (
+                    models.QuestionOrder.objects.filter(survey_temp=survey_temp)
+                    .aggregate(m=Max("order"))
+                    .get("m")
+                    or 0
+                )
+                # The new questions order is one higher
+                next_order = current_max + 1
+
+                # Use through_defaults to set the right order
+                survey_temp.questions.add(
+                    question, through_defaults={"order": next_order}
+                )
+                # Handle the case where the question does not exist
 
             # Check for valid question format
             if question_format not in [
@@ -958,6 +1039,7 @@ def edit_question_view(
             "question_id": question_id,
             "question_text": question_text,
             "options": options,
+            "bank_question": bank_question,
         },
     )
 
@@ -1277,6 +1359,7 @@ def my_results_view(request):
             "answered_surveys": answered_surveys,
             "current_time": current_time,
             "pagetitle": "Resultat på besvarade enkäter",
+            "user_role": user.user_role,
         },
     )
 
@@ -1366,6 +1449,32 @@ def templates_and_drafts(request, search_str: str | None = None) -> HttpResponse
 @login_required
 def my_surveys_view(request):
     return render(request, "my_surveys.html")
+
+
+@csrf_protect
+def remove_employee_from_employee_group_view(request):
+    if request.method == "POST":
+        if request.headers.get("HX-Request"):
+            email = request.POST.get("email")
+            group = request.POST.get("group")
+            user = models.CustomUser.objects.get(email=email)
+            group_to_remove = models.EmployeeGroup.objects.filter(name=group).first()
+            user.employee_groups.remove(group_to_remove)
+            return HttpResponse(status=200)
+    return HttpResponse(status=400)
+
+
+@csrf_protect
+def remove_employee_from_survey_group_view(request):
+    if request.method == "POST":
+        if request.headers.get("HX-Request"):
+            email = request.POST.get("email")
+            group = request.POST.get("group")
+            user = models.CustomUser.objects.get(email=email)
+            group_to_remove = models.EmployeeGroup.objects.filter(name=group).first()
+            user.survey_groups.remove(group_to_remove)
+            return HttpResponse(status=200)
+    return HttpResponse(status=400)
 
 
 @allowed_roles("admin")
@@ -1641,9 +1750,15 @@ def survey_result_view(request, survey_id):
     # TODO : Ändra så att analysis handler fås från organization
     analysis_handler = AnalysisHandler()
 
-    user = request.user
+    # Retrievs all survey results of this survey
+    survey_results = survey.survey_results.all()
 
-    summary_context = analysis_handler.get_survey_summary(survey.id, user)
+    summary_context = analysis_handler.get_survey_summary(survey.id)
+
+    if survey_results is None:
+        # This survey has no answers (should not even be displayed to the user then)
+        return HttpResponse(400)
+
     # Proceed to render the survey results
     return render(
         request,
@@ -1796,17 +1911,4 @@ def chart_view(request):
     context["lineData"] = [entry["summary"]["enpsScore"] for entry in trends]
     print(context["lineData"])
     
-    return render(request, "analysis.html", context)
-
-
-def chart_view_test(request):
-    # If no real data exists, show sample data
-    labels = ["Happy", "Neutral", "Sad"]
-    data = [3, 2, 1]
-
-    context = {
-        "labels": labels,
-        "data": data,
-    }
-
     return render(request, "analysis.html", context)

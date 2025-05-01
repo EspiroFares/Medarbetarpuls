@@ -8,242 +8,247 @@
  * paragraphs, links, and other text elements.
  */
 
- @import url('variables.css');
+@import url("variables.css");
 
 .login-container {
-    width: 70%;
-    max-width: 500px;
-    text-align: center;
-    background: var(--white);
-    /* white; */
-    padding: 20px;
-    border-radius: 10px;
+  width: 70%;
+  max-width: 500px;
+  text-align: center;
+  background: var(--white);
+  /* white; */
+  padding: 20px;
+  border-radius: 10px;
 }
 
 .input-form {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .input-form label {
-    color: var(--dark_blue);
-    /* #102b46 */
-    display: block;
-    margin-bottom: 1%;
-    margin-left: -50%;
-    text-align: left;
+  color: var(--dark_blue);
+  /* #102b46 */
+  display: block;
+  margin-bottom: 1%;
+  margin-left: -50%;
+  text-align: left;
 }
 
 .input-form input {
-    width: 65%;
-    padding: 10px;
-    border: none;
-    border-radius: 10px;
-    background-color: var(--almost_white);
-    /* #eef5fe; */
-    margin-bottom: 3%;
-    font-size: 16px;
+  width: 65%;
+  padding: 10px;
+  border: none;
+  border-radius: 10px;
+  background-color: var(--almost_white);
+  /* #eef5fe; */
+  margin-bottom: 3%;
+  font-size: 16px;
 }
 
 .account-help-links {
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
-    margin-top: 5%;
-    gap: 10%;
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 5%;
+  gap: 10%;
 }
 
 .account-help-links:has(a:only-child) {
-    /* If only one link, center it */
-    justify-content: center;
-    margin-top: 8%;
+  /* If only one link, center it */
+  justify-content: center;
+  margin-top: 8%;
 }
 
 .account-help-links a {
-    text-decoration: none;
-    color: var(--dark_blue);
-    /* #102b46; */
-    font-size: 14px;
+  text-decoration: none;
+  color: var(--dark_blue);
+  /* #102b46; */
+  font-size: 14px;
 }
 
 .account-help-links a:hover {
-    /* In HTML, the <a> tag stands for “anchor”, and it’s used to create hyperlinks  */
-    text-decoration: underline;
+  /* In HTML, the <a> tag stands for “anchor”, and it’s used to create hyperlinks  */
+  text-decoration: underline;
 }
 
 .create-form {
-    /* For create org/acc */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  /* For create org/acc */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .create-form label {
-    align-self: flex-start;
-    margin-left: 13%;
-    margin-bottom: 5px;
-    color: var(--dark_blue);
-    /* #102b46; */
-    font-size: 16px;
+  align-self: flex-start;
+  margin-left: 13%;
+  margin-bottom: 5px;
+  color: var(--dark_blue);
+  /* #102b46; */
+  font-size: 16px;
 }
 
 .create-form input {
-    width: 70%;
-    padding: 14px;
-    font-size: 16px;
-    border: none;
-    border-radius: 10px;
-    background-color: var(--almost_white);
-    /* #eef5fe; */
-    margin-bottom: 20px;
-    /* Larger space between inputs */
+  width: 70%;
+  padding: 14px;
+  font-size: 16px;
+  border: none;
+  border-radius: 10px;
+  background-color: var(--almost_white);
+  /* #eef5fe; */
+  margin-bottom: 20px;
+  /* Larger space between inputs */
 }
 
 .view-results {
-    margin-top: 20px;
-    padding: 10px 20px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
 }
 
 .title-background h2 {
-    flex: 1;
-    /* Allow the heading to take up available space */
-    text-align: center;
-    /* Center the text */
-    margin: 0;
-    /* Remove default margin */
+  flex: 1;
+  /* Allow the heading to take up available space */
+  text-align: center;
+  /* Center the text */
+  margin: 0;
+  /* Remove default margin */
 }
 
 .editable-title {
-    font-size: 32px;
-    font-weight: bold;
-    color: #102b46;
-    border: none;
-    background-color: transparent;
-    /* Remove input background */
-    outline: none;
-    /* Remove focus outline */
-    text-align: center;
-    width: 100%;
-    /* Full width to look like a title */
-    padding: 5px 0;
+  font-size: 32px;
+  font-weight: bold;
+  color: #102b46;
+  border: none;
+  background-color: transparent;
+  /* Remove input background */
+  outline: none;
+  /* Remove focus outline */
+  text-align: center;
+  width: 100%;
+  /* Full width to look like a title */
+  padding: 5px 0;
 }
 
 .editable-title:hover {
-    cursor: text;
+  cursor: text;
 }
 
 .editable-question {
-    font-size: 16px;
-    font-weight: normal;
-    color: #102b46;
-    border: none;
-    background-color: transparent;
-    outline: none;
-    text-align: center;
-    width: 100%;
-    margin-top: 0%;
-    padding: 5px 0;
+  font-size: 16px;
+  font-weight: normal;
+  color: #102b46;
+  border: none;
+  background-color: transparent;
+  outline: none;
+  text-align: center;
+  width: 100%;
+  margin-top: 0%;
+  padding: 5px 0;
 }
 
 .editable-question:hover {
-    cursor: text;
+  cursor: text;
 }
 
 .tooltip {
-    position: relative;
-    width: 24px;
-    height: 24px;
-    display: inline-block;
+  position: relative;
+  width: 24px;
+  height: 24px;
+  display: inline-block;
 }
 
 .tooltip::after {
-    content: attr(data-tooltip);
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 0px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #007bff;
+  color: #fff;
+  padding: 6px 10px;
+  font-size: 12px;
+  border-radius: 4px;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.tooltip.comment::after {
+    background-color: transparent;
     position: absolute;
-    bottom: 0px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #007bff;
-    color: #fff;
-    padding: 6px 10px;
-    font-size: 12px;
-    border-radius: 4px;
-    white-space: nowrap;
-    opacity: 0;
-    transition: opacity 0.2s;
-    pointer-events: none;
-    z-index: 100;
+    left: 0;
+    right: 0;
+    bottom: -6px;
+    font-size: 1.2rem; 
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .tooltip:hover::after {
-    opacity: 1;
+  opacity: 1;
 }
 
 .icon-wrapper {
-    position: relative;
-    width: 30px;
-    height: 30px;
+  position: relative;
+  width: 30px;
+  height: 30px;
 }
 
 .question-title h1 {
-    margin: 0px;
-    /* Remove default margin */
-    padding: 0;
-    /* Remove any padding if needed */
-    font-size: 1.5em;
-    /* Adjust font size as needed */
-    text-align: center;
-    /* Center the text if desired */
-}
-  
-.question-result .question-icon {
-    width: 90%;
-    height: 50%;
+  margin: 0px;
+  /* Remove default margin */
+  padding: 0;
+  /* Remove any padding if needed */
+  font-size: 1.5em;
+  /* Adjust font size as needed */
+  text-align: center;
+  /* Center the text if desired */
 }
 
 .settings-container {
-    text-align: center;
-    padding: 30px;
-    border-radius: 10px;
-    background-color: white;
-    margin-top: 100px;
+  text-align: center;
+  padding: 30px;
+  border-radius: 10px;
+  background-color: white;
+  margin-top: 100px;
 }
 
 .settings-container h1 {
-    font-size: 32px;
-    color: #102b46;
-    margin-bottom: 20%;
+  font-size: 32px;
+  color: #102b46;
+  margin-bottom: 20%;
 }
 
 .settings-container h2 {
-    font-size: 20px;
-    margin-bottom: 10%;
-    font-weight: normal;
-    color: #102b46;
+  font-size: 20px;
+  margin-bottom: 10%;
+  font-weight: normal;
+  color: #102b46;
 }
 
 .label {
-    color: #102b46;
-    font-weight: normal;
+  color: #102b46;
+  font-weight: normal;
 }
 
 .value {
-    color: #4e8ce1;
+  color: #4e8ce1;
 }
 
 .value a {
-    /* For links in table */
-    color: #4e8ce1;
-    text-decoration: none;
+  /* For links in table */
+  color: #4e8ce1;
+  text-decoration: none;
 }
 
 .value a:hover {
-    text-decoration: underline;
+  text-decoration: underline;
 }
 
 .tag,
@@ -271,285 +276,287 @@
 }
 
 .date-input {
-    background-color: var(--almost_white);
-    padding: 5px;
-    border: none;
-    border-radius: 10px;
+  background-color: var(--almost_white);
+  padding: 5px;
+  border: none;
+  border-radius: 10px;
 }
-  
+
 .back-icon {
-    width: 50px;
-    height: 50px;
+  width: 50px;
+  height: 50px;
 }
-  
+
 /* Use for popups */
 .popup-content {
-    background-color: white;
-    padding: 20px;
-    border-radius: 10px;
-    text-align: center;
-    width: 500px;
+  background-color: white;
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+  width: 500px;
 }
-  
-.popup-content input, .popup-content select {
-    width: 90%;
-    padding: 14px;
-    margin: 10px 0;
-    border: none;
-    border-radius: 10px;
-    background-color: #eef5fe;
+
+.popup-content input,
+.popup-content select {
+  width: 90%;
+  padding: 14px;
+  margin: 10px 0;
+  border: none;
+  border-radius: 10px;
+  background-color: #eef5fe;
 }
 
 .popup-content select {
-    width: 100%; 
+  width: 100%;
 }
 
 .popup-content.textquestion textarea {
-    width: 90%;
-    height: 200px;
-    max-height: 400px;
-    text-align: start;
-    resize: none;
-    width: 90%;
-    padding: 14px;
-    font-size: medium;
-    margin: 10px 0;
-    border: none;
-    border-radius: 10px;
-    color: var(--dark_blue);
-    font-family: Arial, sans-serif;
-    background-color: #eef5fe;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  height: 200px;
+  max-height: 400px;
+  text-align: start;
+  resize: none;
+  width: 90%;
+  padding: 14px;
+  font-size: medium;
+  margin: 10px 0;
+  border: none;
+  border-radius: 10px;
+  color: var(--dark_blue);
+  font-family: Arial, sans-serif;
+  background-color: #eef5fe;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .popup-content.textquestion textarea:focus {
-    transform: scale(1.05);
-    outline: none;
-    transition: transform 0.5 ease-in;
+  transform: scale(1.05);
+  outline: none;
+  transition: transform 0.5 ease-in;
 }
 
 .checkbox-group {
-    display: flex;
-    justify-content: center;
-    gap: 50px;
-    margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 50px;
+  margin-bottom: 20px;
 }
 
 .checkbox-group label {
-    font-size: 16px;
-    color: #102b46;
-    text-align: left;
-    display: flex;
-    align-items: center;
-    gap: 5px;
+  font-size: 16px;
+  color: #102b46;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .checkbox-group input[type="checkbox"] {
-    margin-right: 5px;
+  margin-right: 5px;
 }
 
 .search-container {
-    margin: 15px auto;
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin-bottom: 15%;
+  margin: 15px auto;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 15%;
 }
 
 .search-container input {
-    padding: 8px;
-    border-radius: 20px;
-    border: 1px solid #ccc;
-    width: 300px;
-    height: 20px;
+  padding: 8px;
+  border-radius: 20px;
+  border: 1px solid #ccc;
+  width: 300px;
+  height: 20px;
 }
 
 .icon {
-    width: 20px;
-    height: 20px;
+  width: 20px;
+  height: 20px;
 }
 
 .question-list {
-    list-style-type: none;
-    padding: 0;
-    margin: 0;
+  list-style-type: none;
+  overflow-y: auto;
+  padding: 0;
+  margin: 0;
+  max-height: 500px;
 }
 
 .question-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background-color: #fff;
-    border-radius: 8px;
-    margin: 8px 0;
-    padding: 10px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    transition: transform 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #fff;
+  border-radius: 8px;
+  margin: 8px 0;
+  padding: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
 }
 
 .question-item:hover {
-    transform: translateY(-2px);
-}
-
-.question-icon {
-    width: 20% auto;
-    height: 40px;
-    margin-right: 10px;
+  transform: translateY(-2px);
 }
 
 .question-text {
-    flex: 1;
-    font-size: 16px;
-    color: #102b46;
+  flex: 1;
+  font-size: 16px;
+  color: #102b46;
 }
 
 .question-form {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .question-form label {
-    align-self: flex-start;
-    margin-left: 13%;
-    margin-bottom: 5px;
-    color: #102b46;
-    font-size: 16px;
+  align-self: flex-start;
+  margin-left: 13%;
+  margin-bottom: 5px;
+  color: #102b46;
+  font-size: 16px;
 }
 
 .question-form input {
-    width: 70%;
-    height: 70px;
-    padding: 14px;
-    font-size: 16px;
-    border: none;
-    border-radius: 10px;
-    background-color: #eef5fe;
-    margin-bottom: 20px;
-    /* Larger space between inputs */
+  width: 70%;
+  height: 70px;
+  padding: 14px;
+  font-size: 16px;
+  border: none;
+  border-radius: 10px;
+  background-color: #eef5fe;
+  margin-bottom: 20px;
+  /* Larger space between inputs */
 }
 
 .question-form.comment {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.4);
-    /* Alpha: 0.4 = 40% opacity */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 2;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+  /* Alpha: 0.4 = 40% opacity */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2;
 }
 
-.question-form.comment input{
-    position: fixed;
-    bottom: 35px;
+.question-form.comment input {
+  position: fixed;
+  width: 650px;
+  bottom: 35px;
+}
+
+.question-form.comment input:focus {
+    outline: none;
 }
 
 .analysis-container h2 {
-    margin-bottom: 12%;
-    font-weight: normal;
-    /* Heading automatically bold, wants normal */
-    font-size: 20px;
-    color: #102b46;
+  margin-bottom: 12%;
+  font-weight: normal;
+  /* Heading automatically bold, wants normal */
+  font-size: 20px;
+  color: #102b46;
 }
 
 .topbar a {
-    /*color: var(--black);
+  /*color: var(--black);
     background-color: var(--soft_blue);*/
-    padding: 14px 16px;
-    text-decoration: none;
-    font-size: 17px;
-    display: block;
+  padding: 14px 16px;
+  text-decoration: none;
+  font-size: 17px;
+  display: block;
 }
 
 .topbar a:hover {
-    color: var(--black);
+  color: var(--black);
 }
 
 .topbar-logo {
-    top: 1%;
-    left: 1%;
-    position: fixed;
-    width: 5%;
+  top: 1%;
+  left: 1%;
+  position: fixed;
+  width: 5%;
 }
 
 .pagetitle {
-    color: var(--dark_blue);
-    text-align: center;
-    background-color: transparent;
-    padding: 0;
-    margin-top: 0%;
+  color: var(--dark_blue);
+  text-align: center;
+  background-color: transparent;
+  padding: 0;
+  margin-top: 0%;
 }
 
 .pagetitle h2 {
-    font-size: 20px;
-    margin-top: 0;
+  font-size: 20px;
+  margin-top: 0;
 }
 
 .sidepanel a {
-    padding: 8px 8px 8px 32px;
-    text-decoration: none;
-    font-size: 25px;
-    color: var(--white);
-    display: block;
+  padding: 8px 8px 8px 32px;
+  text-decoration: none;
+  font-size: 25px;
+  color: var(--white);
+  display: block;
 }
 
 .sidepanel a:hover {
-    color: var(--almost_white);
-    background-color: var(--blue);
+  color: var(--almost_white);
+  background-color: var(--blue);
 }
 
 .menu a {
-    color: var(--white);
+  color: var(--white);
 }
-  
+
 .menu a:hover {
-    color: var(--black);
+  color: var(--black);
 }
 
 .wrapper {
-    position: relative;
+  position: relative;
 }
 
 #error-box {
-    min-height: 1.5em;
-    color: red;
-    margin-bottom: 1em;
+  min-height: 1.5em;
+  color: red;
+  margin-bottom: 1em;
 }
 
 .main-container h1 {
-    font-size: 28px;
-    color: var(--blue);
-    /* #4e8ce1; */
+  font-size: 28px;
+  color: var(--blue);
+  /* #4e8ce1; */
 }
 
 .main-container h2 {
-    color: var(--dark_blue);
+  color: var(--dark_blue);
 }
 
 .option-input {
-    margin: 5px 0;
-    width: 500px;
+  margin: 5px 0;
+  width: 500px;
 }
-  
-.option-input input{
-    height: 30px;
+
+.option-input input {
+  height: 30px;
 }
 
 .answer-survey-container h2 {
-    font-size: 2rem;
-    font-weight: bold;
-    color: white;
-    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
-    margin-bottom: 2rem;
+  font-size: 2rem;
+  font-weight: bold;
+  color: white;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+  margin-bottom: 2rem;
 }
 
 .answer-survey-container p {
-    font-size: 2rem;
-    color: white;
-    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
-    margin-bottom: 2rem;
+  font-size: 2rem;
+  color: white;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+  margin-bottom: 2rem;
 }

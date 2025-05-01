@@ -317,6 +317,7 @@ class TextQuestion(BaseQuestionDetails):
 
 # What this model does needs to be explained here
 class Question(models.Model):
+    question_title = models.CharField(max_length=32, null=True, blank=True)
     question = models.CharField(max_length=255)
     question_format = models.CharField(
         max_length=15, choices=QuestionFormat.choices, default=QuestionFormat.TEXT
@@ -332,6 +333,7 @@ class Question(models.Model):
     bank_question = models.ForeignKey(
         Organization, on_delete=models.CASCADE, related_name="question_bank", null=True
     )
+    bank_question_tag = models.IntegerField(null=True, blank=True)
 
     # All questions tyoe possible
     slider_question = models.OneToOneField(
@@ -358,7 +360,7 @@ class Question(models.Model):
             data = {
                 f.name: getattr(self, f.name)
                 for f in self._meta.fields
-                if f.name not in ('id', 'pk')
+                if f.name not in ('id', 'pk', 'bank_question')
             }
             # Remove any fields referring to child OneToOne we will handle those separately
             for rel_name in (
@@ -387,6 +389,10 @@ class Question(models.Model):
                 )
                 new_q.multiple_choice_question = mcq
                 new_q.save()  # Link them
+
+            if self.bank_question is not None:
+                new_q.bank_question_tag = self.id
+                new_q.save()
 
             return new_q
 

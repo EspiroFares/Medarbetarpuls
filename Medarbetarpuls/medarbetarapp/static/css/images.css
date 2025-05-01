@@ -57,7 +57,7 @@
 }
 
 .image-button:hover img {
-  transform: scale(1.1)
+  transform: scale(1.1);
   /* Lighten on hover */
 }
 
@@ -115,20 +115,31 @@
 
 /* Custom checkbox (image-based) */
 .checkbox-img {
-    width: 32px;
-    height: 32px;
-    transition: transform 0.2s;
+  width: 32px;
+  height: 32px;
+  transition: transform 0.2s;
 }
-  
+
 /* Checked state */
 .multiple-input input[type="checkbox"]:checked ~ .checkbox-img {
-    background-image: url('/static/images/checkbox-checked.png');
-    transform: scale(1.3);
-    transition: filter 0.3s ease;
+  background-image: url("/static/images/checkbox-checked.png");
+  transform: scale(1.3);
+  transition: filter 0.3s ease;
 }
 
 .start-icon {
-    width: 70px;
-    height: 70px;
-    margin-bottom: -10%;;
+  width: 70px;
+  height: 70px;
+  margin-bottom: -10%;
+}
+
+.question-icon {
+  width: 20% auto;
+  height: 40px;
+  margin-right: 10px;
+}
+
+.question-icon.result {
+  width: 25px;
+  height: 25px;
 }

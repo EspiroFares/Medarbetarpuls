@@ -78,7 +78,11 @@
         messageBox.style.display = "block";
         // Display the message to the user for a short while before redirecting
         setTimeout(() =>  window.location.href = '/', 1500);
-      } else {
+      }else if(event.detail.xhr.status === 204){
+        messageBox.innerHTML = "Ny kod skickad";
+        messageBox.style.color = "Blue";
+        messageBox.style.display = "block";
+      }else {
         messageBox.innerHTML = event.detail.xhr.responseText || "Felaktig kod";
         messageBox.style.color = "red";
         messageBox.style.display = "block";
