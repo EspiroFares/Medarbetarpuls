@@ -53,14 +53,12 @@
             id="time-filter"
           >
             {% for label, value in survey_ranges %}
-            <button
-              hx-get="?period={{ value }}"
-              hx-target="#filtered-content"
-              hx-swap="outerHTML"
-              class="px-3 py-1 rounded-md text-sm font-medium {% if value == selected_survey_range %} bg-blue-500 text-white {% else %} bg-blue-100 text-blue-900 {% endif %}" 
+            <a
+              href="?group_id={{ request.GET.group_id }}&surveys={{ value }}"
+              class="px-3 py-1 rounded-md text-sm font-medium {% if value == selected_survey_range %} bg-blue-500 text-white {% else %} bg-blue-100 text-blue-900 {% endif %}"
             >
               {{ label }}
-            </button>
+            </a>
             {% endfor %}
           </div>
         </div>

@@ -60,7 +60,7 @@ def createUsers(userRole: UserRole, amount: int):
     return users
 
 
-def createSurveys(amount: int, surveyCreator: CustomUser):
+def createSurveys(amount: int, surveyCreator: CustomUser, ):
     surveys = []
     for i in range(amount):
         survey = Survey.objects.create(
@@ -74,8 +74,6 @@ def createSurveys(amount: int, surveyCreator: CustomUser):
             is_viewable=True,
             is_anonymous=True,
         )
-        target_group = EmployeeGroup.objects.get(name="IT")
-        survey.employee_groups.add(target_group)
         surveys.append(survey)
     return surveys
 
@@ -149,7 +147,7 @@ def createAnswers(result: SurveyUserResult, question: Question):
             is_answered=True,
             survey=result,
             question=question,
-            multiple_choice_answer=[True, False, False],
+            multiple_choice_answer=[random.choice([True,False]) for i in range(4)],
         )
     elif question.question_format == QuestionFormat.SLIDER:
         Answer.objects.create(
@@ -170,7 +168,7 @@ def createAnswers(result: SurveyUserResult, question: Question):
             is_answered=True,
             survey=result,
             question=question,
-            free_text_answer="This is a comment",
+            free_text_answer="This is a text answer",
         )
 
 
@@ -193,9 +191,14 @@ it_team = EmployeeGroup.objects.create(name="IT", organization=org)
 base_group.employees.add(admin, creator, *responders)
 hr_team.employees.add(*responders[:4])
 it_team.employees.add(*responders[4:])
+
 base_group.managers.add(admin)
 hr_team.managers.add(admin)
 it_team.managers.add(admin)
+
+base_group.managers.add(creator)
+hr_team.managers.add(creator)
+it_team.managers.add(creator)
 
 
 for user in [admin, creator, *responders]:
@@ -204,7 +207,7 @@ for user in [admin, creator, *responders]:
     email_entry.save()
 
 
-surveys = createSurveys(3, creator)
+surveys = createSurveys(10, creator)
 questions = []
 for s in surveys:
     questions += createQuestions(1, QuestionFormat.SLIDER, QuestionType.ENPS, s)
@@ -215,9 +218,12 @@ for s in surveys:
     questions += createQuestions(1, QuestionFormat.TEXT, QuestionType.REOCCURRING, s)
 
 for s in surveys:
+    s.employee_groups.add(base_group,hr_team, it_team)
     s.publish_survey()
     for result in s.survey_results.all():
         for q in s.questions.all():
             createAnswers(result, q)
 
 print("✅ Successfully created test data!")
+print("Admin:", admin)
+

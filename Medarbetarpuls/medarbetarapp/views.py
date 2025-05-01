@@ -1726,31 +1726,46 @@ def correct_name(name: str) -> Boolean | str:
 @allowed_roles("admin", "surveycreator")
 def chart_view(request):
     group_id = request.GET.get("group_id")
+    survey_count = request.GET.get("surveys","1")
     analysisHandler = AnalysisHandler()
-    context: dict = {}
 
-    context["survey_ranges"] = [
-        ("Senaste", "1"),
-        ("1-3", "3"),
-        ("1-5", "5"),
-        ("Alla", "all"),
-    ]
-
+    context = {
+        "survey_ranges": [
+            ("Senaste", "1"),
+            ("Senaste 3", "3"),
+            ("Senaste 5", "5"),
+            ("Alla", "all"),
+        ],
+        "selected_survey_range": survey_count,
+    }
+    
     if not group_id:
         return render(request, "analysis.html", context)
 
     group = get_object_or_404(EmployeeGroup, id=group_id)
-
     surveys = analysisHandler.get_surveys_for_group(group)
 
     if not surveys.exists():
         context["message"] = "Gruppen har inga enkäter ännu."
         return render(request, "analysis.html", context)
+    
+    if survey_count != "all":
+        try:
+            count = int(survey_count)
+            filtered_surveys = surveys[:count]
+        except ValueError:
+            filtered_surveys = surveys
+    else:
+        filtered_surveys = surveys
 
-    survey = surveys.latest("sending_date")  # behöver fixas
-
+    if not filtered_surveys:
+        context["message"] = "Inga filtrerade enkäter hittades."
+        return render(request, "analysis.html", context)
+    
+    latest_survey = filtered_surveys[0]
+    
     summary = analysisHandler.get_survey_summary(
-        survey_id=survey.id,
+        survey_id=latest_survey.id,
         employee_group=group,
     )
 
@@ -1759,14 +1774,10 @@ def chart_view(request):
             enps_question = i["question"]
             context.update(i)
             break
-
-    # if not context:
-    #   context["message"] = "Ingen eNPS-fråga i den här enkäten."
-    #  return render(request, "analysis.html", context)
-
-    context["deadline"] = summary["survey"].deadline.strftime(
-        "%Y-%m-%d"
-    )  # maybe move this row to get_survey_summary
+        
+    #if not enps_question:
+     #   context["message"] = "Ingen eNPS-fråga i den här enkäten."
+      #  return render(request, "analysis.html", context)
 
     context["deadline"] = summary["survey"].deadline.strftime("%Y-%m-%d")
     context["amount"] = summary["survey"].collected_answer_count
@@ -1777,26 +1788,14 @@ def chart_view(request):
         )
     )
 
-    filtered_surveys = analysisHandler.get_filtered_surveys(
-        "2024-10-01", "2026-10-01", group
-    )
+
     trends = analysisHandler.get_question_trend(
         enps_question, list(filtered_surveys), group
     )
-    survey_count = request.GET.get("surveys")
-    if survey_count and survey_count != "all":
-        survey_count = int(survey_count)
-        filtered_surveys = surveys.order_by("-sending_date")[:survey_count]
-    else:
-        filtered_surveys = surveys.order_by("sending_date")
-    deadlines = [entry["deadline"] for entry in trends]
-    enps_scores = [entry["summary"]["enpsScore"] for entry in trends]
-
-    context["lineLabels"] = deadlines
-    context["lineData"] = enps_scores
-
-    context["selected_survey_range"] = request.GET.get("surveys", "1")
-
+    context["lineLabels"] = [entry["sending_date"] for entry in trends]
+    context["lineData"] = [entry["summary"]["enpsScore"] for entry in trends]
+    print(context["lineData"])
+    
     return render(request, "analysis.html", context)
 
 
