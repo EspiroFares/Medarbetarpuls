@@ -1839,7 +1839,7 @@ def correct_name(name: str) -> Boolean | str:
 
 @login_required
 @allowed_roles("admin", "surveycreator")
-def chart_view(request):
+def analysis_view(request):
     group_id = request.GET.get("group_id")
     survey_count = request.GET.get("surveys","1")
     analysisHandler = AnalysisHandler()
