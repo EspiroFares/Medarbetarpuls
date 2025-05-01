@@ -52,8 +52,8 @@
         // The previous URL that linked to this page
         let previousUrl = document.referrer;
         if (previousUrl) {
-          if (previousUrl.includes("my-results")) {
-            // Avoid redirecting back to this page to prevent an infinite loop
+          if (previousUrl.includes("my-results") || previousUrl.includes("survey-result")) {
+            // Avoid redirecting back to these pages to prevent an infinite loop
             if (user_role == "surveycreator") {
               previousUrl = "/start-creator/";
             } else {
