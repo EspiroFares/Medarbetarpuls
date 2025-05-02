@@ -133,7 +133,6 @@
         </button>
       </div>
     </div>
-  </body>
   <script>
   document.addEventListener("DOMContentLoaded", function () {
     const addOptionBtn = document.getElementById("add-option-btn");
@@ -156,6 +155,24 @@
       optionsContainer.scrollTop = optionsContainer.scrollHeight;
     });
   });
+    // Timer that calls logout form after specified time
+    let logoutTimer;
+    function resetTimer() {
+      clearTimeout(logoutTimer);
+      logoutTimer = setTimeout(() => {
+        document.getElementById('logout-form').requestSubmit();
+        }, 10 * 60 * 1000); // 10 minutes
+    }
 
-  </script>
+    window.onload = resetTimer;
+    document.onmousemove = resetTimer;
+    document.onkeypress = resetTimer;
+    document.onscroll = resetTimer;
+    document.onclick = resetTimer;
+  
+    </script>
+    <form id="logout-form" method="post" hx-post="/logout/" hx-target="body" hx-swap="outerHTML" style="display:none;">
+      {% csrf_token %}
+    </form>
+  </body>
 </html>

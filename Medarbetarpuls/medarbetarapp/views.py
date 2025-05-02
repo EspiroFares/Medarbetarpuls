@@ -1243,12 +1243,23 @@ def login_view(request):
 @login_required
 @allowed_roles("admin", "surveycreator", "surveyresponder")
 def logout_view(request):
+    """
+    A logout function that logs out the user and clears the session
+
+    Args:
+        request: HTMX post request 
+
+    Returns:
+        HttpResponse: If successful redirect to login page otherwise status 400.
+    """
     if request.method == "POST":
         if request.headers.get("HX-Request"):
+            print("here")
             logout(request)
             request.session.flush()  # Make sure session is cleared
-            response = HttpResponse(status=200)
-            response["HX-Redirect"] = "/"
+            response = HttpResponse(status=200) 
+            response['HX-Redirect'] = '/'
+            print("also here")
             return response
     return HttpResponse(status=400)
 
