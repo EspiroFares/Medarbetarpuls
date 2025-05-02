@@ -214,6 +214,14 @@ class AnalysisHandler:
         anonymous_users = {f"User {i}": users[i] for i in range(len(users))}
         return anonymous_users
 
+    def get_bank_questions(self):
+        """
+        Returns all questions that are part of an organization's question bank.
+        """
+        bank_questions = Question.objects.filter(bank_question_tag__isnull=False)
+
+        return bank_questions
+
     # --------- SLIDER-QUESTION FUNCTIONALITY -------------
     def calculate_enps_data(self, answers) -> tuple[int, int, int]:
         """

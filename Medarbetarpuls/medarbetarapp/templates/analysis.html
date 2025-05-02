@@ -72,11 +72,11 @@
             <form method="get" action="{% url 'analysis' %}">
               <input type="hidden" name="group_id" value="{{ request.GET.group_id }}">
               <input type="hidden" name="surveys" value="{{ request.GET.surveys }}">
-              <select id="groupDropdown" name="group_id" onchange="this.form.submit()">
-                <option value="">— Välj grupp —</option>
-                {% for group in user.survey_groups.all %}
-                  <option value="{{ group.id }}" {% if group.id|stringformat:"s" == request.GET.group_id %}selected{% endif %}>
-                    {{ group.name }}
+              <select id="questionDropdown" name="question_id" onchange="this.form.submit()">
+                <option value="">— Välj fråga —</option>
+                {% for question in bank_questions %}
+                  <option value="{{ question.id }}" {% if question.id|stringformat:"s" == selected_question_id %}selected{% endif %}>
+                    {{ question.question }}
                   </option>
                 {% endfor %}
               </select>
