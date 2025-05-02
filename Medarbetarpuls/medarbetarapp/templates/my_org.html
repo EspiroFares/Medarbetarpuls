@@ -56,13 +56,11 @@
                 <th>Roll</th>
                 <th>Enkätgrupp</th>
                 <th></th>
-                <th></th>
                 <!-- Empty column for removal symbol -->
               </tr>
             </thead>
             <tbody id="employeeTable">
               {% for employee in employees %}
-              <!---->
               {% if employee.is_active %}
               <tr>
                 <td>{{ employee.name }}</td>
@@ -72,16 +70,15 @@
                   <!-- Add htmx post request to remove employee group from that user-->
                 <div class="tag">{{ group.name}}
                    {% if group.name != "Alla" %}
-                   <button 
-                    class="delete-button"
-                    style= "width: 2px; height: 2px;"         
+                   <span class="close" 
                     hx-post="/remove-employee-from-employee-group/"
                     hx-trigger="click"
                     hx-swap="none" 
                     hx-vals=
                     '{"email": "{{ employee.email }}",
-                     "group": "{{group.name}}",
-                     "csrfmiddlewaretoken": "{{ csrf_token }}"}'>x</button>
+                      "group": "{{group.name}}",
+                      "csrfmiddlewaretoken": "{{ csrf_token }}"}'>&times;
+                    </span>
                     {% endif %}
                     </div>
                   {% endfor %}
@@ -89,30 +86,35 @@
                     class="button"  
                     onclick = "openAddEmployeeGroup('{{ employee.email }}')"
                     >+</button>
-
                 </td>
                 <td>
-                  {% if employee.user_role == "surveycreator" %}
-                  Enkätskapare
-                  {% else %}
-                  Enkätsvarare
-                  {% endif %}
+                  <!-- To get the text and pen aligned-->
+                  <div style="display: flex; justify-content: center; gap: 5px;">
+                    {% if employee.user_role == "surveycreator" %}
+                      Enkätskapare
+                    {% else %}
+                      Enkätsvarare
+                    {% endif %}
+                    <div class="value">
+                      <a href="#" onclick="openEditUser('{{ employee.email }}','{{ employee.user_role }}')">
+                        <span class="edit-icon">✏️</span></a>
+                      </form>
+                    </div>
+                  </div>
+                  
                 </td>
                 {% if employee.user_role == "surveycreator" %}
                 <td>
                   {% for group in employee.survey_groups.all %}
                   <div class="tag">{{ group.name}}
-                    <button 
-                     class="delete-button"    
-                     style= "width: 2px; height: 2px;"     
-                     onclick 
-                     hx-post="/remove-employee-from-survey-group/"
-                     hx-trigger="click"
-                     hx-swap="none" 
-                     hx-vals=
-                     '{"email": "{{ employee.email }}",
-                      "group": "{{group.name}}",
-                      "csrfmiddlewaretoken": "{{ csrf_token }}"}'>x</button>
+                    <span class="close" 
+                    hx-post="/remove-employee-from-survey-group/"
+                    hx-trigger="click"
+                    hx-swap="none" 
+                    hx-vals=
+                    '{"email": "{{ employee.email }}",
+                     "group": "{{group.name}}",
+                     "csrfmiddlewaretoken": "{{ csrf_token }}"}'>&times;</span>
                      </div>
                   {% endfor %}
 
@@ -168,14 +170,6 @@
                       class="icon"
                     />
                   </button>
-                </td>
-                <td>
-                  <div class="value">
-                    <a href="#" onclick="openEditUser('{{ employee.email }}','{{ employee.user_role }}')">
-                      <span class="edit-icon">✏️</span></a>
-
-                    </form>
-                  </div>
                 </td>
                 {% endif %}
               
