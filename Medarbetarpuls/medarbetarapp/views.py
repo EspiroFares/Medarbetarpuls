@@ -108,6 +108,15 @@ def create_acc(request):
 @csrf_protect
 @allowed_roles("admin")
 def edit_employee_group_view(request):
+    """
+    Adds new employee group to the given user
+
+    Args:
+        request: The input user and new employee group from the field
+
+    Returns:
+        HttpResponse: Returns status 200 if all is good, otherwise 400
+    """
     if request.method == "POST":
         if request.headers.get("HX-Request"):
             email = request.POST.get("add-employee-group-email")
@@ -133,6 +142,15 @@ def edit_employee_group_view(request):
 @csrf_protect
 @allowed_roles("admin")
 def edit_survey_group_view(request):
+    """
+    Adds new survey group to the given user
+
+    Args:
+        request: The input user and new survey group from the field
+
+    Returns:
+        HttpResponse: Returns status 200 if all is good, otherwise 400
+    """
     if request.method == "POST":
         if request.headers.get("HX-Request"):
             email = request.POST.get("add-survey-group-email")
@@ -158,6 +176,15 @@ def edit_survey_group_view(request):
 @csrf_protect
 @allowed_roles("admin")
 def edit_employee_view(request):
+    """
+    Edits the given users role to the new given role
+
+    Args:
+        request: The input user and role from the field
+
+    Returns:
+        HttpResponse: Returns status 200 if all is good, otherwise 400
+    """
     if request.method == "POST":
         if request.headers.get("HX-Request"):
             email = request.POST.get("email")
@@ -427,6 +454,15 @@ def answer_survey_view(
 
 @csrf_protect
 def resend_authentication_code_acc(request):
+    """
+    Sends a new two factor authentication code to the given email
+
+    Args:
+        request: The email and source from the input fields
+
+    Returns:
+        HttpResponse: Returns status=204 if all is good, otherwise error message 400
+    """
     if request.method == "POST":
         source = request.POST.get("source")
         email = "not_defined"
@@ -447,6 +483,8 @@ def resend_authentication_code_acc(request):
             fail_silently=False,
         )
         return HttpResponse("Sent", status=204)
+    return HttpResponse(status=400)
+
 
 @csrf_protect
 def authentication_acc_view(request):
@@ -1589,6 +1627,15 @@ def my_surveys_view(request):
 
 @csrf_protect
 def remove_employee_from_employee_group_view(request):
+    """
+    Removes the given employee group from the given users employee groups
+
+    Args:
+        request: Email and employee group from input fields
+
+    Returns:
+        HttpResponse: Returns status=200 if all good otherwise status=400
+    """
     if request.method == "POST":
         if request.headers.get("HX-Request"):
             email = request.POST.get("email")
@@ -1602,6 +1649,15 @@ def remove_employee_from_employee_group_view(request):
 
 @csrf_protect
 def remove_employee_from_survey_group_view(request):
+    """
+    Removes the given survey group from the given users survey groups
+
+    Args:
+        request: Email and survey group from input fields
+
+    Returns:
+        HttpResponse: Returns status=200 if all good otherwise status=400
+    """
     if request.method == "POST":
         if request.headers.get("HX-Request"):
             email = request.POST.get("email")
