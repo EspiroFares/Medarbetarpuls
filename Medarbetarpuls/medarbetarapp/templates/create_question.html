@@ -28,7 +28,7 @@
                 <!-- Retrieve the Swedish translation of the label -->
                 {{ question_labels|get_item:type.label }} 
               </span>
-              <a href="{% url 'edit_question_new' survey_temp.id type %}"> 
+              <a href="{% url 'edit_question_new' survey_temp.id type %}{% if source and source != 'None' %}?source={{ source }}{% endif %}"> 
                 <button type="button">Välj</button>  
               </a>
             </div>
@@ -52,7 +52,7 @@
             />
             <p>{{ question.question_title }}</p>
             <a
-              href="{% url 'edit_question' survey_temp.id question.question_format question.id%}"
+              href="{% url 'edit_question' survey_temp.id question.question_format question.id%}{% if source and source != 'None' %}?source={{ source }}{% endif %}"
             >
               <button type="button">Välj</button>
             </a>
@@ -64,7 +64,7 @@
         <div class="popup-buttons">
           <button
             class="image-button"
-            onclick="window.location.href='{% url 'create_survey_with_id' survey_temp.id %}'"
+            onclick="window.location.href='{% url 'create_survey_with_id' survey_temp.id %}{% if source and source != 'None' %}?source={{ source }}{% endif %}'"
           >
             <img
               src="{% static 'images/go-back-btn.png' %}"

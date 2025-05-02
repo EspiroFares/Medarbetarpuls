@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="sv">
+  <head>
+    {% load static %}
+    <script src="https://unpkg.com/htmx.org@1.8.4"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Medarbetarpuls - Home</title>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}" />
+  </head>
+  <body>
+    <div class="main-container">
+      <!-- Go back button-->
+      <button
+        class="image-button"
+        onclick="navigateBack()"
+      >
+        <img
+          src="{% static 'images/go-back-btn.png' %}"
+          alt="Gå Tillbaka"
+          class="back-icon"
+        />
+      </button>
+
+      {% include "topbar.html" with pagetitle="Organisationens enkätmallar och frågebank" %}
+      <div class="title-background">
+        <h2>Enkätmallar</h2>
+      </div>
+      {% comment %} <div class="search-container">
+        <form hx-post="{% url 'templates_and_drafts' %}" hx-trigger="submit">
+          {% csrf_token %}
+          <input
+            type="text"
+            id="search-bar"
+            name="search-bar"
+            class="search-bar"
+            placeholder="Sök bland enkätmallar..."
+          />
+          <button type="submit" class="search-button">Sök</button>
+        </form>
+      </div> {% endcomment %}
+      <!-- Change name to variable -->
+      <div class="grid-container">
+        {% for survey_temp in survey_templates %}
+        <a
+          href="{% url 'create_survey_with_id' survey_temp.id %}?source={{ source }}"
+          class="grid-item blue"
+        >
+          <div class="question-title">
+            <h1>{{ survey_temp.name }}</h1>
+          </div>
+
+          <div class="question-background">
+            <p>{{ survey_temp.last_edited }}</p>
+          </div>
+          <div class="question-result">
+            <div class="grid-icon">
+              <img
+                src="{% static 'images/trashcan.png' %}"
+                class="icon-img"
+                onclick="event.stopPropagation(); event.preventDefault();"
+                hx-post="{% url 'delete_survey_template' survey_temp.id %}"
+                hx-confirm="Är du säker att du vill ta bort den här enkäten?"
+                hx-target=".grid-item"
+              />
+              <meta name="csrf-token" content="{{ csrf_token }}" />
+            </div>
+            <div class="grid-icon">
+              <img
+                src="{% static 'images/share-icon.png' %}"
+                class="icon-img"
+                onclick="event.stopPropagation(); event.preventDefault();"
+                hx-get="{% url 'create_survey_with_id' survey_temp.id %}"
+                hx-target="body"
+                hx-swap="outerHTML"
+              />
+            </div>
+          </div>
+        </a>
+        {% endfor %}
+
+        <a href="{% url 'create_survey' %}?source={{ source }}" class="add-button-link">
+          <div class="add-button">
+            <span>+</span>
+          </div>
+        </a>
+      </div>
+
+      <div class="title-background">
+        <h2>Frågemallar</h2>
+      </div>
+      <div class="grid-container">
+        {% for question in question_templates %}
+        <a
+          href="{% url 'edit_question' question.question_format question.id %}?source={{ source }}"
+          class="grid-item blue"
+        >
+          <div class="question-title">
+            <h1>Fråga {{forloop.counter}}</h1>
+            <form
+              hx-post="{% url 'delete_question' question.id %}?source={{ source }}"
+              hx-trigger="submit"
+              hx-confirm="Är du säker att du vill ta bort den här frågan?"
+              hx-swap="none"
+            >
+              {% csrf_token %}
+              <button class="question-remove-button" type="submit">
+                Ta bort
+              </button>
+            </form>
+          </div>
+
+          <div class="question-background">
+            <p>{{question.question}}</p>
+          </div>
+
+          <div class="question-result">
+            <img
+              src="{% static 'images/' %}{{ question.question_format }}.png"
+              alt="{{ question.question_format.label }} image"
+              class="question-icon"
+            />
+          </div>
+        </a>
+        {% endfor %}
+
+        <a
+          href="{% url 'create_question'%}?source={{ source }}"
+          class="add-button-link"
+        >
+          <div class="add-button">
+            <span>+</span>
+          </div>
+        </a>
+      </div>
+      
+    </div>
+    <script>
+      document.body.addEventListener("htmx:configRequest", (event) => {
+        const csrfToken = document.querySelector(
+          'meta[name="csrf-token"]',
+        ).content;
+        event.detail.headers["X-CSRFToken"] = csrfToken;
+      });
+
+      function navigateBack() {
+        // The previous URL that linked to this page
+        let previousUrl = document.referrer;
+        if (previousUrl) {
+          if (previousUrl.includes("create-survey") || previousUrl.includes("templates_and_drafts") || previousUrl.includes("organization_templates")) {
+            // Avoid redirecting back to this page to prevent an infinite loop
+            // Only creator and reponder can see results from one survey
+            previousUrl = previousUrl;
+          }
+          window.location.href = previousUrl;
+        } else {
+          // Fallback if referrer is empty
+          // This simulates the user pressing the back button
+          window.history.back();
+        }
+      }
+    </script>
+  </body>
+</html>
