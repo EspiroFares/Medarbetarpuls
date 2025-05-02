@@ -96,6 +96,7 @@
           <!-- Shows comments for the question. Is only showned when toggled 
                by one of the earlier buttons -->
           <div class="question-result" x-show="show_state === STATES.COMMENT">
+            <strong>Kommentarer:</strong>
             {% with list_=summary.text_comments %}
             <!---->
             {% include "step_thru_text.html" with list_=list_ is_answer=False %}
@@ -105,35 +106,43 @@
 
           <!-- Shows personal answer for the question. Is only showned when toggled 
                by one of the earlier buttons -->
-        
-<div class="question-result" x-show="show_state === STATES.PERSONAL_ANSWER">
-  {% if summary.my_result %}
-    <p><strong>Ditt svar:</strong>
-      {% if summary.question.question_format == "multiplechoice" %}
-      {% for answer in summary.my_result.answer %}
-          {% if answer %}
-              {{ forloop.counter }}<br>
-          {% endif %}
-      {% endfor %}
-   {% else %}
-        {{ summary.my_result.answer }}
-      {% endif %}
-    </p>
-  {% else %}
-    <p><em>Du har inte besvarat denna fråga än.</em></p>
-  {% endif %}
 
-  {% if summary.text_comments %}
-    <p><strong>Dina kommentarer:</strong></p>
-    <ul>
-      {% for comment in summary.text_comments %}
-        <li>{{ comment }}</li>
-      {% endfor %}
-    </ul>
-  {% endif %}
-</div>
-
-      
+          <div
+            class="question-result"
+            x-show="show_state === STATES.PERSONAL_ANSWER"
+          >
+            {% if summary.my_result %}
+            <p>
+              <strong>Ditt svar:</strong>
+              <!---->
+              {% if summary.question.question_format == "multiplechoice" %}
+              <!---->
+              {% for answer in summary.my_result.answer %}
+              <!---->
+              {% if answer %}
+              <!---->
+              {{ forloop.counter }}<br />
+              {% endif %}
+              <!---->
+              {% endfor %}
+              <!---->
+              {% else %} {{ summary.my_result.answer }}
+              <!---->
+              {% endif %}
+            </p>
+            {% else %}
+            <p><em>Du har inte besvarat denna fråga.</em></p>
+            {% endif %}
+            <!---->
+            {% if summary.my_result.comment %}
+            <p>
+              <strong>Din kommentar:</strong> <br />
+              {{ summary.my_result.comment }}
+            </p>
+            {% else %}
+            <p><strong>Du angav ingen kommentar</strong></p>
+            {% endif %}
+          </div>
 
           <!-- Shows question-result. It is showned by default but is toggled 
                by the earlier buttons.-->
