@@ -307,26 +307,41 @@
       });
 
       // Error handling
-      document.body.addEventListener("htmx:afterRequest", function (event) {
-        // To get survey id from the popup
-        const surveyId =
-          document.getElementById("publish-popup").dataset.surveyId;
-        const errorBox = document.getElementById("error-box");
-        if (event.detail.xhr.status === 200) {
-          errorBox.style.color = "green";
-          errorBox.style.display = "block";
-          // Display the message to the user for a short while before redirecting
-          setTimeout(
-            () => (window.location.href = `/create-survey/${surveyId}/`),
-            1500
-          );
-        } else {
-          errorBox.innerHTML =
-            event.detail.xhr.responseText || "Något fel har inträffat";
-          errorBox.style.color = "red";
-          errorBox.style.display = "block";
-        }
-      });
+    document.body.addEventListener("htmx:afterRequest", function (event) {
+      // To get survey id from the popup
+      const surveyId = document.getElementById("publish-popup").dataset.surveyId;
+      const errorBox = document.getElementById("error-box");
+      if (event.detail.xhr.status === 200) {
+        errorBox.style.color = "green";
+        errorBox.style.display = "block";
+        // Display the message to the user for a short while before redirecting
+        setTimeout(() =>  window.location.href = `/create-survey/${surveyId}/`, 1500);
+      } else {
+        errorBox.innerHTML = event.detail.xhr.responseText || "Något fel har inträffat";
+        errorBox.style.color = "red";
+        errorBox.style.display = "block";
+      }
+
+    });
+
+      // Timer that calls logout form after specified time
+      let logoutTimer;
+      function resetTimer() {
+        clearTimeout(logoutTimer);
+        logoutTimer = setTimeout(() => {
+          document.getElementById('logout-form').requestSubmit();
+          }, 10 * 60 * 1000); // 10 minutes
+      }
+  
+      window.onload = resetTimer;
+      document.onmousemove = resetTimer;
+      document.onkeypress = resetTimer;
+      document.onscroll = resetTimer;
+      document.onclick = resetTimer;
+  
     </script>
+    <form id="logout-form" method="post" hx-post="/logout/" hx-target="body" hx-swap="outerHTML" style="display:none;">
+      {% csrf_token %}
+    </form>
   </body>
 </html>
