@@ -655,6 +655,14 @@ def create_question(request, survey_id: int) -> HttpResponse:
     if survey_temp is None:
         # Handle the case where the survey template does not exist
         return HttpResponse("Survey template not found", status=404)
+    
+    # The swedish translations
+    QUESTION_LABEL_TRANSLATIONS = {
+    "Slider": "Skala",
+    "Text": "Fritext",
+    "Yes No": "Ja/Nej",
+    "Multiple choice": "Flerval",
+    }
 
     return render(
         request,
@@ -663,6 +671,7 @@ def create_question(request, survey_id: int) -> HttpResponse:
             "survey_temp": survey_temp,
             "organization_questions": organization_questions,
             "QuestionFormat": models.QuestionFormat,
+            "question_labels": QUESTION_LABEL_TRANSLATIONS
         },
     )
 
