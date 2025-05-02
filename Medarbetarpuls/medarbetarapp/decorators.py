@@ -3,6 +3,10 @@ from django.shortcuts import redirect
 
 #possible roles: surveyresponder, surveycreator, admin
 def allowed_roles(*allowed_roles):
+    """
+        Decorator function that checks if the user
+        is in the allowed roles for that page 
+    """
     def decorator(view_func):
         @wraps(view_func)
         # the args are to fit in with any view undepending on 
@@ -20,6 +24,10 @@ def allowed_roles(*allowed_roles):
     return decorator
 
 def logout_required():
+    """ 
+        Decorator function that checks if the user
+        is logged in then it redirects to correct start page 
+    """     
     def decorator(view_func):
         @wraps(view_func)
         # the args are to fit in with any view undepending on 
