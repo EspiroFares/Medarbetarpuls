@@ -30,9 +30,48 @@
           <!-- Filter for work-group -->
 
           <div id="filterBar">
-            <strong>Filter:</strong>
+            <strong>Välj grupp:</strong>
             <span id="pillContainer"></span>
             <form method="get" action="{% url 'analysis' %}">
+              <input type="hidden" name="group_id" value="{{ request.GET.group_id }}">
+              <input type="hidden" name="surveys" value="{{ request.GET.surveys }}">
+              <select id="groupDropdown" name="group_id" onchange="this.form.submit()">
+                <option value="">— Välj grupp —</option>
+                {% for group in user.survey_groups.all %}
+                  <option value="{{ group.id }}" {% if group.id|stringformat:"s" == request.GET.group_id %}selected{% endif %}>
+                    {{ group.name }}
+                  </option>
+                {% endfor %}
+              </select>
+            </form>
+          </div>
+
+          <div id="filterBar">
+            <strong>Välj användare:</strong>
+            <span id="pillContainer"></span>
+            <form method="get" action="{% url 'analysis' %}">
+              <!-- Keep existing filters -->
+              <input type="hidden" name="group_id" value="{{ request.GET.group_id }}">
+              <input type="hidden" name="surveys" value="{{ request.GET.surveys }}">
+              
+              <!-- Dropdown for respondents -->
+              <select id="userDropdown" name="user_id" onchange="this.form.submit()">
+                <option value="">— Välj användare —</option>
+                {% for label, user in respondents.items %}
+                  <option value="{{ label }}" {% if label == selected_user_id %}selected{% endif %}>
+                    {{ label }}
+                  </option>
+                {% endfor %}
+              </select>
+            </form>
+          </div>
+
+          <div id="filterBar">
+            <strong>Välj fråga:</strong>
+            <span id="pillContainer"></span>
+            <form method="get" action="{% url 'analysis' %}">
+              <input type="hidden" name="group_id" value="{{ request.GET.group_id }}">
+              <input type="hidden" name="surveys" value="{{ request.GET.surveys }}">
               <select id="groupDropdown" name="group_id" onchange="this.form.submit()">
                 <option value="">— Välj grupp —</option>
                 {% for group in user.survey_groups.all %}
@@ -52,9 +91,11 @@
             class="flex space-x-2 bg-gray-100 p-2 rounded-md"
             id="time-filter"
           >
+          <input type="hidden" name="group_id" value="{{ request.GET.group_id }}">
+          <input type="hidden" name="surveys" value="{{ request.GET.surveys }}">
             {% for label, value in survey_ranges %}
-            <a
-              href="?group_id={{ request.GET.group_id }}&surveys={{ value }}"
+              <a
+              href="?group_id={{ request.GET.group_id }}&surveys={{ value }}{% if request.GET.user_id %}&user_id={{ request.GET.user_id }}{% endif %}"
               class="px-3 py-1 rounded-md text-sm font-medium {% if value == selected_survey_range %} bg-blue-500 text-white {% else %} bg-blue-100 text-blue-900 {% endif %}"
             >
               {{ label }}
@@ -150,20 +191,20 @@
         }
     }
 
-    const enpsGaugeData   = {{ enpsScore        |default:"21"  |safe }};
+    const enpsGaugeData   = {{ enpsScore        |default:"0"  |safe }};
     const enpsBarLabels   = {{ slider_values    |default:"['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10']" |safe }};
-    const enpsBarData     = {{ enpsDistribution |default:"[5, 2, 3, 30, 56, 55, 40, 20, 10, 5, 10]" |safe }};
+    const enpsBarData     = {{ enpsDistribution |default:"[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]" |safe }};
     const pieLabels       = {{ enpsPieLabels    |default:"['Detractors', 'Passives', 'Promoters']" |safe }};
-    const pieData         = {{ enpsPieData      |default:"[4,4,3]" |safe }};
-    const enpsDate        = "{{ deadline|default:'2023-10-01' }}";
-    const answerData     = {{ answer_pct|default:"90" |safe }};
+    const pieData         = {{ enpsPieData      |default:"[0,0,0]" |safe }};
+    const enpsDate        = "{{ deadline|default:'####-##-##' }}";
+    const answerData     = {{ answer_pct|default:"0" |safe }};
     
-    const enpsDataChange  = 10;            // Hur ska detta hämtas??
-    const answerChange    = 3;              // placeholder
+    const enpsDataChange  = {{ enpsChange        |default:"0"  |safe }};            // Hur ska detta hämtas??
+    const answerChange    = {{ answerChange        |default:"0"  |safe }};              // placeholder
     const pieColors       = ["rgb(140,214,16)","rgb(16,23,214)","rgb(16,191,214)"];
 
-    const lineLabels = {{ lineLabels    |default:"['2023-10-01', '2024-10-01', '2025-10-01']" |safe }};
-    const lineData = {{ lineData      |default:"[4,4,5]" |safe }};
+    const lineLabels = {{ lineLabels    |default:"['####-##-##', '####-##-##', '####-##-##']" |safe }};
+    const lineData = {{ lineData      |default:"[0,0,0]" |safe }};
     const lineColors = ["rgb(140,214,16)","rgb(16,23,214)"];
     
     function safeInit(fn, id, ...args) {

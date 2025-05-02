@@ -198,6 +198,22 @@ class AnalysisHandler:
             "answer_pct": answer_pct,
         }
 
+    def get_respondents(
+        self, survey: Survey, employee_group: EmployeeGroup | None = None
+    ):
+        filters = {"published_survey": survey}  # add is answered here?
+
+        if employee_group:
+            filters["user__in"] = employee_group.employees.all()
+
+        users = list(
+            CustomUser.objects.filter(
+                survey_results__in=SurveyUserResult.objects.filter(**filters)
+            ).distinct()
+        )
+        anonymous_users = {f"User {i}": users[i] for i in range(len(users))}
+        return anonymous_users
+
     # --------- SLIDER-QUESTION FUNCTIONALITY -------------
     def calculate_enps_data(self, answers) -> tuple[int, int, int]:
         """
@@ -391,7 +407,6 @@ class AnalysisHandler:
         user: CustomUser | None = None,
         employee_group: EmployeeGroup | None = None,
     ) -> Dict[str, Any]:
-
         if not question or not question.specific_question:
             # Om question eller specific_question inte finns
             return {
@@ -431,7 +446,6 @@ class AnalysisHandler:
         user: CustomUser | None = None,
         employee_group: EmployeeGroup | None = None,
     ) -> Dict[str, Any]:
-
         answer_options = [
             "YES",
             "NO",
@@ -467,7 +481,6 @@ class AnalysisHandler:
         user: CustomUser | None = None,
         employee_group: EmployeeGroup | None = None,
     ) -> Dict[str, Any]:
-
         answers = self.get_answers(
             question, survey, user=user, employee_group=employee_group
         )
@@ -532,7 +545,7 @@ class AnalysisHandler:
             elif question.question_type == QuestionType.ENPS:
                 question_summary = self.get_enps_summary(
                     survey=survey,
-                    question = question,
+                    question=question,
                     user=user,
                     employee_group=employee_group,
                 )
@@ -582,7 +595,9 @@ class AnalysisHandler:
         trend = []
 
         for survey in sorted(surveys, key=lambda s: s.sending_date):
-            question = survey.questions.filter(question=question.question).first() #fetch the question object corresponding to the same string as the 
+            question = (
+                survey.questions.filter(question=question.question).first()
+            )  # fetch the question object corresponding to the same string as the
             if question.question_format == QuestionFormat.MULTIPLE_CHOICE:
                 question_summary = self.get_multiple_choice_summary(
                     question=question,
@@ -614,8 +629,8 @@ class AnalysisHandler:
                 )
             elif question.question_format == QuestionFormat.SLIDER:
                 question_summary = self.get_slider_summary(
-                    question_id=question.id,
-                    survey_id=survey.id,
+                    question=question,
+                    survey=survey,
                     user=user,
                     employee_group=employee_group,
                 )

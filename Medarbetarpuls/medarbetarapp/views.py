@@ -447,6 +447,7 @@ def resend_authentication_code_acc(request):
         )
         return HttpResponse("Sent", status=204)
 
+
 @csrf_protect
 def authentication_acc_view(request):
     """
@@ -1841,7 +1842,8 @@ def correct_name(name: str) -> Boolean | str:
 @allowed_roles("admin", "surveycreator")
 def analysis_view(request):
     group_id = request.GET.get("group_id")
-    survey_count = request.GET.get("surveys","1")
+    survey_count = request.GET.get("surveys", "1")
+    user_id = request.GET.get("user_id")
     analysisHandler = AnalysisHandler()
 
     context = {
@@ -1853,7 +1855,7 @@ def analysis_view(request):
         ],
         "selected_survey_range": survey_count,
     }
-    
+
     if not group_id:
         return render(request, "analysis.html", context)
 
@@ -1863,7 +1865,7 @@ def analysis_view(request):
     if not surveys.exists():
         context["message"] = "Gruppen har inga enkäter ännu."
         return render(request, "analysis.html", context)
-    
+
     if survey_count != "all":
         try:
             count = int(survey_count)
@@ -1876,11 +1878,16 @@ def analysis_view(request):
     if not filtered_surveys:
         context["message"] = "Inga filtrerade enkäter hittades."
         return render(request, "analysis.html", context)
-    
+
     latest_survey = filtered_surveys[0]
-    
+    respondents_dict = analysisHandler.get_respondents(latest_survey, group)
+    context["respondents"] = respondents_dict
+    context["selected_user_id"] = user_id
+    print(respondents_dict)
+
     summary = analysisHandler.get_survey_summary(
         survey_id=latest_survey.id,
+        user=respondents_dict.get(user_id) if user_id else None,
         employee_group=group,
     )
 
@@ -1889,10 +1896,10 @@ def analysis_view(request):
             enps_question = i["question"]
             context.update(i)
             break
-        
-    #if not enps_question:
-     #   context["message"] = "Ingen eNPS-fråga i den här enkäten."
-      #  return render(request, "analysis.html", context)
+
+    # if not enps_question:
+    #   context["message"] = "Ingen eNPS-fråga i den här enkäten."
+    #  return render(request, "analysis.html", context)
 
     context["deadline"] = summary["survey"].deadline.strftime("%Y-%m-%d")
     context["amount"] = summary["survey"].collected_answer_count
@@ -1903,12 +1910,14 @@ def analysis_view(request):
         )
     )
 
-
     trends = analysisHandler.get_question_trend(
-        enps_question, list(filtered_surveys), group
+        enps_question,
+        list(filtered_surveys),
+        group,
+        respondents_dict.get(user_id) if user_id else None,
     )
     context["lineLabels"] = [entry["sending_date"] for entry in trends]
+
     context["lineData"] = [entry["summary"]["enpsScore"] for entry in trends]
-    print(context["lineData"])
-    
+
     return render(request, "analysis.html", context)
