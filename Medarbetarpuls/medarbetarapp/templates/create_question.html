@@ -2,6 +2,7 @@
 <html lang="sv">
   <head>
     {% load static %}
+    {% load dict_utils %}
     <script src="https://unpkg.com/htmx.org@1.8.4"></script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -19,13 +20,18 @@
           <li class="question-item">
             <img
               src="{% static 'images/' %}{{ type.value }}.png"
-              alt="{{ type.label }} image"
+              alt="{{ question_labels|get_item:type.label }} bild"
               class="question-icon"
-            />
-            {{type.label}}
-            <a href="{% url 'edit_question_new' survey_temp.id type %}">
-              <button type="button">Välj</button>
-            </a>
+            />  
+            <div class="question-label">
+              <span class="question-text">
+                <!-- Retrieve the Swedish translation of the label -->
+                {{ question_labels|get_item:type.label }} 
+              </span>
+              <a href="{% url 'edit_question_new' survey_temp.id type %}"> 
+                <button type="button">Välj</button>  
+              </a>
+            </div>
           </li>
           {% endfor %}
         </ul>

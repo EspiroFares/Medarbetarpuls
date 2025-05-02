@@ -20,8 +20,9 @@
         </button>
         <h2>Skapa enkät</h2>
       </div>
-
+      <button class="button" onclick="openPopup()">Publicera</button>
       <div class="grid-container" id="question-list">
+        
         {% for question in survey_temp.get_ordered_questions %}
         <a
           href="{% url 'edit_question' survey_temp.id question.question_format question.id %}"
@@ -87,7 +88,6 @@
           </div>
         </a>
       </div>
-      <button class="button" onclick="openPopup()">Publicera enkät</button>
     </div>
     <div
       id="publish-popup"

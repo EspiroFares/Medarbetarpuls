@@ -37,11 +37,11 @@
       <div class="title-background">
         <button
           class="title-back-button"
-          onclick="window.location.href='{% url 'my_results' %}'"
+          onclick="window.location.href='{% url 'survey_status' %}'"
         >
           Tillbaka
         </button>
-        <h2>{{ survey.published_survey.name }} Name</h2>
+        <h2>{{ survey.name }}</h2>
       </div>
 
       <div class="grid-container">
@@ -82,16 +82,16 @@
 
                   <td>
                     <p x-text="`${index+1}/${answer_count}`"></p>
-                  </td>
-
-                  <td>
-                    <img
+                  </td>                
+                    <!-- Remove because is not really necessary for the result? 
+                     <td>
+                     <img
                       src="{% static 'images/' %}{{ summary.question.question_format }}.png"
                       alt="{{ summary.question.question_format }}"
                       class="question-icon result"
                     />
-                  </td>
-
+                    </td>
+                    -->
                   <td>
                     <button
                       @click="if(index < answer_count - 1) index++"

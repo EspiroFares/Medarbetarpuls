@@ -387,10 +387,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: #fff;
+  background-color: white;
   border-radius: 8px;
   margin: 8px 0;
-  padding: 10px;
+  padding: 10px 16px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s;
 }
