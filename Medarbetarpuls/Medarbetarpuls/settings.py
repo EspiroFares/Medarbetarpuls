@@ -207,3 +207,10 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 CELERY_BROKER_URL = "redis://localhost:6379/0"
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
+
+
+# Timeout after 10 minutes of inactivity
+#SESSION_COOKIE_AGE = 10
+#SESSION_SAVE_EVERY_REQUEST = True  # reset the timer on each request
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True  # flush the session when window is closed
+
