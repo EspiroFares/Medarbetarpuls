@@ -26,19 +26,6 @@
       <div class="title-background">
         <h2>Enkätmallar</h2>
       </div>
-      {% comment %} <div class="search-container">
-        <form hx-post="{% url 'templates_and_drafts' %}" hx-trigger="submit">
-          {% csrf_token %}
-          <input
-            type="text"
-            id="search-bar"
-            name="search-bar"
-            placeholder="Sök bland enkätmallar..."
-          />
-          <button type="submit">Sök</button>
-        </form>
-      </div> {% endcomment %}
-      <!-- Change name to variable -->
       <div class="grid-container">
         {% for survey_temp in survey_templates %}
         <a
@@ -50,7 +37,8 @@
           </div>
 
           <div class="question-background">
-            <p>{{ survey_temp.last_edited }}</p>
+              <p>Senast redigerad: </p>
+              <p>{{ survey_temp.last_edited }}</p>
           </div>
           <div class="question-result">
             <div class="grid-icon">
@@ -63,16 +51,6 @@
                 hx-target=".grid-item"
               />
               <meta name="csrf-token" content="{{ csrf_token }}" />
-            </div>
-            <div class="grid-icon">
-              <img
-                src="{% static 'images/share-icon.png' %}"
-                class="icon-img"
-                onclick="event.stopPropagation(); event.preventDefault();"
-                hx-get="{% url 'create_survey_with_id' survey_temp.id %}"
-                hx-target="body"
-                hx-swap="outerHTML"
-              />
             </div>
           </div>
         </a>
@@ -95,12 +73,11 @@
           class="grid-item blue"
         >
           <div class="question-title">
-            <h1>Fråga {{forloop.counter}}</h1>
+            <h3>{{question.question_title}}</h3>
             <form
               hx-post="{% url 'delete_question' question.id %}?source={{ source }}"
               hx-trigger="submit"
               hx-confirm="Är du säker att du vill ta bort den här frågan?"
-              hx-swap="none"
             >
               {% csrf_token %}
               <button class="question-remove-button" type="submit">

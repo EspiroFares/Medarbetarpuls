@@ -11,7 +11,18 @@
   <body>
     <div class="popup-overlay">
       <div class="popup-content">
-        <h2>Redigera fråga</h2>
+        {% if source == "organization_templates" and not survey_temp.id%}
+          <input
+            type="text"
+            id="question_name"
+            name="question_name"
+            placeholder="Namn på frågan"
+            class="input-form"
+            required
+          />
+        {% else %}
+          <h2>Redigera fråga</h2>
+        {% endif %}
         <img src="{% static 'images/' %}{{ question_format }}.png" 
             alt="{{ question_format }} image"
             class="question-icon"
@@ -20,71 +31,79 @@
         {% if question_id is None %} 
         <form
           class="question-form"
-          hx-post="{% url 'edit_question_new' survey_temp.id question_format %}{% if source and source != 'None' %}?source={{ source }}{% endif %}"
+          {% if survey_temp.id %}
+            hx-post="{% url 'edit_question_new' survey_temp.id question_format %}{% if source and source != 'None' %}?source={{ source }}{% endif %}"
+          {% else %}
+            hx-post="{% url 'edit_question_new' question_format %}?source={{ source }}"
+            hx-include="#question_name"
+          {% endif %}
           hx-target=".question-form"
           hx-trigger="submit"
         >
         {% else %} 
         <form
           class="question-form"
-          hx-post="{% url 'edit_question' survey_temp.id question_format question_id %}{% if source and source != 'None' %}?source={{ source }}{% endif %}"
+          {% if survey_temp.id %}
+            hx-post="{% url 'edit_question' survey_temp.id question_format question_id %}{% if source and source != 'None' %}?source={{ source }}{% endif %}"
+          {% else %}
+            hx-post="{% url 'edit_question' question_format question_id %}?source={{ source }}"
+            hx-include="#question_name"
+          {% endif %}
           hx-target=".question-form"
           hx-trigger="submit"
         >
         {% endif %}
         {% csrf_token %}
         {% if question_format == "multiplechoice" %}
-        {% if question_text is None %}
-        <input
-          type="text"
-          id="question"
-          name="question"
-          placeholder="Fråga"
-          required
-        />
-        <div id="options-container" class="options-container">
-      
-          <div class="option-input">
-            <input type="text" name="options" placeholder="Alternativ 1" required />
-          </div>
-          <div class="option-input">
-            <input type="text" name="options" placeholder="Alternativ 2" required />
-          </div>
-        </div>
-        {% elif bank_question %}
-        <input
-          type="text"
-          id="question"
-          name="question"
-          value="{{ question_text }}"
-          required
-          readonly
-        />
-        <div id="options-container" class="options-container">
-          {% for option in options %}
-          <div class="option-input">
-            <input type="text" name="options" placeholder="Alternativ {{ forloop.counter }}" value="{{ option }}" readonly/>
-          </div>
-          {% endfor %}
-        </div>
-        {% else %}
-        <input
-          type="text"
-          id="question"
-          name="question"
-          value="{{ question_text }}"
-          required
-        />    
-        <div id="options-container" class="options-container">
-          {% for option in options %}
-          <div class="option-input">
-            <input type="text" name="options" placeholder="Alternativ {{ forloop.counter }}" value="{{ option }}" />
-          </div>
-        
-        {% endfor %}
-      </div>
-        {% endif %}
-        {% if not bank_question%}
+          {% if question_text is None %}
+            <input
+              type="text"
+              id="question"
+              name="question"
+              placeholder="Fråga"
+              required
+            />
+            <div id="options-container" class="options-container">
+              <div class="option-input">
+                <input type="text" name="options" placeholder="Alternativ 1" required />
+              </div>
+              <div class="option-input">
+                <input type="text" name="options" placeholder="Alternativ 2" required />
+              </div>
+            </div>
+          {% elif bank_question and not source == "organization_templates"%}
+            <input
+              type="text"
+              id="question"
+              name="question"
+              value="{{ question_text }}"
+              required
+              readonly
+            />
+            <div id="options-container" class="options-container">
+            {% for option in options %}
+              <div class="option-input">
+                <input type="text" name="options" placeholder="Alternativ {{ forloop.counter }}" value="{{ option }}" readonly/>
+              </div>
+            {% endfor %}
+            </div>
+          {% else %}
+            <input
+              type="text"
+              id="question"
+              name="question"
+              value="{{ question_text }}"
+              required
+            />    
+            <div id="options-container" class="options-container">
+            {% for option in options %}
+              <div class="option-input">
+                <input type="text" name="options" placeholder="Alternativ {{ forloop.counter }}" value="{{ option }}" />
+              </div>
+            {% endfor %}
+            </div>
+          {% endif %}
+        {% if not bank_question or source == "organization_templates" %}
           <button type="button" class="default-button" id="add-option-btn">Lägg till alternativ</button>
         {% endif %}
         <button type="submit">Spara</button>
@@ -100,7 +119,7 @@
             placeholder="Fråga"
             required
           />
-          {% elif bank_question%}
+          {% elif bank_question and not source == "organization_templates"%}
           <input
             type="text"
             id="question"
@@ -121,10 +140,17 @@
           <button type="submit">Spara</button>
         </form>
         {% endif %}
-        <button
-          class="image-button"
-          onclick="window.location.href='{% url 'create_survey_with_id' survey_temp.id %}{% if source and source != 'None' %}?source={{ source }}{% endif %}'"
-        >
+        {% if survey_temp.id %}
+          <button
+            class="image-button"
+            onclick="window.location.href='{% url 'create_survey_with_id' survey_temp.id %}{% if source and source != 'None' %}?source={{ source }}{% endif %}'"
+          >
+        {% else %}
+          <button
+            class="image-button"
+            onclick="window.location.href='{% url 'organization_templates' %}'"
+          >
+        {% endif %}
           <img
             src="{% static 'images/go-back-btn.png' %}"
             alt="Go Back"

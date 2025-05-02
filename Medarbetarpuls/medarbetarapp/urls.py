@@ -81,6 +81,11 @@ urlpatterns = [
         name="edit_question_new",
     ),
     path(
+        "edit-question/<str:question_format>/",
+        views.edit_question_view,
+        name="edit_question_new",
+    ),
+    path(
         "edit-question/<int:survey_id>/<str:question_format>/<int:question_id>/",
         views.edit_question_view,
         name="edit_question",
