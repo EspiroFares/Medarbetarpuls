@@ -14,7 +14,7 @@
       <div class="title-background">
         <button
           class="title-back-button"
-          onclick="window.location.href='{% url 'templates_and_drafts'%}'"
+          onclick="window.location.href='{% if source and source != 'None' %}{% url source%}{%else%}{%url "templates_and_drafts"%}{% endif %}'"
         >
           Tillbaka
         </button>
@@ -25,13 +25,13 @@
         
         {% for question in survey_temp.get_ordered_questions %}
         <a
-          href="{% url 'edit_question' survey_temp.id question.question_format question.id %}"
+          href="{% url 'edit_question' survey_temp.id question.question_format question.id %}{% if source and source != 'None' %}?source={{ source }}{% endif %}"
           class="grid-item blue"
         >
           <div class="question-title">
             <h1>Fråga {{forloop.counter}}</h1>
             <form
-              hx-post="{% url 'delete_question' question.id survey_temp.id %}"
+              hx-post="{% url 'delete_question' question.id survey_temp.id %}{% if source and source != 'None' %}?source={{ source }}{% endif %}"
               hx-trigger="submit"
               hx-confirm="Är du säker att du vill ta bort den här frågan?"
               hx-swap="none"
@@ -49,7 +49,7 @@
 
           <div class="question-result">
             <form
-              hx-post="{% url 'move_question_left' survey_temp.id question.id %}"
+              hx-post="{% url 'move_question_left' survey_temp.id question.id %}{% if source and source != 'None' %}?source={{ source }}{% endif %}"
               hx-trigger="submit"
               hx-target="#question-list"
               hx-swap="outerHTML"
@@ -66,7 +66,7 @@
             />
 
             <form
-              hx-post="{% url 'move_question_right' survey_temp.id question.id %}"
+              hx-post="{% url 'move_question_right' survey_temp.id question.id %}{% if source and source != 'None' %}?source={{ source }}{% endif %}"
               hx-trigger="submit"
               hx-target="#question-list"
               hx-swap="outerHTML"
@@ -80,7 +80,7 @@
         {% endfor %}
 
         <a
-          href="{% url 'create_question' survey_temp.id %}"
+          href="{% url 'create_question' survey_temp.id %}{% if source and source != 'None' %}?source={{ source }}{% endif %}"
           class="add-button-link"
         >
           <div class="add-button">
@@ -198,7 +198,8 @@
           <div class="popup-buttons">
             <button
               class="image-button"
-              onclick="window.location.href='{% url 'create_survey_with_id' survey_temp.id %}'"
+              onclick="window.location.href='{% url 'create_survey_with_id' survey_temp.id %}
+              {% if source and source != 'None' %}?source={{ source }}{% endif %}'"
             >
               <img
                 src="{% static 'images/go-back-btn.png' %}"
