@@ -20,7 +20,16 @@
         </button>
         <h2>Skapa enkät</h2>
       </div>
-      <button class="button" onclick="openPopup()">Publicera</button>
+      {% if source == "organization_templates" %}
+        <button
+        class="title-back-button"
+        onclick="window.location.href='{% if source and source != 'None' %}{% url source%}{%else%}{%url "templates_and_drafts"%}{% endif %}'"
+        > 
+        Spara enkät
+        </button>
+      {% else%}
+        <button class="button" onclick="openPopup()">Publicera</button>
+      {% endif %}
       <div class="grid-container" id="question-list">
         
         {% for question in survey_temp.get_ordered_questions %}
