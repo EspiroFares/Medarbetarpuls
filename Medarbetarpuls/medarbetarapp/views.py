@@ -1753,23 +1753,20 @@ def survey_result_view(request, survey_id):
 
     # Retrievs all survey results of this survey
     survey_results = survey.survey_results.all()
+    user = request.user
 
     summary_context = analysis_handler.get_survey_summary(survey.id)
-    summary_context_myresult = analysis_handler.get_survey_summary(survey.id, user=request.user)
-    for i, q_summary in enumerate(summary_context["summaries"]):
-        my_result = summary_context_myresult["summaries"][i].get("my_result")
-        q_summary["my_result"] = my_result
+    for summary in summary_context["summaries"]:
+        summary["my_result"] = analysis_handler.get_answers(
+            summary["question"], user=user, survey=survey
+        ).first()
 
     if survey_results is None:
         # This survey has no answers (should not even be displayed to the user then)
         return HttpResponse(400)
 
     # Proceed to render the survey results
-    return render(
-        request,
-        "survey_result.html",
-        summary_context
-    )
+    return render(request, "survey_result.html", summary_context)
 
 
 @login_required
@@ -1872,7 +1869,6 @@ def analysis_view(request):
     summary = analysisHandler.get_survey_summary(
         survey_id=survey.id,
         employee_group=group,
-        
     )
 
     for i in summary["summaries"]:

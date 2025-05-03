@@ -105,13 +105,6 @@ class AnalysisHandler:
             filters["survey__in"] = results
 
         if user:
-            if (
-               survey and user == survey.creator
-            ):  # tycker vi bör ha hanterat detta någon annanstans
-                logger.info(
-                    "No answers available for %s", user or employee_group or survey
-                )
-                return Answer.objects.none()
             filters["survey__user"] = user
 
         elif employee_group:
@@ -371,7 +364,6 @@ class AnalysisHandler:
         answers = self.get_answers(
             question, survey, user=user, employee_group=employee_group
         )
-        my_answer = answers.filter(survey__user=user).first() if user else None  
 
         distribution = self.get_response_distribution_slider(answers)
         standard_deviation = self.calculate_standard_deviation(answers)
@@ -381,7 +373,6 @@ class AnalysisHandler:
         return {
             "question": question,
             "answers": answers,
-            "my_answer": my_answer,
             "slider_values": [str(i) for i in range(1, 11)],
             "comments": comments,
             "text_comments": self.get_text_comments(comments),
@@ -432,14 +423,12 @@ class AnalysisHandler:
         answers = self.get_answers(
             question, survey, user=user, employee_group=employee_group
         )
-        my_answer = self.get_answers(question, survey, user=user).first() if user else None
 
         distribution = self.get_response_distribution_mc(answers, answer_options)
         comments = self.get_comments(question, survey)
         return {
             "question": question,
             "answers": answers,
-            "my_answer": my_answer,
             "comments": comments,
             "text_comments": self.get_text_comments(comments),
             "answer_options": answer_options,
@@ -470,7 +459,6 @@ class AnalysisHandler:
         answers = self.get_answers(
             question, survey, user=user, employee_group=employee_group
         )
-        my_answer = answers.filter(survey__user=user).first() if user else None
         distribution = self.get_response_distribution_yes_no(answers)
         answer_count = answers.count()
         yes_count = answers.filter(yes_no_answer=True).count()
@@ -506,7 +494,6 @@ class AnalysisHandler:
         answers = self.get_answers(
             question, survey, user=user, employee_group=employee_group
         )
-        my_answer = self.get_answers(question, survey, user=user).first() if user else None
 
         text_answers = []
         for answer in answers:
@@ -518,7 +505,6 @@ class AnalysisHandler:
         return {
             "question": question,
             "answers": answers,
-            "my_answer": my_answer,
             "text_answers": text_answers,
             "answer_count": answer_count,
             "comments": comments,
@@ -526,7 +512,7 @@ class AnalysisHandler:
         }
 
     # --------------- FULL SURVEY SUMMARY -----------
- 
+
     def get_survey_summary(
         self,
         survey_id: int,
@@ -585,24 +571,10 @@ class AnalysisHandler:
             else:
                 continue  # skip unknown formats
 
-            # Add user's personal result if user is given
-            if user:
-                question_summary["my_result"] = Answer.objects.filter(
-                    question=question,
-                    survey__published_survey=survey,
-                    survey__user=user,
-                    is_answered=True
-                ).first()
-            else:
-                question_summary["my_result"] = None
-
             summary["summaries"].append(question_summary)
 
         return summary
 
-
-
-    
     # ----------------------- HISTORY ----------------------
 
     def get_filtered_surveys(
