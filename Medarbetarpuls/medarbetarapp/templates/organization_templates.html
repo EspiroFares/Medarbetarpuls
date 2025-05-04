@@ -46,7 +46,7 @@
                 src="{% static 'images/trashcan.png' %}"
                 class="icon-img"
                 onclick="event.stopPropagation(); event.preventDefault();"
-                hx-post="{% url 'delete_survey_template' survey_temp.id %}"
+                hx-post="{% url 'delete_survey_template' survey_temp.id %}?source={{ source }}"
                 hx-confirm="Är du säker att du vill ta bort den här enkäten?"
                 hx-target=".grid-item"
               />

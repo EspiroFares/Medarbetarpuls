@@ -92,7 +92,7 @@
       <div class="grid-container">
         {% for survey in organization_survey_templates %}
         <a
-          href="{% url 'create_survey_with_id' survey.id %}"
+          href="{% url 'create_survey_with_id' survey.id%}?source=readonly"
           class="grid-item blue"
         >
           <div class="question-title">
@@ -103,27 +103,7 @@
             <p>{{ survey.last_edited }}</p>
           </div>
           <div class="question-result">
-            <div class="grid-icon">
-              <img
-                src="{% static 'images/trashcan.png' %}"
-                class="icon-img"
-                onclick="event.stopPropagation(); event.preventDefault();"
-                hx-post="{% url 'delete_survey_template' survey.id %}"
-                hx-confirm="Är du säker att du vill ta bort den här enkäten?"
-                hx-target=".grid-item"
-              />
-              <meta name="csrf-token" content="{{ csrf_token }}" />
-            </div>
-            <div class="grid-icon">
-              <img
-                src="{% static 'images/share-icon.png' %}"
-                class="icon-img"
-                onclick="event.stopPropagation(); event.preventDefault();"
-                hx-get="{% url 'create_survey_with_id' survey.id %}"
-                hx-target="body"
-                hx-swap="outerHTML"
-              />
-            </div>
+            
           </div>
         </a>
         {% endfor %}
