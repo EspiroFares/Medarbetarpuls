@@ -14,7 +14,7 @@
       <div class="title-background">
         <button
           class="title-back-button"
-          onclick="window.location.href='{% if source and source != 'None' %}{% url source%}{%else%}{%url "templates_and_drafts"%}{% endif %}'"
+          onclick="window.location.href='{% if source and source == 'organization_templates' %}{% url source%}{%else%}{%url "templates_and_drafts"%}{% endif %}'"
         >
           Tillbaka
         </button>
@@ -23,33 +23,35 @@
       {% if source == "organization_templates" %}
         <button
         class="title-back-button"
-        onclick="window.location.href='{% if source and source != 'None' %}{% url source%}{%else%}{%url "templates_and_drafts"%}{% endif %}'"
+        onclick="window.location.href='{% if source == 'organization_templates' %}{% url source%}{%else%}{%url "templates_and_drafts"%}{% endif %}'"
         > 
         Spara enkät
         </button>
-      {% else%}
+      {% else %}
         <button class="button" onclick="openPopup()">Publicera</button>
       {% endif %}
       <div class="grid-container" id="question-list">
         
         {% for question in survey_temp.get_ordered_questions %}
         <a
-          href="{% url 'edit_question' survey_temp.id question.question_format question.id %}{% if source and source != 'None' %}?source={{ source }}{% endif %}"
+          href="{% url 'edit_question' survey_temp.id question.question_format question.id %}{% if source%}?source={{ source }}{% endif %}"
           class="grid-item blue"
         >
           <div class="question-title">
             <h1>Fråga {{forloop.counter}}</h1>
-            <form
-              hx-post="{% url 'delete_question' question.id survey_temp.id %}{% if source and source != 'None' %}?source={{ source }}{% endif %}"
-              hx-trigger="submit"
-              hx-confirm="Är du säker att du vill ta bort den här frågan?"
-              hx-swap="none"
-            >
-              {% csrf_token %}
-              <button class="question-remove-button" type="submit">
-                Ta bort
-              </button>
-            </form>
+            {% if source != "readonly"%}
+              <form
+                hx-post="{% url 'delete_question' question.id survey_temp.id %}{% if source == 'organization_templates' %}?source={{ source }}{% endif %}"
+                hx-trigger="submit"
+                hx-confirm="Är du säker att du vill ta bort den här frågan?"
+                hx-swap="none"
+              >
+                {% csrf_token %}
+                <button class="question-remove-button" type="submit">
+                  Ta bort
+                </button>
+              </form>
+            {%endif%}
           </div>
 
           <div class="question-background">
@@ -57,8 +59,9 @@
           </div>
 
           <div class="question-result">
+          {% if source != "readonly"%}
             <form
-              hx-post="{% url 'move_question_left' survey_temp.id question.id %}{% if source and source != 'None' %}?source={{ source }}{% endif %}"
+              hx-post="{% url 'move_question_left' survey_temp.id question.id %}{% if source == 'organization_templates' %}?source={{ source }}{% endif %}"
               hx-trigger="submit"
               hx-target="#question-list"
               hx-swap="outerHTML"
@@ -67,15 +70,15 @@
               {% csrf_token %}
               <button type="submit">&larr;</button>
             </form>
-
+          {% endif %}
             <img
               src="{% static 'images/' %}{{ question.question_format }}.png"
               alt="{{ question.question_format.label }} image"
               class="question-icon"
             />
-
+          {% if source != "readonly"%}
             <form
-              hx-post="{% url 'move_question_right' survey_temp.id question.id %}{% if source and source != 'None' %}?source={{ source }}{% endif %}"
+              hx-post="{% url 'move_question_right' survey_temp.id question.id %}{% if source == 'organization_templates' %}?source={{ source }}{% endif %}"
               hx-trigger="submit"
               hx-target="#question-list"
               hx-swap="outerHTML"
@@ -84,18 +87,21 @@
               {% csrf_token %}
               <button type="submit">&rarr;</button>
             </form>
+          {% endif %}
           </div>
         </a>
         {% endfor %}
 
+        {% if source != "readonly" %}
         <a
-          href="{% url 'create_question' survey_temp.id %}{% if source and source != 'None' %}?source={{ source }}{% endif %}"
+          href="{% url 'create_question' survey_temp.id %}{% if source == 'organization_templates' %}?source={{ source }}{% endif %}"
           class="add-button-link"
         >
           <div class="add-button">
             <span>+</span>
           </div>
         </a>
+        {% endif %}
       </div>
     </div>
     <div
