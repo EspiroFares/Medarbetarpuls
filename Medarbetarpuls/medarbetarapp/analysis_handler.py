@@ -106,13 +106,6 @@ class AnalysisHandler:
             filters["survey__in"] = results
 
         if user:
-            if (
-                user == survey.creator
-            ):  # tycker vi bör ha hanterat detta någon annanstans
-                logger.info(
-                    "No answers available for %s", user or employee_group or survey
-                )
-                return Answer.objects.none()
             filters["survey__user"] = user
 
         elif employee_group:
@@ -168,6 +161,21 @@ class AnalysisHandler:
         return Answer.objects.filter(**filters).exclude(
             comment=""
         )  # only returns comments non empty comments, do we want empty comments?
+
+    def get_text_comments(self, answers: QuerySet):
+        """
+        Returns list of comment text from the given Answer-Queryset
+
+        Args:
+            comment (Queryset of Answer): The Queryset that will give the comment-text list
+
+        Returns:
+            List[CharField]: A list of the comment texts.
+        """
+        text_comments = []
+        for answer in answers:
+            text_comments.append(answer.comment)
+        return text_comments
 
     def get_participation_metrics(
         self, survey: Survey, employee_group: EmployeeGroup
@@ -281,6 +289,7 @@ class AnalysisHandler:
             "answers": answers,
             "enpsScore": score,
             "comments": comments,
+            "text_comments": self.get_text_comments(comments),
             "enpsPieLabels": ["Detractors", "Passives", "Promoters"],
             "enpsPieData": [detractors, passives, promoters],
             "slider_values": [str(i) for i in range(1, 11)],
@@ -350,18 +359,20 @@ class AnalysisHandler:
         answers = self.get_answers(
             question, survey, user=user, employee_group=employee_group
         )
+
         distribution = self.get_response_distribution_slider(answers)
         standard_deviation = self.calculate_standard_deviation(answers)
         variation_coefficient = self.calculate_variation_coefficient(answers)
         comments = self.get_comments(
             question, survey, user=user, employee_group=employee_group
         )
-        mean = self.calculate_mean(answers)
+        mean = round(self.calculate_mean(answers), 2)
         return {
             "question": question,
             "answers": answers,
             "slider_values": [str(i) for i in range(1, 11)],
             "comments": comments,
+            "text_comments": self.get_text_comments(comments),
             "distribution": distribution,
             "standard_deviation": standard_deviation,
             "variation_coefficient": variation_coefficient,
@@ -391,13 +402,13 @@ class AnalysisHandler:
         user: CustomUser | None = None,
         employee_group: EmployeeGroup | None = None,
     ) -> Dict[str, Any]:
-
         if not question or not question.specific_question:
             # Om question eller specific_question inte finns
             return {
                 "question": question,
                 "answers": [],
                 "comments": [],
+                "text_comments": [],
                 "answer_options": [],
                 "distribution": [],
             }
@@ -406,12 +417,14 @@ class AnalysisHandler:
         answers = self.get_answers(
             question, survey, user=user, employee_group=employee_group
         )
+
         distribution = self.get_response_distribution_mc(answers, answer_options)
         comments = self.get_comments(question, survey)
         return {
             "question": question,
             "answers": answers,
             "comments": comments,
+            "text_comments": self.get_text_comments(comments),
             "answer_options": answer_options,
             "distribution": distribution,
         }
@@ -431,7 +444,6 @@ class AnalysisHandler:
         user: CustomUser | None = None,
         employee_group: EmployeeGroup | None = None,
     ) -> Dict[str, Any]:
-
         answer_options = [
             "YES",
             "NO",
@@ -453,6 +465,8 @@ class AnalysisHandler:
         return {
             "question": question,
             "comments": comments,
+            "answers": answers,
+            "text_comments": self.get_text_comments(comments),
             "answer_options": answer_options,
             "distribution": distribution,
             "yes_percentage": yes_percentage,
@@ -467,13 +481,12 @@ class AnalysisHandler:
         user: CustomUser | None = None,
         employee_group: EmployeeGroup | None = None,
     ) -> Dict[str, Any]:
-
         answers = self.get_answers(
             question, survey, user=user, employee_group=employee_group
         )
-        answer_list = list(answers)
+
         text_answers = []
-        for answer in answer_list:
+        for answer in answers:
             text_answers.append(answer.free_text_answer)
 
         comments = self.get_comments(question, survey)
@@ -485,9 +498,11 @@ class AnalysisHandler:
             "text_answers": text_answers,
             "answer_count": answer_count,
             "comments": comments,
+            "text_comments": self.get_text_comments(comments),
         }
 
     # --------------- FULL SURVEY SUMMARY -----------
+
     def get_survey_summary(
         self,
         survey_id: int,
@@ -505,6 +520,7 @@ class AnalysisHandler:
             "employee_group": employee_group,
             "summaries": [],
         }
+
         questions = Question.objects.filter(connected_surveys__id=survey_id)
 
         for question in questions:
@@ -532,7 +548,7 @@ class AnalysisHandler:
             elif question.question_type == QuestionType.ENPS:
                 question_summary = self.get_enps_summary(
                     survey=survey,
-                    question = question,
+                    question=question,
                     user=user,
                     employee_group=employee_group,
                 )
@@ -543,6 +559,8 @@ class AnalysisHandler:
                     user=user,
                     employee_group=employee_group,
                 )
+            else:
+                continue  # skip unknown formats
 
             summary["summaries"].append(question_summary)
 
@@ -582,7 +600,9 @@ class AnalysisHandler:
         trend = []
 
         for survey in sorted(surveys, key=lambda s: s.sending_date):
-            question = survey.questions.filter(question=question.question).first() #fetch the question object corresponding to the same string as the 
+            question = (
+                survey.questions.filter(question=question.question).first()
+            )  # fetch the question object corresponding to the same string as the
             if question.question_format == QuestionFormat.MULTIPLE_CHOICE:
                 question_summary = self.get_multiple_choice_summary(
                     question=question,

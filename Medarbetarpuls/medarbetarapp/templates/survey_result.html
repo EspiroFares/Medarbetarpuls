@@ -47,69 +47,132 @@
       <div class="grid-container">
         {% for summary in summaries %}
 
-        <div class="grid-item result green">
+        <!-- Code for creating boxes for question-results. 
+         Alpine is used for switching between showing result, comments and personal answers. -->
+        <div
+          class="grid-item result green"
+          x-data="{
+                STATES: {
+                    ANSWER: 'answer',
+                    COMMENT: 'comment',
+                    PERSONAL_ANSWER: 'personal_answer'
+                },
+                show_state : 'answer',
+                
+                toggle_answer(state) { 
+                    if (this.show_state === state) {
+                        this.show_state = this.STATES.ANSWER;
+                    } else {
+                        this.show_state = state;
+                    }
+                }
+            }"
+        >
+          <!-- Question number and title -->
           <div class="question-title result">
+            <!-- Button for toggle between personal answer and result -->
+            <button
+              @click="toggle_answer(STATES.PERSONAL_ANSWER)"
+              x-text="show_state === STATES.PERSONAL_ANSWER ? 'Stäng svar' : 'Visa svar'"
+            ></button>
+
             <h1>Fråga {{ forloop.counter }}</h1>
+
+            <!-- Button for toggle between comment and result -->
+            <img
+              @click="toggle_answer(STATES.COMMENT)"
+              style="cursor: pointer"
+              src="{% static 'images/text' %}.png"
+              alt="Kommentarer"
+              class="question-icon result"
+            />
           </div>
 
+          <!-- Shows the question -->
           <div class="question-background result">
             <p>{{ summary.question.question }}</p>
           </div>
 
-          <div class="question-result" x-data="{ index: 0 }">
+          <!-- Shows comments for the question. Is only showned when toggled 
+               by one of the earlier buttons -->
+          <div class="question-result" x-show="show_state === STATES.COMMENT">
+            <strong>Kommentarer:</strong>
+            {% with list_=summary.text_comments %}
+            <!---->
+            {% include "step_thru_text.html" with list_=list_ is_answer=False %}
+            <!---->
+            {% endwith %}
+          </div>
+
+          <!-- Shows personal answer for the question. Is only showned when toggled 
+               by one of the earlier buttons -->
+
+          <div
+            class="question-result"
+            x-show="show_state === STATES.PERSONAL_ANSWER"
+          >
+            {% if summary.my_result %}
+            <p>
+              <strong>Ditt svar:</strong>
+              <!---->
+              {% if summary.question.question_format == "multiplechoice" %}
+              <!---->
+              {% for answer in summary.my_result.answer %}
+              <!---->
+              {% if answer %}
+              <!---->
+              {{ forloop.counter }}<br />
+              {% endif %}
+              <!---->
+              {% endfor %}
+              <!---->
+              {% else %} {{ summary.my_result.answer }}
+              <!---->
+              {% endif %}
+            </p>
+            {% else %}
+            <p><em>Du har inte besvarat denna fråga.</em></p>
+            {% endif %}
+            <!---->
+            {% if summary.my_result.comment %}
+            <p>
+              <strong>Din kommentar:</strong> <br />
+              {{ summary.my_result.comment }}
+            </p>
+            {% else %}
+            <p><strong>Du angav ingen kommentar</strong></p>
+            {% endif %}
+          </div>
+
+          <!-- Shows question-result. It is showned by default but is toggled 
+               by the earlier buttons.-->
+          <div class="question-result" x-show="show_state === STATES.ANSWER">
             {% if summary.question.question_format == "yesno" %}
-            <p>{{ summary.yes_percentage }}%</p>
-            <img
-              src="{% static 'images/' %}{{ summary.question.question_format }}.png"
-              alt="{{ summary.question.question_format }}"
-              class="question-icon result"
-            />
-            <p>{{ summary.no_percentage }}%</p>
-            {% elif summary.question.question_format == "text" %}
-            <div
-              x-data="{ answers: {{ summary.text_answers|safe }}, answer_count: {{ summary.answer_count }} }"
-            >
-              <table>
-                <tr>
-                  <td>
-                    <button
-                      @click="if(index > 0) index--"
-                      :disabled="index === 0"
-                    >
-                      Föregående
-                    </button>
-                  </td>
+            <!-- Code for yes/no-question result -->
 
-                  <td>
-                    <p x-text="`${index+1}/${answer_count}`"></p>
-                  </td>                
-                    <!-- Remove because is not really necessary for the result? 
-                     <td>
-                     <img
-                      src="{% static 'images/' %}{{ summary.question.question_format }}.png"
-                      alt="{{ summary.question.question_format }}"
-                      class="question-icon result"
-                    />
-                    </td>
-                    -->
-                  <td>
-                    <button
-                      @click="if(index < answer_count - 1) index++"
-                      :disabled="index === answer_count - 1"
-                    >
-                      Nästa
-                    </button>
-                  </td>
-                </tr>
-              </table>
-
-              <p
-                x-text="answer_count > 0 ? answers[index] : 'Inga svar finns'"
-                class="result-text"
-              ></p>
+            <div class="question-result yesno">
+              <p>{{ summary.yes_percentage }}%</p>
+              <img
+                src="{% static 'images/' %}{{ summary.question.question_format }}.png"
+                alt="{{ summary.question.question_format }}"
+                class="question-icon"
+              />
+              <p>{{ summary.no_percentage }}%</p>
             </div>
 
+            {% elif summary.question.question_format == "text" %}
+            <!-- Code for text-question result -->
+
+            {% with list_=summary.text_answers %}
+            <!---->
+            {% include "step_thru_text.html" with list_=list_ is_answer=True %}
+            <!---->
+            {% endwith %}
+            <!---->
+
             {% elif summary.question.question_format == "multiplechoice" %}
+            <!-- Code for multiplechoice-question result -->
+
             <div class="graph-container">
               <canvas id="{{ forloop.counter }}"></canvas>
             </div>
@@ -126,7 +189,9 @@
               initBarChart("{{ forloop.counter }}", {{ summary.answer_options|safe}}, {{ summary.distribution|safe  }}, pieColors);
               });
             </script>
+
             {% elif summary.question.question_format == "slider" %}
+            <!-- Code for slider-question result -->
 
             <p>Medelvärde:</p>
             <p>{{ summary.mean|safe }}</p>
@@ -195,18 +260,24 @@
       function resetTimer() {
         clearTimeout(logoutTimer);
         logoutTimer = setTimeout(() => {
-          document.getElementById('logout-form').requestSubmit();
-          }, 10 * 60 * 1000); // 10 minutes
+          document.getElementById("logout-form").requestSubmit();
+        }, 10 * 60 * 1000); // 10 minutes
       }
-  
+
       window.onload = resetTimer;
       document.onmousemove = resetTimer;
       document.onkeypress = resetTimer;
       document.onscroll = resetTimer;
       document.onclick = resetTimer;
-    
     </script>
-    <form id="logout-form" method="post" hx-post="/logout/" hx-target="body" hx-swap="outerHTML" style="display:none;">
+    <form
+      id="logout-form"
+      method="post"
+      hx-post="/logout/"
+      hx-target="body"
+      hx-swap="outerHTML"
+      style="display: none"
+    >
       {% csrf_token %}
     </form>
   </body>
