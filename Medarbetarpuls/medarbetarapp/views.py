@@ -8,7 +8,7 @@ from xmlrpc.client import Boolean
 from django.core.cache import cache
 from datetime import datetime, time
 from django.http import HttpResponse
-from .models import QuestionType, SurveyUserResult, EmployeeGroup
+from .models import QuestionType, SurveyUserResult, EmployeeGroup, QuestionFormat
 from django.core.mail import send_mail
 from .tasks import schedule_notification, publish_survey_async
 from django.utils.timezone import make_aware
@@ -21,6 +21,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Case, When, IntegerField, Value
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from .standard_questions import STANDARD_QUESTIONS
+from django.conf import settings
 
 
 logger = logging.getLogger(__name__)
@@ -1347,6 +1348,9 @@ def publish_survey(request, survey_id: int) -> HttpResponse:
 
             # Only tries scheduling if we are on linux system!
             os_type = platform.system()
+            
+            if settings.DEBUG:
+                survey.publish_survey()
 
             if os_type == "Linux":
                 publish_survey_async.apply_async(
@@ -2115,7 +2119,8 @@ def analysis_view(request):
         context["message"] = "Gruppen har inga enkäter ännu."
         return render(request, "analysis.html", context)
 
-    
+    # Sortera innan slicing för att undvika "Cannot reorder..."-fel
+    surveys = surveys.order_by("-sending_date")
     if survey_count != "all":
         try:
             count = int(survey_count)
@@ -2145,21 +2150,46 @@ def analysis_view(request):
         )
     )
 
-    # ======== Question Trend (bank) ============
+    selected_question_format = None
     if question_id:
         selected_question = get_object_or_404(models.Question, id=question_id)
         context["selected_question_text"] = selected_question.question
+
+        if selected_question.question_type == QuestionType.ENPS:
+            selected_question_format = QuestionType.ENPS
+        else:
+            selected_question_format = selected_question.question_format
+
+        # Trenddata för alla format
         trend_data = analysisHandler.get_question_trend(
             selected_question,
             list(filtered_surveys),
             group,
             respondents_dict.get(user_id) if user_id else None,
         )
-        context["lineLabels"] = [entry["sending_date"] for entry in trend_data]
-        context["lineData"] = [
-            entry["summary"].get("mean", 0) for entry in trend_data
-        ]
+        print(trend_data)
+        if trend_data:
+            last_summary = trend_data[-1]["summary"]
 
+            context["slider_mean"] = last_summary.get("mean", 0)
+            context["slider_std"] = last_summary.get("standard_deviation", 0)
+            context["slider_cv"] = last_summary.get("variation_coefficient", 0)
+            context["slider_median"] = last_summary.get("median", 0)  # om tillgänglig
+
+            context["slider_values"] = last_summary.get("labels", [str(i) for i in range(11)])
+            context["sliderDistribution"] = last_summary.get("distribution", [0]*11)
+            context["sliderTrendData"] = [entry["summary"].get("mean", 0) for entry in trend_data]
+            context["sliderTrendLabels"] = [entry["sending_date"] for entry in trend_data]
+        
+            context["enpsScore"] = last_summary.get("enpsScore")
+            context["enpsPieLabels"] = last_summary.get("enpsPieLabels")
+            context["enpsPieData"] = last_summary.get("enpsPieData")
+            context["enpsDistribution"] = last_summary.get("enpsDistribution") 
+
+
+    context["selected_question_format"] = selected_question_format
     context["bank_questions"] = analysisHandler.get_bank_questions()
+    context["QuestionFormat"] = QuestionFormat
+    context["QuestionType"] = QuestionType
 
     return render(request, "analysis.html", context)

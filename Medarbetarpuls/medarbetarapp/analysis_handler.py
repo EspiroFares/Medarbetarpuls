@@ -78,7 +78,12 @@ class AnalysisHandler:
         Returns:
             QuerySet[Survey]: A distinct queryset of Survey objects linked to the given group.
         """
-        return Survey.objects.filter(employee_groups=employee_group).distinct()
+        return (
+        Survey.objects
+        .filter(employee_groups=employee_group)
+        .order_by('-sending_date')
+        .distinct()
+    )
 
     def get_answers(
         self,
@@ -349,7 +354,7 @@ class AnalysisHandler:
         mean = self.calculate_mean(answers)
         variance = sum((x - mean) ** 2 for x in values) / n
         standard_deviation = math.sqrt(variance)
-        return standard_deviation
+        return round(standard_deviation, 2)
 
     def calculate_variation_coefficient(self, answers) -> float:
         """Calculate coefficient of variation for slider answers."""
@@ -624,41 +629,46 @@ class AnalysisHandler:
         trend = []
 
         for survey in sorted(surveys, key=lambda s: s.sending_date):
-            question = (
-                survey.questions.filter(question=question.question).first()
+            _question = question
+            
+            question_obj = (
+                survey.questions.filter(question=_question.question).first()
             )  # fetch the question object corresponding to the same string as the
-            if question.question_format == QuestionFormat.MULTIPLE_CHOICE:
+            if question_obj is None:
+                continue
+            
+            if question_obj.question_format == QuestionFormat.MULTIPLE_CHOICE:
                 question_summary = self.get_multiple_choice_summary(
-                    question=question,
+                    question=question_obj,
                     survey=survey,
                     user=user,
                     employee_group=employee_group,
                 )
-            elif question.question_format == QuestionFormat.YES_NO:
+            elif question_obj.question_format == QuestionFormat.YES_NO:
                 question_summary = self.get_yes_no_summary(
-                    question=question,
+                    question=question_obj,
                     survey=survey,
                     user=user,
                     employee_group=employee_group,
                 )
-            elif question.question_format == QuestionFormat.TEXT:
+            elif question_obj.question_format == QuestionFormat.TEXT:
                 # cant show any trends on text questions, should we show participation metrics here instead?
                 question_summary = self.get_free_text_summary(
-                    question=question,
+                    question=question_obj,
                     survey=survey,
                     user=user,
                     employee_group=employee_group,
                 )
-            elif question.question_type == QuestionType.ENPS:
+            elif question_obj.question_type == QuestionType.ENPS:
                 question_summary = self.get_enps_summary(
-                    question=question,
+                    question=question_obj,
                     survey=survey,
                     user=user,
                     employee_group=employee_group,
                 )
-            elif question.question_format == QuestionFormat.SLIDER:
+            elif question_obj.question_format == QuestionFormat.SLIDER:
                 question_summary = self.get_slider_summary(
-                    question=question,
+                    question=question_obj,
                     survey=survey,
                     user=user,
                     employee_group=employee_group,

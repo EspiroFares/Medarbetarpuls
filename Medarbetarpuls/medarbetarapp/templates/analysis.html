@@ -33,10 +33,8 @@
             <strong>Välj grupp:</strong>
             <span id="pillContainer"></span>
             <form method="get" action="{% url 'analysis' %}">
-              <input type="hidden" name="group_id" value="{{ request.GET.group_id }}">
               <input type="hidden" name="surveys" value="{{ request.GET.surveys }}">
               <select id="groupDropdown" name="group_id" onchange="this.form.submit()">
-                <option value="">— Välj grupp —</option>
                 {% for group in user.survey_groups.all %}
                   <option value="{{ group.id }}" {% if group.id|stringformat:"s" == request.GET.group_id %}selected{% endif %}>
                     {{ group.name }}
@@ -46,42 +44,41 @@
             </form>
           </div>
 
-          <div id="filterBar">
-            <strong>Välj användare:</strong>
-            <span id="pillContainer"></span>
-            <form method="get" action="{% url 'analysis' %}">
-              <!-- Keep existing filters -->
-              <input type="hidden" name="group_id" value="{{ request.GET.group_id }}">
-              <input type="hidden" name="surveys" value="{{ request.GET.surveys }}">
-              
-              <!-- Dropdown for respondents -->
-              <select id="userDropdown" name="user_id" onchange="this.form.submit()">
-                <option value="">— Välj användare —</option>
-                {% for label, user in respondents.items %}
-                  <option value="{{ label }}" {% if label == selected_user_id %}selected{% endif %}>
-                    {{ label }}
-                  </option>
-                {% endfor %}
-              </select>
-            </form>
-          </div>
 
-          <div id="filterBar">
-            <strong>Välj bankfråga:</strong>
-            <span id="pillContainer"></span>
-            <form method="get" action="{% url 'analysis' %}">
-              <input type="hidden" name="group_id" value="{{ request.GET.group_id }}">
-              <input type="hidden" name="surveys" value="{{ request.GET.surveys }}">
-              <select id="questionDropdown" name="question_id" onchange="this.form.submit()">
-                <option value="">— Välj fråga —</option>
-                {% for question in bank_questions %}
-                  <option value="{{ question.id }}" {% if question.id|stringformat:"s" == selected_question_id %}selected{% endif %}>
-                    {{ question.question }}
-                  </option>
-                {% endfor %}
-              </select>
-            </form>
-          </div>
+      <div id="filterBar">
+        <strong>Välj användare:</strong>
+        <form method="get" action="{% url 'analysis' %}">
+          <input type="hidden" name="group_id"    value="{{ request.GET.group_id }}">
+          <input type="hidden" name="surveys"     value="{{ request.GET.surveys }}">
+          <input type="hidden" name="question_id" value="{{ request.GET.question_id }}">
+          <select name="user_id" onchange="this.form.submit()">
+            <option value="">— Välj användare —</option>
+            {% for label, user in respondents.items %}
+              <option value="{{ label }}" {% if label == selected_user_id %}selected{% endif %}>
+                {{ label }}
+              </option>
+            {% endfor %}
+          </select>
+        </form>
+      </div>
+
+      <div id="filterBar">
+        <strong>Välj bankfråga:</strong>
+        <form method="get" action="{% url 'analysis' %}">
+          <input type="hidden" name="group_id" value="{{ request.GET.group_id }}">
+          <input type="hidden" name="surveys"  value="{{ request.GET.surveys }}">
+          <input type="hidden" name="user_id"  value="{{ request.GET.user_id }}">
+          <select name="question_id" onchange="this.form.submit()">
+            <option value="">— Välj fråga —</option>
+            {% for question in bank_questions %}
+              <option value="{{ question.id }}" {% if question.id|stringformat:"s" == selected_question_id %}selected{% endif %}>
+                {{ question.question }}
+              </option>
+            {% endfor %}
+          </select>
+        </form>
+      </div>
+
       
       
       <!-- Filter for time period -->
@@ -91,34 +88,34 @@
             class="flex space-x-2 bg-gray-100 p-2 rounded-md"
             id="time-filter"
           >
-          <input type="hidden" name="group_id" value="{{ request.GET.group_id }}">
-          <input type="hidden" name="surveys" value="{{ request.GET.surveys }}">
-            {% for label, value in survey_ranges %}
-              <a
-              href="?group_id={{ request.GET.group_id }}&surveys={{ value }}{% if request.GET.user_id %}&user_id={{ request.GET.user_id }}{% endif %}"
-              class="px-3 py-1 rounded-md text-sm font-medium {% if value == selected_survey_range %} bg-blue-500 text-white {% else %} bg-blue-100 text-blue-900 {% endif %}"
-            >
-              {{ label }}
-            </a>
-            {% endfor %}
+          <input type="hidden" name="group_id"   value="{{ request.GET.group_id }}">
+          <input type="hidden" name="user_id"    value="{{ request.GET.user_id }}">
+          <input type="hidden" name="question_id" value="{{ request.GET.question_id }}">
+          {% for label, value in survey_ranges %}
+          <a
+          href="?group_id={{ request.GET.group_id }}{% if request.GET.user_id %}&user_id={{ request.GET.user_id }}{% endif %}{% if request.GET.question_id %}&question_id={{ request.GET.question_id }}{% endif %}&surveys={{ value }}"
+          class="px-3 py-1 rounded-md text-sm font-medium {% if value == selected_survey_range %}bg-blue-500 text-white{% else %}bg-blue-100 text-blue-900{% endif %}"
+        >
+          {{ label }}
+        </a>
+        
+        {% endfor %}
+        
           </div>
         </div>
       </div>
 
 
       <div class="analysis-container">
-        <div class="analysis-item ratio-5-1">
+        {% if selected_question_format == None %}
+        <div class="analysis-item ratio-2-1">
           <div class="analysis-item-title">
-            <h2><b>eNPS</b></h2>
+            <h2><b>Svarsfrekvens över tid</b></h2>
           </div>
-          <div class="gauge-container">
-            <canvas id="enpsGauge"></canvas>
-          </div>
-          <div class="graph-container">
-            <canvas id="enpsBar"></canvas>
+          <div class="graph-container" style="height: 90%">
+            <canvas id="yesNoPieChart"></canvas>
           </div>
         </div>
-
         <div class="analysis-item ratio-1-1">
           <div class="analysis-item-title">
             <h2><b>Svarsfrekvens</b></h2>
@@ -128,15 +125,289 @@
           </div>
         </div>
 
-        <div class="analysis-item ratio-2-1">
+        <div class="analysis-item ratio-1-1">
           <div class="analysis-item-title">
-            <h2><b>Analysera fråga</b></h2>
+            <h2><b>eNPS</b></h2>
           </div>
-          <div class="graph-container" style="height: 90%">
-            <canvas id="trendChart"></canvas>
+          <div class="graph-container">
+            <canvas id="canvas" width="400" height="400"></canvas>
           </div>
         </div>
-      </div>
+        <div class="analysis-item ratio-2-1">
+          <div class="analysis-item-title">
+            <h2><b>Svarsuppdelning på frågor</b></h2>
+          </div>
+          <div class="graph-container" style="height: 90%">
+            <canvas id="yesNoPieChart"></canvas>
+          </div>
+        </div>
+
+
+        {% elif selected_question_format == "enps" %}
+          <div class="analysis-item ratio-5-1">
+            <div class="analysis-item-title">
+              <h2><b>eNPS</b></h2>
+            </div>
+            <div class="gauge-container">
+              <canvas id="enpsGauge"></canvas>
+            </div>
+            <div class="graph-container">
+              <canvas id="enpsBar"></canvas>
+            </div>
+          </div>
+          <div class="analysis-item ratio-1-1">
+            <div class="analysis-item-title">
+              <h2><b>Svarsfrekvens</b></h2>
+            </div>
+            <div class="graph-container">
+              <canvas id="canvas" width="400" height="400"></canvas>
+            </div>
+          </div>
+          <div class="analysis-item ratio-2-1">
+            <div class="analysis-item-title">
+              <h2><b>Analysera fråga</b></h2>
+            </div>
+            <div class="graph-container" style="height: 90%">
+              <canvas id="trendChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        {% elif selected_question_format == "slider" %}
+        <div class="analysis-item ratio-2-1">
+          <div class="analysis-item-title">
+            <h2><b>Fördelning av val</b></h2>
+          </div>
+          <div class="graph-container" style="height: 90%">
+            <canvas id="barChartSlider"></canvas>
+          </div>
+        </div>
+        <div class="statistics-container">
+          <div class="analysis-item ratio-1-4">
+            <div class="analysis-item-title">
+              <h2><b>Medel</b></h2>
+            </div>
+            <div class="graph-container flex flex-col items-center justify-center text-sm">
+              <p>{{ slider_mean }}</p>
+            </div>
+          </div>
+        
+          <div class="analysis-item ratio-1-4">
+            <div class="analysis-item-title">
+              <h2><b>Std.avv</b></h2>
+            </div>
+            <div class="graph-container flex flex-col items-center justify-center text-sm">
+              <p>{{ slider_std}}</p>
+            </div>
+          </div>
+        
+          <div class="analysis-item ratio-1-4">
+            <div class="analysis-item-title">
+              <h2><b>V.Koeff</b></h2>
+            </div>
+            <div class="graph-container flex flex-col items-center justify-center text-sm">
+              <p>{{ slider_cv}}</p>
+            </div>
+          </div>
+        
+          <div class="analysis-item ratio-1-4">
+            <div class="analysis-item-title">
+              <h2><b>Median</b></h2>
+            </div>
+            <div class="graph-container flex flex-col items-center justify-center text-sm">
+              <p>{{ slider_cv}}</p>
+            </div>
+          </div>
+        </div>
+      
+        <div class="analysis-item ratio-1-1">
+          <div class="analysis-item-title">
+            <h2><b>Svarsfrekvens</b></h2>
+          </div>
+          <div class="graph-container">
+            <canvas id="canvas" width="400" height="400"></canvas>
+          </div>
+        </div>
+        <div class="analysis-item ratio-2-1">
+          <div class="analysis-item-title">
+            <h2><b>Historik</b></h2>
+          </div>
+          <div class="graph-container" style="height: 90%">
+            <canvas id="lineTrendChartSlider"></canvas>
+          </div>
+        </div>
+        
+        {% elif selected_question_format == "multiplechoice" %}
+
+          <div class="analysis-item ratio-2-1">
+            <div class="analysis-item-title">
+              <h2><b>Fördelning av val</b></h2>
+            </div>
+            <div class="graph-container" style="height: 90%">
+              <canvas id="barChartMultipleChoice"></canvas>
+            </div>
+          </div>
+          <div class="statistics-container">
+            <div class="analysis-item ratio-1-4">
+              <div class="analysis-item-title">
+                <h2><b>Medel</b></h2>
+              </div>
+              <div class="graph-container flex flex-col items-center justify-center text-sm">
+                <p>{{ slider_mean }}</p>
+              </div>
+            </div>
+          
+            <div class="analysis-item ratio-1-4">
+              <div class="analysis-item-title">
+                <h2><b>Std.avv</b></h2>
+              </div>
+              <div class="graph-container flex flex-col items-center justify-center text-sm">
+                <p>{{ slider_std}}</p>
+              </div>
+            </div>
+          
+            <div class="analysis-item ratio-1-4">
+              <div class="analysis-item-title">
+                <h2><b>V.Koeff</b></h2>
+              </div>
+              <div class="graph-container flex flex-col items-center justify-center text-sm">
+                <p>{{ slider_cv}}</p>
+              </div>
+            </div>
+          
+            <div class="analysis-item ratio-1-4">
+              <div class="analysis-item-title">
+                <h2><b>V.Koeff</b></h2>
+              </div>
+              <div class="graph-container flex flex-col items-center justify-center text-sm">
+                <p>{{ slider_cv}}</p>
+              </div>
+            </div>
+          </div>
+        
+          <div class="analysis-item ratio-1-1">
+            <div class="analysis-item-title">
+              <h2><b>Svarsfrekvens</b></h2>
+            </div>
+            <div class="graph-container">
+              <canvas id="canvas" width="400" height="400"></canvas>
+            </div>
+          </div>
+          <div class="analysis-item ratio-2-1">
+            <div class="analysis-item-title">
+              <h2><b>Fördelning av val</b></h2>
+            </div>
+            <div class="graph-container" style="height: 90%">
+              <canvas id="barChartMultipleChoice"></canvas>
+            </div>
+          </div>
+        {% elif selected_question_format == "yesno" %}
+          <div class="analysis-item ratio-2-1">
+            <div class="analysis-item-title">
+              <h2><b>Ja/Nej-resultat</b></h2>
+            </div>
+            <div class="graph-container" style="height: 90%">
+              <canvas id="yesNoPieChart"></canvas>
+            </div>
+          </div>
+          <div class="analysis-item ratio-1-1">
+            <div class="analysis-item-title">
+              <h2><b>Svarsfrekvens</b></h2>
+            </div>
+            <div class="graph-container">
+              <canvas id="canvas" width="400" height="400"></canvas>
+            </div>
+          </div>
+          <div class="analysis-item ratio-1-1">
+            <div class="analysis-item-title">
+              <h2><b>Trend</b></h2>
+            </div>
+            <div class="graph-container">
+              <canvas id="canvas" width="400" height="400"></canvas>
+            </div>
+          </div>
+          <div class="analysis-item ratio-1-1">
+            <div class="analysis-item-title">
+              <h2><b>Svarsfrekvens</b></h2>
+            </div>
+            <div class="graph-container">
+              <canvas id="canvas" width="400" height="400"></canvas>
+            </div>
+          </div>
+          <div class="statistics-container">
+            <div class="analysis-item ratio-1-4">
+              <div class="analysis-item-title">
+                <h2><b>Medel</b></h2>
+              </div>
+              <div class="graph-container flex flex-col items-center justify-center text-sm">
+                <p>{{ slider_mean }}</p>
+              </div>
+            </div>
+          
+            <div class="analysis-item ratio-1-4">
+              <div class="analysis-item-title">
+                <h2><b>Std.avv</b></h2>
+              </div>
+              <div class="graph-container flex flex-col items-center justify-center text-sm">
+                <p>{{ slider_std|default:"-"|floatformat:2 }}</p>
+              </div>
+            </div>
+          
+            <div class="analysis-item ratio-1-4">
+              <div class="analysis-item-title">
+                <h2><b>V.Koeff</b></h2>
+              </div>
+              <div class="graph-container flex flex-col items-center justify-center text-sm">
+                <p>{{ slider_cv|default:"-"|floatformat:2 }}</p>
+              </div>
+            </div>
+          
+            <div class="analysis-item ratio-1-4">
+              <div class="analysis-item-title">
+                <h2><b>V.Koeff</b></h2>
+              </div>
+              <div class="graph-container flex flex-col items-center justify-center text-sm">
+                <p>{{ slider_cv|default:"-"|floatformat:2 }}</p>
+              </div>
+            </div>
+          </div>
+
+        {% elif selected_question_format == "text" %}
+        <div class="analysis-item ratio-1-1">
+          <div class="analysis-item-title">
+            <h2><b>Svarsfrekvens</b></h2>
+          </div>
+          <div class="graph-container">
+            <canvas id="canvas" width="400" height="400"></canvas>
+          </div>
+        </div>
+        
+        <div class="analysis-item ratio-2-1">
+          <div class="analysis-item-title">
+            <h2><b>placeholder</b></h2>
+          </div>
+          <div class="graph-container" style="height: 90%">
+            <canvas id="yesNoPieChart"></canvas>
+          </div>
+        </div>
+
+        <div class="analysis-item ratio-2-1">
+          <div class="analysis-item-title">
+            <h2><b>Fritextsvar</b></h2>
+          </div>
+          <div class="graph-container" style="height: 90%; overflow-y: scroll;">
+            {% for answer in free_text_answers %}
+              <p>{{ answer }}</p>
+            {% empty %}
+              <p>Inga svar tillgängliga.</p>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+
+
+
     
 
     <script>
@@ -197,15 +468,32 @@
     const pieLabels       = {{ enpsPieLabels    |default:"['Detractors', 'Passives', 'Promoters']" |safe }};
     const pieData         = {{ enpsPieData      |default:"[0,0,0]" |safe }};
     const enpsDate        = "{{ deadline|default:'####-##-##' }}";
-    const answerData     = {{ answer_pct |default:"0" |safe }};
-    
-    const enpsDataChange  = {{ enpsChange        |default:"0"  |safe }};            // Hur ska detta hämtas??
-    const answerChange    = {{ answerChange        |default:"0"  |safe }};              // placeholder
+    const answerData      = {{ answer_pct       |default:"0" |safe }};
+    const enpsDataChange  = {{ enpsChange       |default:"0" |safe }};
+    const answerChange    = {{ answerChange     |default:"0" |safe }};
     const pieColors       = ["rgb(140,214,16)","rgb(16,23,214)","rgb(16,191,214)"];
-
-    const lineLabels = {{ lineLabels    |default:"['####-##-##', '####-##-##', '####-##-##']" |safe }};
-    const lineData = {{ lineData      |default:"[0,0,0]" |safe }};
+    
+    // Trend chart
+    const lineLabels = {{ lineLabels            |default:"['####-##-##', '####-##-##', '####-##-##']" |safe }};
+    const lineData   = {{ lineData              |default:"[0,0,0]" |safe }};
     const lineColors = ["rgb(140,214,16)","rgb(16,23,214)"];
+    
+    // Extra bar chart (multiple choice/slider)
+    const barChartSlider = {{ slider_values    |default:"['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10']" |safe }};
+    const barDataSlider  = {{ sliderDistribution |default:"[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]" |safe }};
+    const barChartLabels = {{ barChartLabels    |default:"[]" |safe }};
+    const barChartData   = {{ barChartData      |default:"[]" |safe }};
+    
+    // Yes/No chart
+    const yesNoLabels    = {{ yesNoLabels       |default:"['Ja', 'Nej']" |safe }};
+    const yesNoData      = {{ yesNoData         |default:"[0,0]" |safe }};
+    
+    // Statistiska värden (för både slider och multiple choice)
+    const sliderMean     = {{ slider_mean       |default:"0" |safe }};
+    const sliderStd      = {{ slider_std        |default:"0" |safe }};
+    const sliderCv       = {{ slider_cv         |default:"0" |safe }};
+    const sliderTrendLabels = {{ lineLabels            |default:"['####-##-##', '####-##-##', '####-##-##']" |safe }};
+    const sliderTrendData = {{ lineData              |default:"[0,0,0]" |safe }};
     
     function safeInit(fn, id, ...args) {
       const canvas = document.getElementById(id);
@@ -220,12 +508,16 @@
     
     document.addEventListener("DOMContentLoaded", function () {
       if (enpsBarLabels.length === 0) return;
-    
+      //ENPS
       safeInit(initEnpsGauge, "enpsGauge", enpsGaugeData, enpsDataChange, enpsDate);
       safeInit(initEnpsBar,   "enpsBar",   enpsBarLabels, enpsBarData);
       safeInit(initAnswerFrequency, "canvas", answerData, answerChange);
       //safeInit(initBarChart,  "enpsChart", pieLabels, pieData, pieColors);
+      
+      //SLIDER
       safeInit(initLineChart, "trendChart", lineLabels, lineData, lineColors);
+      safeInit(initLineChart, "lineTrendChartSlider", sliderTrendLabels, sliderTrendData, lineColors);
+      safeInit(initBarChart, "barChartSlider", barChartSlider, barDataSlider);
     });
 
       // Timer that calls logout form after specified time
