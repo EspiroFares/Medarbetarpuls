@@ -711,10 +711,7 @@ def create_question(request, survey_id: int | None = None) -> HttpResponse:
     }
 
     source = request.GET.get("source")
-<<<<<<< HEAD
     print(f"Source: {source}")
-=======
->>>>>>> dev
 
     return render(
         request,
@@ -819,10 +816,7 @@ def delete_question(
     """
 
     source = request.GET.get("source")
-<<<<<<< HEAD
     print(f"Source: {source}")
-=======
->>>>>>> dev
 
     if request.method == "POST":
         if request.headers.get("HX-Request"):
@@ -1032,13 +1026,9 @@ def edit_question_view(
     """
     user: models.CustomUser = request.user
     options = None  # Use later to show options
-<<<<<<< HEAD
 
     source = request.GET.get("source")
     print(f"SOURCE: {source}")
-=======
-    source = request.GET.get("source")
->>>>>>> dev
 
     # SurveyCreator needs a help-function to access organization
     if user.admin is None:
@@ -1211,19 +1201,7 @@ def edit_question_view(
     return render(
         request,
         "edit_question.html",
-<<<<<<< HEAD
-        {
-            "survey_temp": survey_temp,
-            "question_format": question_format,
-            "question_id": question_id,
-            "question_text": question_text,
-            "options": options,
-            "bank_question": bank_question,
-            "source": source,
-        },
-=======
         context,
->>>>>>> dev
     )
 
 
@@ -1458,10 +1436,6 @@ def logout_view(request):
             request.session.flush()  # Make sure session is cleared
             response = HttpResponse(status=200)
             response["HX-Redirect"] = "/"
-<<<<<<< HEAD
-            print("also here")
-=======
->>>>>>> dev
             return response
     return HttpResponse(status=400)
 
@@ -1681,51 +1655,12 @@ def organization_templates(request, search_str: str | None = None) -> HttpRespon
     question_templates = organization.question_bank.all()
     source = "organization_templates"
 
-<<<<<<< HEAD
-    # # Annotate and filter templates with 0 questions
-    # empty_templates: models.SurveyTemplate = request.user.survey_templates.annotate(
-    #     num_questions=Count("questions")
-    # ).filter(num_questions=0)
-
-    # # Delete them
-    # empty_templates.delete()
-
-    # if search_str is None:
-    #     # Order templates by last time edited
-    #     survey_templates = request.user.survey_templates.all().order_by("-last_edited")
-    # else:
-    #     # Order templates by search bar input relevance
-    #     survey_templates = request.user.survey_templates.annotate(
-    #         relevance=Case(
-    #             When(name__iexact=search_str, then=Value(3)),  # exact match
-    #             When(name__istartswith=search_str, then=Value(2)),  # startswith
-    #             When(name__icontains=search_str, then=Value(1)),  # somewhere inside
-    #             default=Value(0),
-    #             output_field=IntegerField(),
-    #         )
-    #     ).order_by("-relevance", "-last_edited")
-
-    # Post request for when search button is pressed
-    if request.method == "POST":
-        if request.headers.get("HX-Request"):
-            search_str_input: str = request.POST.get("search-bar")
-
-            if search_str_input is None:
-                return HttpResponse(headers={"HX-Redirect": "/organization_templates/"})
-            else:
-                return HttpResponse(
-                    headers={
-                        "HX-Redirect": "/organization_templates/" + search_str_input
-                    }
-                )
-=======
     empty_templates: models.SurveyTemplate = survey_templates.annotate(
         num_questions=Count("questions")
     ).filter(num_questions=0)
 
     # Delete them
     empty_templates.delete()
->>>>>>> dev
 
     return render(
         request,
@@ -2153,10 +2088,9 @@ def correct_name(name: str) -> Boolean | str:
 def analysis_view(request):
     group_id = request.GET.get("group_id")
     survey_count = request.GET.get("surveys", "1")
-<<<<<<< HEAD
     user_id = request.GET.get("user_id")
-=======
->>>>>>> dev
+    question_id = request.GET.get("question_id")
+
     analysisHandler = AnalysisHandler()
 
     context = {
@@ -2167,6 +2101,8 @@ def analysis_view(request):
             ("Alla", "all"),
         ],
         "selected_survey_range": survey_count,
+        "selected_user_id": user_id,
+        "selected_question_id": question_id,
     }
 
     if not group_id:
@@ -2179,6 +2115,7 @@ def analysis_view(request):
         context["message"] = "Gruppen har inga enkäter ännu."
         return render(request, "analysis.html", context)
 
+    
     if survey_count != "all":
         try:
             count = int(survey_count)
@@ -2193,12 +2130,8 @@ def analysis_view(request):
         return render(request, "analysis.html", context)
 
     latest_survey = filtered_surveys[0]
-<<<<<<< HEAD
     respondents_dict = analysisHandler.get_respondents(latest_survey, group)
     context["respondents"] = respondents_dict
-    context["selected_user_id"] = user_id
-=======
->>>>>>> dev
 
     summary = analysisHandler.get_survey_summary(
         survey_id=latest_survey.id,
@@ -2206,40 +2139,27 @@ def analysis_view(request):
         employee_group=group,
     )
 
-    for i in summary["summaries"]:
-        if i["question"].question_type == QuestionType.ENPS:
-            enps_question = i["question"]
-            context.update(i)
-            break
-
-    # if not enps_question:
-    #   context["message"] = "Ingen eNPS-fråga i den här enkäten."
-    #  return render(request, "analysis.html", context)
-
-    context["deadline"] = summary["survey"].deadline.strftime("%Y-%m-%d")
-    context["amount"] = summary["survey"].collected_answer_count
-
     context.update(
         analysisHandler.get_participation_metrics(
             summary["survey"], summary["employee_group"]
         )
     )
 
-    trends = analysisHandler.get_question_trend(
-        enps_question,
-        list(filtered_surveys),
-        group,
-        respondents_dict.get(user_id) if user_id else None,
-    )
-    context["lineLabels"] = [entry["sending_date"] for entry in trends]
+    # ======== Question Trend (bank) ============
+    if question_id:
+        selected_question = get_object_or_404(models.Question, id=question_id)
+        context["selected_question_text"] = selected_question.question
+        trend_data = analysisHandler.get_question_trend(
+            selected_question,
+            list(filtered_surveys),
+            group,
+            respondents_dict.get(user_id) if user_id else None,
+        )
+        context["lineLabels"] = [entry["sending_date"] for entry in trend_data]
+        context["lineData"] = [
+            entry["summary"].get("mean", 0) for entry in trend_data
+        ]
 
-    context["lineData"] = [entry["summary"]["enpsScore"] for entry in trends]
-<<<<<<< HEAD
-
-    bank_questions = analysisHandler.get_bank_questions()
-    print("QUESTION BANK", bank_questions)
-=======
-    print(context["lineData"])
->>>>>>> dev
+    context["bank_questions"] = analysisHandler.get_bank_questions()
 
     return render(request, "analysis.html", context)

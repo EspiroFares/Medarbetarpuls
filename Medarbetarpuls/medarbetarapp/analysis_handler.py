@@ -226,7 +226,7 @@ class AnalysisHandler:
         """
         Returns all questions that are part of an organization's question bank.
         """
-        bank_questions = Question.objects.filter(bank_question_tag__isnull=False)
+        bank_questions = Question.objects.filter(bank_question__isnull=False).distinct()
 
         return bank_questions
 

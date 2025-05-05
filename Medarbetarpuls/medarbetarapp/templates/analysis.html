@@ -67,7 +67,7 @@
           </div>
 
           <div id="filterBar">
-            <strong>Välj fråga:</strong>
+            <strong>Välj bankfråga:</strong>
             <span id="pillContainer"></span>
             <form method="get" action="{% url 'analysis' %}">
               <input type="hidden" name="group_id" value="{{ request.GET.group_id }}">
@@ -197,7 +197,7 @@
     const pieLabels       = {{ enpsPieLabels    |default:"['Detractors', 'Passives', 'Promoters']" |safe }};
     const pieData         = {{ enpsPieData      |default:"[0,0,0]" |safe }};
     const enpsDate        = "{{ deadline|default:'####-##-##' }}";
-    const answerData     = {{ answer_pct|default:"0" |safe }};
+    const answerData     = {{ answer_pct |default:"0" |safe }};
     
     const enpsDataChange  = {{ enpsChange        |default:"0"  |safe }};            // Hur ska detta hämtas??
     const answerChange    = {{ answerChange        |default:"0"  |safe }};              // placeholder
