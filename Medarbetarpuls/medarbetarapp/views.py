@@ -3,11 +3,12 @@ import platform
 from . import models
 from django.db.models import Q, Max, Count
 from django.utils import timezone
+from django.urls import reverse
 from xmlrpc.client import Boolean
 from django.core.cache import cache
 from datetime import datetime, time
 from django.http import HttpResponse
-from .models import QuestionType, SurveyUserResult
+from .models import QuestionType, SurveyUserResult, EmployeeGroup
 from django.core.mail import send_mail
 from .tasks import schedule_notification, publish_survey_async
 from django.utils.timezone import make_aware
@@ -107,6 +108,15 @@ def create_acc(request):
 @csrf_protect
 @allowed_roles("admin")
 def edit_employee_group_view(request):
+    """
+    Adds new employee group to the given user
+
+    Args:
+        request: The input user and new employee group from the field
+
+    Returns:
+        HttpResponse: Returns status 200 if all is good, otherwise 400
+    """
     if request.method == "POST":
         if request.headers.get("HX-Request"):
             email = request.POST.get("add-employee-group-email")
@@ -132,6 +142,15 @@ def edit_employee_group_view(request):
 @csrf_protect
 @allowed_roles("admin")
 def edit_survey_group_view(request):
+    """
+    Adds new survey group to the given user
+
+    Args:
+        request: The input user and new survey group from the field
+
+    Returns:
+        HttpResponse: Returns status 200 if all is good, otherwise 400
+    """
     if request.method == "POST":
         if request.headers.get("HX-Request"):
             email = request.POST.get("add-survey-group-email")
@@ -157,6 +176,15 @@ def edit_survey_group_view(request):
 @csrf_protect
 @allowed_roles("admin")
 def edit_employee_view(request):
+    """
+    Edits the given users role to the new given role
+
+    Args:
+        request: The input user and role from the field
+
+    Returns:
+        HttpResponse: Returns status 200 if all is good, otherwise 400
+    """
     if request.method == "POST":
         if request.headers.get("HX-Request"):
             email = request.POST.get("email")
@@ -426,6 +454,15 @@ def answer_survey_view(
 
 @csrf_protect
 def resend_authentication_code_acc(request):
+    """
+    Sends a new two factor authentication code to the given email
+
+    Args:
+        request: The email and source from the input fields
+
+    Returns:
+        HttpResponse: Returns status=204 if all is good, otherwise error message 400
+    """
     if request.method == "POST":
         source = request.POST.get("source")
         email = "not_defined"
@@ -446,6 +483,7 @@ def resend_authentication_code_acc(request):
             fail_silently=False,
         )
         return HttpResponse("Sent", status=204)
+    return HttpResponse(status=400)
 
 
 @csrf_protect
@@ -633,8 +671,8 @@ def authentication_org_view(request):
 
 
 @login_required
-@allowed_roles("surveycreator")
-def create_question(request, survey_id: int) -> HttpResponse:
+@allowed_roles("surveycreator", "admin")
+def create_question(request, survey_id: int | None = None) -> HttpResponse:
     """
     Makes it possible to create a question with predefined formats.
     This function is reachable from create_survey.
@@ -646,24 +684,43 @@ def create_question(request, survey_id: int) -> HttpResponse:
         HttpResponse: Returns status 404 if the survey template does not exist
     """
     user: models.CustomUser = request.user
+
+    source = request.GET.get("source")
     # Retrieve the survey template from the database if it belongs to the user
     survey_temp: models.SurveyTemplate = user.survey_templates.filter(
         id=survey_id
     ).first()
-    organization: models.Organization = find_organization_by_email(email=user.email)
+
+    # SurveyCreator needs a help-function to access organization
+    if user.admin is None:
+        organization: models.Organization = find_organization_by_email(email=user.email)
+    else:
+        organization: models.Organization = user.admin
     organization_questions: models.Question = organization.question_bank.all()
 
-    if survey_temp is None:
+    if survey_temp is None and source != "organization_templates":
         # Handle the case where the survey template does not exist
         return HttpResponse("Survey template not found", status=404)
+
+    # The swedish translations
+    QUESTION_LABEL_TRANSLATIONS = {
+        "Slider": "Skala",
+        "Text": "Fritext",
+        "Yes No": "Ja/Nej",
+        "Multiple choice": "Flerval",
+    }
+
+    source = request.GET.get("source")
 
     return render(
         request,
         "create_question.html",
         {
             "survey_temp": survey_temp,
+            "source": source,
             "organization_questions": organization_questions,
             "QuestionFormat": models.QuestionFormat,
+            "question_labels": QUESTION_LABEL_TRANSLATIONS,
         },
     )
 
@@ -741,8 +798,10 @@ def create_org(request) -> HttpResponse:
 
 @csrf_protect
 @login_required
-@allowed_roles("surveycreator")
-def delete_question(request, question_id: int, survey_id: int) -> HttpResponse:
+@allowed_roles("surveycreator", "admin")
+def delete_question(
+    request, question_id: int, survey_id: int | None = None
+) -> HttpResponse:
     """
     Makes it possible to delete a specific question from
     a specific survey.
@@ -754,15 +813,25 @@ def delete_question(request, question_id: int, survey_id: int) -> HttpResponse:
     Returns:
         HttpResponse: Redirects to create_survey or 400
     """
+
+    source = request.GET.get("source")
+
     if request.method == "POST":
         if request.headers.get("HX-Request"):
             question: models.Question = get_object_or_404(
                 models.Question, id=question_id
             )
             question.delete()
-            return HttpResponse(
-                headers={"HX-Redirect": "/create-survey/" + str(survey_id)}
-            )
+
+            if survey_id is None:
+                # If no survey_id is given, redirect to create_survey
+                hx_redirect_url = ""
+            else:
+                hx_redirect_url = f"/create-survey/{survey_id}"
+                if source:  # Only append source if it's not None or empty
+                    hx_redirect_url += f"?source={source}"
+
+            return HttpResponse(headers={"HX-Redirect": hx_redirect_url})
 
     return HttpResponse(status=400)  # Bad request if no expression
 
@@ -801,8 +870,11 @@ def move_question_left(request, survey_temp_id: int, question_id: int) -> HttpRe
         q_order.save()
         prev.save()
 
+    source = request.GET.get("source")
+
     context = {
         "survey_temp": survey_temp,
+        "source": source,
     }
 
     return render(request, "partials/question-list.html", context)
@@ -840,8 +912,11 @@ def move_question_right(request, survey_temp_id: int, question_id: int) -> HttpR
         q_order.save()
         nxt.save()
 
+    source = request.GET.get("source")
+
     context = {
         "survey_temp": survey_temp,
+        "source": source,
     }
 
     return render(request, "partials/question-list.html", context)
@@ -861,6 +936,8 @@ def create_survey_view(request, survey_id: int | None = None) -> HttpResponse:
         HttpResponse: Redirects to create_survey or renders create_survey_view
     """
 
+    source = request.GET.get("source")
+
     # Check if survey_id is not given
     if survey_id is None:
         # Create a new survey template and assign it to the user
@@ -873,16 +950,32 @@ def create_survey_view(request, survey_id: int | None = None) -> HttpResponse:
         survey_temp.name = "Survey " + str(survey_id)
         survey_temp.save()
 
+        if source == "organization_templates" and request.user.admin:
+            # If the source is from organization templates, redirect to the create_survey page
+            organization: models.Organization = request.user.admin
+            organization.survey_template_bank.add(survey_temp)
+
         # Redirect to the create_survey view with the new survey_id
         # This will allow the user to edit the survey template immediately
-        return redirect("create_survey_with_id", survey_id=survey_temp.id)
+        redirect_url = f"{reverse('create_survey_with_id', args=[survey_temp.id])}"
+        if source:  # Only append source if it's not None or empty
+            redirect_url += f"?source={source}"
+        return redirect(redirect_url)
 
     # If survey_id is given, fetch the corresponding survey template
     # from the database and render the create_survey view
     user: models.CustomUser = request.user
-    survey_temp: models.SurveyTemplate = user.survey_templates.filter(
-        id=survey_id
-    ).first()
+    if source == "readonly":
+        # User is trying to access a survey from the organizations survey bank
+        organization = find_organization_by_email(email=user.email)
+        survey_temp: models.SurveyTemplate = organization.survey_template_bank.filter(
+            id=survey_id
+        ).first()
+    else:
+        survey_temp: models.SurveyTemplate = user.survey_templates.filter(
+            id=survey_id
+        ).first()
+
     if survey_temp is None:
         # Handle the case where the survey template does not exist
         return HttpResponse("Survey template not found", status=404)
@@ -898,15 +991,22 @@ def create_survey_view(request, survey_id: int | None = None) -> HttpResponse:
                 }
             )
 
-    return render(request, "create_survey.html", {"survey_temp": survey_temp})
+    return render(
+        request,
+        "create_survey.html",
+        {
+            "survey_temp": survey_temp,
+            "source": source,
+        },
+    )
 
 
 @login_required
-@allowed_roles("surveycreator")
+@allowed_roles("surveycreator", "admin")
 def edit_question_view(
     request,
-    survey_id: int,
     question_format: models.QuestionFormat,
+    survey_id: int | None = None,
     question_id: str | None = None,
 ) -> HttpResponse:
     """
@@ -924,46 +1024,86 @@ def edit_question_view(
     """
     user: models.CustomUser = request.user
     options = None  # Use later to show options
-    organization: models.Organization = find_organization_by_email(email=user.email)
+    source = request.GET.get("source")
+
+    # SurveyCreator needs a help-function to access organization
+    if user.admin is None:
+        organization: models.Organization = find_organization_by_email(email=user.email)
+    else:
+        organization: models.Organization = user.admin
 
     bank_question = organization.question_bank.filter(id=question_id).exists()
 
-    # Get the survey from given id
-    survey_temp: models.SurveyTemplate = user.survey_templates.filter(
-        id=survey_id
-    ).first()
-    if survey_temp is None:
-        # Handle the case where the survey template does not exist
-        return HttpResponse("Survey template not found", status=404)
+    if source == "readonly":
+        # If the question is from the bank, get it from the bank
+
+        survey_temp: models.SurveyTemplate = organization.survey_template_bank.filter(
+            id=question_id
+        ).first()
+
+    elif survey_id is not None:
+        # Get the survey from given id
+        survey_temp: models.SurveyTemplate = user.survey_templates.filter(
+            id=survey_id
+        ).first()
+        if survey_temp is None:
+            # Handle the case where the survey template does not exist
+            return HttpResponse("Survey template not found", status=404)
 
     if request.method == "POST":
         if request.headers.get("HX-Request"):
             # Special case for when a question is created
+
             if question_id is None:
                 question: models.Question = models.Question()
                 question.save()
 
-                # Figure out the current max order for this survey
-                current_max = (
-                    models.QuestionOrder.objects.filter(survey_temp=survey_temp)
-                    .aggregate(m=Max("order"))
-                    .get("m")
-                    or 0
-                )
+                if (
+                    source == "organization_templates"
+                    and request.user.admin
+                    and survey_id is None
+                ):
+                    # If the source is from organization templates, add the question to the survey template
+                    organization.question_bank.add(question)
+                    # Add the question to the survey template
+                else:
+                    # Figure out the current max order for this survey
+                    current_max = (
+                        models.QuestionOrder.objects.filter(survey_temp=survey_temp)
+                        .aggregate(m=Max("order"))
+                        .get("m")
+                        or 0
+                    )
+                    # The new questions order is one higher
+                    next_order = current_max + 1
+                    # Use through_defaults to set the right order
+                    survey_temp.questions.add(
+                        question, through_defaults={"order": next_order}
+                    )
 
-                # The new questions order is one higher
-                next_order = current_max + 1
-
-                # Use through_defaults to set the right order
-                survey_temp.questions.add(
-                    question, through_defaults={"order": next_order}
-                )
+            elif survey_id is not None:
+                question = survey_temp.questions.filter(id=question_id).exists()
+                if question:
+                    question = survey_temp.questions.filter(id=question_id).first()
+                else:
+                    question = organization.question_bank.filter(id=question_id).exists
+                    if question:
+                        question = organization.question_bank.filter(
+                            id=question_id
+                        ).first()
+                        print("Question found in bank")
+                    else:
+                        # Handle the case where the question does not exist
+                        return HttpResponse("Question not found", status=404)
             else:
-                question = survey_temp.questions.filter(id=question_id).first()
+                question = organization.question_bank.filter(id=question_id).exists
+                if question:
+                    question = organization.question_bank.filter(id=question_id).first()
+                else:
+                    # Handle the case where the question does not exist
+                    return HttpResponse("Question not found", status=404)
 
-            if question is None:
-                question = organization.question_bank.filter(id=question_id).first()
-
+            if source != "organization_templates" or survey_id is not None:
                 current_max = (
                     models.QuestionOrder.objects.filter(survey_temp=survey_temp)
                     .aggregate(m=Max("order"))
@@ -989,6 +1129,12 @@ def edit_question_view(
             question.question_format = question_format
             question.save()
 
+            question_title = request.POST.get("question_name")
+
+            if question_title is not None:
+                question.question_title = question_title
+                question.save()
+
             # Add testcase for multiplechoice questions
             if question_format == models.QuestionFormat.MULTIPLE_CHOICE:
                 options = request.POST.getlist("options")
@@ -1008,13 +1154,18 @@ def edit_question_view(
             question.question = request.POST.get("question")
             question.save()
 
-            # Update last edited date of survey
-            survey_temp.last_edited = timezone.now()
-            survey_temp.save()
+            if source != "organization_templates" or survey_id is not None:
+                # Update last edited date of survey
+                survey_temp.last_edited = timezone.now()
+                survey_temp.save()
+            else:
+                return HttpResponse(headers={"HX-Redirect": "/organization_templates/"})
 
-            return HttpResponse(
-                headers={"HX-Redirect": "/create-survey/" + str(survey_id)}
-            )
+            hx_redirect_url = f"/create-survey/{survey_id}"
+            if source and source != "None":  # Only append if source is valid
+                hx_redirect_url += f"?source={source}"
+
+            return HttpResponse(headers={"HX-Redirect": hx_redirect_url})
 
     # Checks if there is a specific question text to be displayed
     question_text: str | None = None
@@ -1031,17 +1182,22 @@ def edit_question_view(
                 .multiple_choice_question.options
             )
 
+    context = {
+        "question_format": question_format,
+        "question_id": question_id,
+        "question_text": question_text,
+        "options": options,
+        "bank_question": bank_question,
+        "source": source,
+    }
+    if survey_id is not None:
+        context.update({"survey_id": survey_id})
+        context.update({"survey_temp": survey_temp})
+
     return render(
         request,
         "edit_question.html",
-        {
-            "survey_temp": survey_temp,
-            "question_format": question_format,
-            "question_id": question_id,
-            "question_text": question_text,
-            "options": options,
-            "bank_question": bank_question,
-        },
+        context,
     )
 
 
@@ -1055,7 +1211,24 @@ def publish_survey(request, survey_id: int) -> HttpResponse:
             user: models.CustomUser = request.user
             survey_temp: models.SurveyTemplate = user.survey_templates.filter(
                 id=survey_id
-            ).first()
+            ).exists()
+            if survey_temp:
+                survey_temp = user.survey_templates.filter(id=survey_id).first()
+            else:
+                organization: models.Organization = find_organization_by_email(
+                    email=user.email
+                )
+                survey_temp = organization.survey_template_bank.filter(
+                    id=survey_id
+                ).exists()
+                if survey_temp:
+                    survey_temp = organization.survey_template_bank.filter(
+                        id=survey_id
+                    ).first()
+                else:
+                    # Handle the case where the survey template does not exist
+                    return HttpResponse("Survey template not found", status=404)
+
             if survey_temp is None:
                 # Handle the case where the survey template does not exist
                 return HttpResponse("Survey template not found", status=404)
@@ -1244,6 +1417,15 @@ def login_view(request):
 @login_required
 @allowed_roles("admin", "surveycreator", "surveyresponder")
 def logout_view(request):
+    """
+    A logout function that logs out the user and clears the session
+
+    Args:
+        request: HTMX post request
+
+    Returns:
+        HttpResponse: If successful redirect to login page otherwise status 400.
+    """
     if request.method == "POST":
         if request.headers.get("HX-Request"):
             logout(request)
@@ -1366,7 +1548,7 @@ def my_results_view(request):
 
 
 @csrf_protect
-@allowed_roles("surveycreator")
+@allowed_roles("surveycreator", "admin")
 def delete_survey_template(request, survey_id: int) -> HttpResponse:
     """
     Deletes a survey template via HTMX.
@@ -1379,13 +1561,18 @@ def delete_survey_template(request, survey_id: int) -> HttpResponse:
     Returns:
         HttpResponse: Redirects to "/templates_and_drafts/" on success or returns status 400 on failure.
     """
+    source = request.GET.get("source")
+
     if request.method == "POST":
         if request.headers.get("HX-Request"):
             survey_temp = get_object_or_404(
                 models.SurveyTemplate, id=survey_id, creator=request.user
             )
             survey_temp.delete()
-            return HttpResponse(headers={"HX-Redirect": "/templates_and_drafts/"})
+            if source == "organization_templates":
+                return HttpResponse(headers={"HX-Redirect": "/organization_templates/"})
+            else:
+                return HttpResponse(headers={"HX-Redirect": "/templates_and_drafts/"})
 
     return HttpResponse(status=400)
 
@@ -1411,6 +1598,9 @@ def templates_and_drafts(request, search_str: str | None = None) -> HttpResponse
     empty_templates: models.SurveyTemplate = request.user.survey_templates.annotate(
         num_questions=Count("questions")
     ).filter(num_questions=0)
+
+    organization = find_organization_by_email(email=request.user.email)
+    organization_survey_templates = organization.survey_template_bank.all()
 
     # Delete them
     empty_templates.delete()
@@ -1443,7 +1633,39 @@ def templates_and_drafts(request, search_str: str | None = None) -> HttpResponse
                 )
 
     return render(
-        request, "templates_and_drafts.html", {"survey_templates": survey_templates}
+        request,
+        "templates_and_drafts.html",
+        {
+            "survey_templates": survey_templates,
+            "organization_survey_templates": organization_survey_templates,
+        },
+    )
+
+
+@csrf_protect
+@login_required
+@allowed_roles("admin")
+def organization_templates(request, search_str: str | None = None) -> HttpResponse:
+    organization = request.user.admin
+    survey_templates = organization.survey_template_bank.all()
+    question_templates = organization.question_bank.all()
+    source = "organization_templates"
+
+    empty_templates: models.SurveyTemplate = survey_templates.annotate(
+        num_questions=Count("questions")
+    ).filter(num_questions=0)
+
+    # Delete them
+    empty_templates.delete()
+
+    return render(
+        request,
+        "organization_templates.html",
+        {
+            "survey_templates": survey_templates,
+            "question_templates": question_templates,
+            "source": source,
+        },
     )
 
 
@@ -1454,6 +1676,15 @@ def my_surveys_view(request):
 
 @csrf_protect
 def remove_employee_from_employee_group_view(request):
+    """
+    Removes the given employee group from the given users employee groups
+
+    Args:
+        request: Email and employee group from input fields
+
+    Returns:
+        HttpResponse: Returns status=200 if all good otherwise status=400
+    """
     if request.method == "POST":
         if request.headers.get("HX-Request"):
             email = request.POST.get("email")
@@ -1467,6 +1698,15 @@ def remove_employee_from_employee_group_view(request):
 
 @csrf_protect
 def remove_employee_from_survey_group_view(request):
+    """
+    Removes the given survey group from the given users survey groups
+
+    Args:
+        request: Email and survey group from input fields
+
+    Returns:
+        HttpResponse: Returns status=200 if all good otherwise status=400
+    """
     if request.method == "POST":
         if request.headers.get("HX-Request"):
             email = request.POST.get("email")
@@ -1843,31 +2083,46 @@ def correct_name(name: str) -> Boolean | str:
 @allowed_roles("admin", "surveycreator")
 def analysis_view(request):
     group_id = request.GET.get("group_id")
+    survey_count = request.GET.get("surveys", "1")
     analysisHandler = AnalysisHandler()
-    context: dict = {}
 
-    context["time_periods"] = [
-        ("senaste", "sen"),
-        ("1 mån", "1m"),
-        ("3 mån", "3m"),
-        ("6 mån", "6m"),
-        ("1 år", "1y"),
-    ]
+    context = {
+        "survey_ranges": [
+            ("Senaste", "1"),
+            ("Senaste 3", "3"),
+            ("Senaste 5", "5"),
+            ("Alla", "all"),
+        ],
+        "selected_survey_range": survey_count,
+    }
+
     if not group_id:
         return render(request, "analysis.html", context)
 
-    group = get_object_or_404(models.EmployeeGroup, id=group_id)
-
+    group = get_object_or_404(EmployeeGroup, id=group_id)
     surveys = analysisHandler.get_surveys_for_group(group)
 
     if not surveys.exists():
         context["message"] = "Gruppen har inga enkäter ännu."
         return render(request, "analysis.html", context)
 
-    survey = surveys.latest("sending_date")  # behöver fixas
+    if survey_count != "all":
+        try:
+            count = int(survey_count)
+            filtered_surveys = surveys[:count]
+        except ValueError:
+            filtered_surveys = surveys
+    else:
+        filtered_surveys = surveys
+
+    if not filtered_surveys:
+        context["message"] = "Inga filtrerade enkäter hittades."
+        return render(request, "analysis.html", context)
+
+    latest_survey = filtered_surveys[0]
 
     summary = analysisHandler.get_survey_summary(
-        survey_id=survey.id,
+        survey_id=latest_survey.id,
         employee_group=group,
     )
 
@@ -1877,13 +2132,9 @@ def analysis_view(request):
             context.update(i)
             break
 
-    # if not context:
+    # if not enps_question:
     #   context["message"] = "Ingen eNPS-fråga i den här enkäten."
     #  return render(request, "analysis.html", context)
-
-    context["deadline"] = summary["survey"].deadline.strftime(
-        "%Y-%m-%d"
-    )  # maybe move this row to get_survey_summary
 
     context["deadline"] = summary["survey"].deadline.strftime("%Y-%m-%d")
     context["amount"] = summary["survey"].collected_answer_count
@@ -1894,17 +2145,11 @@ def analysis_view(request):
         )
     )
 
-    filtered_surveys = analysisHandler.get_filtered_surveys(
-        "2024-10-01", "2026-10-01", group
-    )
     trends = analysisHandler.get_question_trend(
         enps_question, list(filtered_surveys), group
     )
-    print(trends)
-    deadlines = [entry["deadline"] for entry in trends]
-    enps_scores = [entry["summary"]["enpsScore"] for entry in trends]
-
-    context["lineLabels"] = deadlines
-    context["lineData"] = enps_scores
+    context["lineLabels"] = [entry["sending_date"] for entry in trends]
+    context["lineData"] = [entry["summary"]["enpsScore"] for entry in trends]
+    print(context["lineData"])
 
     return render(request, "analysis.html", context)

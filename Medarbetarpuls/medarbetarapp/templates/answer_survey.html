@@ -162,7 +162,7 @@
             name="comment"
             placeholder="Kommentar"
           />
-          {% endif %}
+          {% endif %}         
         </div>
 
         <!-- Button for when all questions are answered-->
@@ -181,14 +181,23 @@
 
       <!-- Comment button -->
       <div class="bottom-actions">
-        <a href="#" onclick="openCloseComment()" title="Kommentera">
-          <img
-            src="{% static 'images/comment.png' %}"
-            alt="Comment"
-            class="image-button action-icon"
-          />
+        <a href="#" onclick="openCloseComment()" title="Kommentera" class="icon-with-text" id="comment-icon">
+          <span class="tooltip comment" data-tooltip="Kommentera">
+            <img
+              src="{% static 'images/comment.png' %}"
+              alt="Kommentera"
+              class="image-button action-icon"
+            />
+          </span> 
         </a>
       </div>
+      
+      <div class="bottom-actions">
+        <!-- Show this button when the popup is open -->
+        <button class="action-icon-button" type="button" id="comment-btn" onclick="openCloseComment()" style="display: none;">
+          Kommentera
+        </button>
+      </div>   
 
       <!-- Arrows (left & right) -->
       <div class="navigation-arrows">
@@ -208,7 +217,7 @@
         const yesnoImages = document.querySelectorAll(".yesno-img");
         const multiplechoice_input = document.querySelectorAll(
           ".multiple-input input[type='checkbox']",
-        );
+        );        
 
         const updateSliderVisuals = () => {
           // Remove previous animation classes
@@ -282,6 +291,7 @@
           });
         });
 
+        // Multiple-choice
         multiplechoice_input.forEach((checkbox) => {
           const img = checkbox.parentElement.querySelector(".checkbox-img");
           const parentOption = checkbox.closest(".multiple-input"); // The container element
@@ -314,13 +324,33 @@
         updateSliderVisuals(); // Initialize
       });
 
+      // Comments
+      const commentInput = document.getElementById("comment");
+      if (commentInput) {
+        // Avoid exiting the survey when Enter is pressed
+        commentInput.addEventListener("keydown", function (event) {
+          if (event.key === "Enter") {
+            // Prevent form submission
+            event.preventDefault(); 
+            // Close the comment section instead
+            openCloseComment();
+          }
+        });
+      }
+      
       function openCloseComment() {
         // Open and close the comment popup
-        if (document.getElementById("comment-popup").style.display == "none") {
-          document.getElementById("comment-popup").style.display = "flex";
-        } else {
-          document.getElementById("comment-popup").style.display = "none";
-        }
+        const popup = document.getElementById("comment-popup");
+        const icon = document.getElementById("comment-icon");
+        const button = document.getElementById("comment-btn");
+        const isOpen = popup.style.display === "flex";
+
+        // Toggle popup, if open -> close it with display: "none"
+        popup.style.display = isOpen ? "none" : "flex";
+
+        // Toggle icon and button
+        icon.style.display = isOpen ? "block" : "none";
+        button.style.display = isOpen ? "none" : "block";
       }
 
       function submitForm(action) {
@@ -342,6 +372,26 @@
           }
         }
       });
-    </script>
+
+
+      // Timer that calls logout form after specified time
+      let logoutTimer;
+      function resetTimer() {
+        clearTimeout(logoutTimer);
+        logoutTimer = setTimeout(() => {
+          document.getElementById('logout-form').requestSubmit();
+          }, 10 * 60 * 1000); // 10 minutes
+      }
+
+      window.onload = resetTimer;
+      document.onmousemove = resetTimer;
+      document.onkeypress = resetTimer;
+      document.onscroll = resetTimer;
+      document.onclick = resetTimer;
+
+  </script>
+  <form id="logout-form" method="post" hx-post="/logout/" hx-target="body" hx-swap="outerHTML" style="display:none;">
+    {% csrf_token %}
+  </form>  
   </body>
 </html>

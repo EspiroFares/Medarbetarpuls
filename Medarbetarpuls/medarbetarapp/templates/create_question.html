@@ -2,6 +2,7 @@
 <html lang="sv">
   <head>
     {% load static %}
+    {% load dict_utils %}
     <script src="https://unpkg.com/htmx.org@1.8.4"></script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -19,13 +20,24 @@
           <li class="question-item">
             <img
               src="{% static 'images/' %}{{ type.value }}.png"
-              alt="{{ type.label }} image"
+              alt="{{ question_labels|get_item:type.label }} bild"
               class="question-icon"
-            />
-            {{type.label}}
-            <a href="{% url 'edit_question_new' survey_temp.id type %}">
-              <button type="button">Välj</button>
-            </a>
+            />  
+            <div class="question-label">
+              <span class="question-text">
+                <!-- Retrieve the Swedish translation of the label -->
+                {{ question_labels|get_item:type.label }} 
+              </span>
+              {% if survey_temp.id %}
+                <a href="{% url 'edit_question_new' survey_temp.id type %}{% if source and source != 'None' %}?source={{ source }}{% endif %}"> 
+                  <button type="button">Välj</button>  
+                </a>
+              {% else %}
+                <a href="{% url 'edit_question_new' type %}?source={{ source }}"> 
+                  <button type="button">Välj</button>  
+                </a>
+              {% endif %}
+            </div>
           </li>
           {% endfor %}
         </ul>
@@ -37,7 +49,7 @@
           style="display: none"
         >
           <!-- Replace this with loop when it is possible to save questions to a bank-->
-          {% for question in organization_questions %}
+          {% for question in organization_questions%}
           <li class="question-item">
             <img
               src="{% static 'images/' %}{{ question.question_format }}.png"
@@ -45,30 +57,43 @@
               class="question-icon"
             />
             <p>{{ question.question_title }}</p>
-            <a
-              href="{% url 'edit_question' survey_temp.id question.question_format question.id%}"
-            >
-              <button type="button">Välj</button>
-            </a>
+            {% if survey_temp.id %}
+              <a href="{% url 'edit_question' survey_temp.id question.question_format question.id %}{% if source and source != 'None' %}?source={{ source }}{% endif %}"> 
+                <button type="button">Välj</button>  
+              </a>
+            {% else %}
+              <a href="{% url 'edit_question' question.question_format question.id %}?source={{ source }}"> 
+                <button type="button">Välj</button>  
+              </a>
+            {% endif %}
           </li>
           {% endfor %}          
           <!--   ^^   -->
         </ul>
 
         <div class="popup-buttons">
-          <button
-            class="image-button"
-            onclick="window.location.href='{% url 'create_survey_with_id' survey_temp.id %}'"
-          >
+          {% if survey_temp.id %}
+            <button
+              class="image-button"
+              onclick="window.location.href='{% url 'create_survey_with_id' survey_temp.id %}{% if source and source != 'None' %}?source={{ source }}{% endif %}'"
+            >
+          {% else %}
+            <button
+              class="image-button"
+              onclick="window.location.href='{% url 'organization_templates' %}'"
+            >
+          {% endif %}
             <img
               src="{% static 'images/go-back-btn.png' %}"
               alt="Go Back"
               class="back-icon"
             />
           </button>
-          <button id="suggestions" type="button" onclick="openCloseSugg()">
-            Organisationens standardfrågor
-          </button>
+          {% if survey_temp.id %}
+            <button id="suggestions" type="button" onclick="openCloseSugg()">
+              Organisationens standardfrågor
+            </button>
+          {% endif %}
         </div>
       </div>
     </div>
@@ -93,6 +118,24 @@
           suggestionsButton.innerHTML = "Skapa ny fråga";
         }
       }
+      // Timer that calls logout form after specified time
+      let logoutTimer;
+      function resetTimer() {
+        clearTimeout(logoutTimer);
+        logoutTimer = setTimeout(() => {
+          document.getElementById('logout-form').requestSubmit();
+          }, 10 * 60 * 1000); // 10 minutes
+      }
+  
+      window.onload = resetTimer;
+      document.onmousemove = resetTimer;
+      document.onkeypress = resetTimer;
+      document.onscroll = resetTimer;
+      document.onclick = resetTimer;
+  
     </script>
+    <form id="logout-form" method="post" hx-post="/logout/" hx-target="body" hx-swap="outerHTML" style="display:none;">
+      {% csrf_token %}
+    </form>
   </body>
 </html>

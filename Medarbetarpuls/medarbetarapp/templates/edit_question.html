@@ -11,83 +11,115 @@
   <body>
     <div class="popup-overlay">
       <div class="popup-content">
-        <h2>Redigera fråga</h2>
+        {% if source == "organization_templates" and not survey_id%}
+          <input
+            type="text"
+            id="question_name"
+            name="question_name"
+            placeholder="Namn på frågan"
+            class="input-form"
+            required
+          />
+        {% else %}
+          {% if bank_question or source == "readonly"%}
+              <h2> Förhandsvisa fråga</h2>
+          {% else %}
+            <h2> Redigera fråga</h2>
+          {% endif %}
+        {% endif %}
         <img src="{% static 'images/' %}{{ question_format }}.png" 
             alt="{{ question_format }} image"
             class="question-icon"
         />
 
         {% if question_id is None %} 
-        <form
-          class="question-form"
-          hx-post="{% url 'edit_question_new' survey_temp.id question_format %}"
-          hx-target=".question-form"
-          hx-trigger="submit"
-        >
+          <form
+            class="question-form"
+            {% if survey_id %}
+              hx-post="{% url 'edit_question_new' survey_id question_format %}{% if source %}?source={{ source }}{% endif %}"
+            {% else %}
+              hx-post="{% url 'edit_question_new' question_format %}?source={{ source }}"
+              hx-include="#question_name"
+            {% endif %}
+            hx-target=".question-form"
+            hx-trigger="submit"
+          >
         {% else %} 
-        <form
-          class="question-form"
-          hx-post="{% url 'edit_question' survey_temp.id question_format question_id %}"
-          hx-target=".question-form"
-          hx-trigger="submit"
-        >
+          <form
+            class="question-form"
+            {% if survey_id %}
+              hx-post="{% url 'edit_question' survey_id question_format question_id %}{% if source %}?source={{ source }}{% endif %}"
+            {% else %}
+              hx-post="{% url 'edit_question' question_format question_id %}?source={{ source }}"
+              hx-include="#question_name"
+            {% endif %}
+            hx-target=".question-form"
+            hx-trigger="submit"
+          >
         {% endif %}
         {% csrf_token %}
         {% if question_format == "multiplechoice" %}
-        {% if question_text is None %}
-        <input
-          type="text"
-          id="question"
-          name="question"
-          placeholder="Fråga"
-          required
-        />
-        <div id="options-container" class="options-container">
-      
-          <div class="option-input">
-            <input type="text" name="options" placeholder="Alternativ 1" required />
-          </div>
-          <div class="option-input">
-            <input type="text" name="options" placeholder="Alternativ 2" required />
-          </div>
-        </div>
-        {% elif bank_question %}
-        <input
-          type="text"
-          id="question"
-          name="question"
-          value="{{ question_text }}"
-          required
-          readonly
-        />
-        <div id="options-container" class="options-container">
-          {% for option in options %}
-          <div class="option-input">
-            <input type="text" name="options" placeholder="Alternativ {{ forloop.counter }}" value="{{ option }}" readonly/>
-          </div>
-          {% endfor %}
-        </div>
-        {% else %}
-        <input
-          type="text"
-          id="question"
-          name="question"
-          value="{{ question_text }}"
-          required
-        />    
-        <div id="options-container" class="options-container">
-          {% for option in options %}
-          <div class="option-input">
-            <input type="text" name="options" placeholder="Alternativ {{ forloop.counter }}" value="{{ option }}" />
-          </div>
-        
-        {% endfor %}
-      </div>
-        {% endif %}
-        {% if not bank_question%}
-          <button type="button" class="default-button" id="add-option-btn">Lägg till alternativ</button>
-        {% endif %}
-        <button type="submit">Spara</button>
+          {% if question_text is None %}
+            <input
+              type="text"
+              id="question"
+              name="question"
+              placeholder="Fråga"
+              required
+            />
+            <div id="options-container" class="options-container">
+              <div class="option-input">
+                <input type="text" name="options" placeholder="Alternativ 1" required />
+              </div>
+              <div class="option-input">
+                <input type="text" name="options" placeholder="Alternativ 2" required />
+              </div>
+            </div>
+          {% elif bank_question and survey_id or source == "readonly"%}
+            <input
+              type="text"
+              id="question"
+              name="question"
+              value="{{ question_text }}"
+              required
+              readonly
+            />
+            <div id="options-container" class="options-container">
+            {% for option in options %}
+              <div class="option-input">
+                <input type="text" name="options" placeholder="Alternativ {{ forloop.counter }}" value="{{ option }}" readonly/>
+              </div>
+            {% endfor %}
+            </div>
+          {% else %}
+            <input
+              type="text"
+              id="question"
+              name="question"
+              value="{{ question_text }}"
+              required
+            />    
+            <div id="options-container" class="options-container">
+            {% for option in options %}
+              <div class="option-input">
+                <input type="text" name="options" placeholder="Alternativ {{ forloop.counter }}" value="{{ option }}" />
+              </div>
+            {% endfor %}
+            </div>
+          {% endif %}
+          {% if source %}
+            {% if source == "organization_templates" %}
+              {% if not bank_question or not survey_id%}
+              <button type="button" class="default-button" id="add-option-btn">Lägg till alternativ</button>
+              {% endif %}
+            <button type="submit">Spara</button>
+            {% endif %}
+          {% elif source != "readonly" %}
+            {% if not bank_question %}
+            <button type="button" class="default-button" id="add-option-btn">Lägg till alternativ</button>
+            {% endif %}
+            <button type="submit">Spara</button>
+          {% endif %}
 
         {% else %}
         
@@ -100,7 +132,7 @@
             placeholder="Fråga"
             required
           />
-          {% elif bank_question%}
+          {% elif bank_question and survey_id or source == "readonly"%}
           <input
             type="text"
             id="question"
@@ -118,13 +150,31 @@
             required
           />
           {% endif %}
+
+          {% if source != "readonly" %}
           <button type="submit">Spara</button>
+          {% endif %}
+
         </form>
         {% endif %}
-        <button
-          class="image-button"
-          onclick="window.location.href='{% url 'create_survey_with_id' survey_temp.id %}'"
-        >
+        {% if survey_id %}
+          {% if source %}
+            <button
+              class="image-button"
+              onclick="window.location.href='{% url 'create_survey_with_id' survey_id %}?source={{ source }}'"
+            >
+          {% else %}
+            <button
+            class="image-button"
+            onclick="window.location.href='{% url 'create_survey_with_id' survey_id %}'"
+            > 
+          {% endif %}
+        {% else %}
+          <button
+            class="image-button"
+            onclick="window.location.href='{% url 'organization_templates' %}'"
+          >
+        {% endif %}
           <img
             src="{% static 'images/go-back-btn.png' %}"
             alt="Go Back"
@@ -133,7 +183,6 @@
         </button>
       </div>
     </div>
-  </body>
   <script>
   document.addEventListener("DOMContentLoaded", function () {
     const addOptionBtn = document.getElementById("add-option-btn");
@@ -156,6 +205,43 @@
       optionsContainer.scrollTop = optionsContainer.scrollHeight;
     });
   });
+    // Timer that calls logout form after specified time
+    let logoutTimer;
+    function resetTimer() {
+      clearTimeout(logoutTimer);
+      logoutTimer = setTimeout(() => {
+        document.getElementById('logout-form').requestSubmit();
+        }, 10 * 60 * 1000); // 10 minutes
+    }
 
-  </script>
+    window.onload = resetTimer;
+    document.onmousemove = resetTimer;
+    document.onkeypress = resetTimer;
+    document.onscroll = resetTimer;
+    document.onclick = resetTimer;
+  
+  function navigateBack(survey_id, source) {
+        // The previous URL that linked to this page
+        let previousUrl = document.referrer;
+        if (previousUrl) {
+          if (source == "readonly") {
+            // Avoid redirecting back to this page to prevent an infinite loop
+            previousUrl = '/create-question/' + survey_id + '?source=readonly';
+          } 
+          else if (previousUrl.includes("edit-question")){
+            // Avoid redirecting back to this page to prevent an infinite loop
+            previousUrl = '/create-question/' + survey_id;
+          }
+          window.location.href = previousUrl;
+        } else {
+          // Fallback if referrer is empty
+          // This simulates the user pressing the back button
+          window.history.back();
+        }
+      }
+    </script>
+    <form id="logout-form" method="post" hx-post="/logout/" hx-target="body" hx-swap="outerHTML" style="display:none;">
+      {% csrf_token %}
+    </form>
+  </body>
 </html>

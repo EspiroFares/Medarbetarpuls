@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="sv">
   <head>
     {% load static %}
@@ -14,32 +14,44 @@
       <div class="title-background">
         <button
           class="title-back-button"
-          onclick="window.location.href='{% url 'templates_and_drafts'%}'"
+          onclick="window.location.href='{% if source and source == 'organization_templates' %}{% url source%}{%else%}{%url "templates_and_drafts"%}{% endif %}'"
         >
           Tillbaka
         </button>
         <h2>Skapa enkät</h2>
       </div>
-
+      {% if source == "organization_templates" %}
+        <button
+        class="title-back-button"
+        onclick="window.location.href='{% if source == 'organization_templates' %}{% url source%}{%else%}{%url "templates_and_drafts"%}{% endif %}'"
+        > 
+        Spara enkät
+        </button>
+      {% else %}
+        <button class="button" onclick="openPopup()">Publicera</button>
+      {% endif %}
       <div class="grid-container" id="question-list">
+        
         {% for question in survey_temp.get_ordered_questions %}
         <a
-          href="{% url 'edit_question' survey_temp.id question.question_format question.id %}"
+          href="{% url 'edit_question' survey_temp.id question.question_format question.id %}{% if source%}?source={{ source }}{% endif %}"
           class="grid-item blue"
         >
           <div class="question-title">
             <h1>Fråga {{forloop.counter}}</h1>
-            <form
-              hx-post="{% url 'delete_question' question.id survey_temp.id %}"
-              hx-trigger="submit"
-              hx-confirm="Är du säker att du vill ta bort den här frågan?"
-              hx-swap="none"
-            >
-              {% csrf_token %}
-              <button class="question-remove-button" type="submit">
-                Ta bort
-              </button>
-            </form>
+            {% if source != "readonly"%}
+              <form
+                hx-post="{% url 'delete_question' question.id survey_temp.id %}{% if source == 'organization_templates' %}?source={{ source }}{% endif %}"
+                hx-trigger="submit"
+                hx-confirm="Är du säker att du vill ta bort den här frågan?"
+                hx-swap="none"
+              >
+                {% csrf_token %}
+                <button class="question-remove-button" type="submit">
+                  Ta bort
+                </button>
+              </form>
+            {%endif%}
           </div>
 
           <div class="question-background">
@@ -47,8 +59,9 @@
           </div>
 
           <div class="question-result">
+          {% if source != "readonly"%}
             <form
-              hx-post="{% url 'move_question_left' survey_temp.id question.id %}"
+              hx-post="{% url 'move_question_left' survey_temp.id question.id %}{% if source == 'organization_templates' %}?source={{ source }}{% endif %}"
               hx-trigger="submit"
               hx-target="#question-list"
               hx-swap="outerHTML"
@@ -57,15 +70,15 @@
               {% csrf_token %}
               <button type="submit">&larr;</button>
             </form>
-
+          {% endif %}
             <img
               src="{% static 'images/' %}{{ question.question_format }}.png"
               alt="{{ question.question_format.label }} image"
               class="question-icon"
             />
-
+          {% if source != "readonly"%}
             <form
-              hx-post="{% url 'move_question_right' survey_temp.id question.id %}"
+              hx-post="{% url 'move_question_right' survey_temp.id question.id %}{% if source == 'organization_templates' %}?source={{ source }}{% endif %}"
               hx-trigger="submit"
               hx-target="#question-list"
               hx-swap="outerHTML"
@@ -74,22 +87,29 @@
               {% csrf_token %}
               <button type="submit">&rarr;</button>
             </form>
+          {% endif %}
           </div>
         </a>
         {% endfor %}
 
+        {% if source != "readonly" %}
         <a
-          href="{% url 'create_question' survey_temp.id %}"
+          href="{% url 'create_question' survey_temp.id %}{% if source == 'organization_templates' %}?source={{ source }}{% endif %}"
           class="add-button-link"
         >
           <div class="add-button">
             <span>+</span>
           </div>
         </a>
+        {% endif %}
       </div>
-      <button class="button" onclick="openPopup()">Publicera enkät</button>
     </div>
-    <div id="publish-popup" class="popup-overlay" style="display: none"  data-survey-id="{{ survey_temp.id }}">
+    <div
+      id="publish-popup"
+      class="popup-overlay"
+      style="display: none"
+      data-survey-id="{{ survey_temp.id }}"
+    >
       <div class="popup-content">
         <h2>Publicera enkät</h2>
 
@@ -187,13 +207,14 @@
             <div id="reminder-tags" class="reminder-tags">
               <!-- Tags will dynamically be inserted here -->
             </div>
-          </div>         
+          </div>
 
           <!-- Buttons -->
           <div class="popup-buttons">
             <button
               class="image-button"
-              onclick="window.location.href='{% url 'create_survey_with_id' survey_temp.id %}'"
+              onclick="window.location.href='{% url 'create_survey_with_id' survey_temp.id %}
+              {% if source and source != 'None' %}?source={{ source }}{% endif %}'"
             >
               <img
                 src="{% static 'images/go-back-btn.png' %}"
@@ -249,7 +270,7 @@
         for (let option of reminderOptions) {
           const tag = document.createElement("div");
           tag.className = "reminder-tag";
-          tag.dataset.days = option.value; // For form submission 
+          tag.dataset.days = option.value; // For form submission
 
           tag.innerHTML = `
             ${option.label}
@@ -271,8 +292,12 @@
       }
 
       // Update reminders whenever date changes
-      document.getElementById("publish-date").addEventListener("change", generateReminderOptions);
-      document.getElementById("end-date").addEventListener("change", generateReminderOptions); 
+      document
+        .getElementById("publish-date")
+        .addEventListener("change", generateReminderOptions);
+      document
+        .getElementById("end-date")
+        .addEventListener("change", generateReminderOptions);
 
       document.addEventListener("DOMContentLoaded", function () {
         // Get today's date
@@ -314,6 +339,25 @@
       }
 
     });
+
+      // Timer that calls logout form after specified time
+      let logoutTimer;
+      function resetTimer() {
+        clearTimeout(logoutTimer);
+        logoutTimer = setTimeout(() => {
+          document.getElementById('logout-form').requestSubmit();
+          }, 10 * 60 * 1000); // 10 minutes
+      }
+  
+      window.onload = resetTimer;
+      document.onmousemove = resetTimer;
+      document.onkeypress = resetTimer;
+      document.onscroll = resetTimer;
+      document.onclick = resetTimer;
+  
     </script>
+    <form id="logout-form" method="post" hx-post="/logout/" hx-target="body" hx-swap="outerHTML" style="display:none;">
+      {% csrf_token %}
+    </form>
   </body>
 </html>

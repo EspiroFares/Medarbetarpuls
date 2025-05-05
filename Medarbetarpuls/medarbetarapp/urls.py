@@ -42,10 +42,20 @@ urlpatterns = [
         views.create_question,
         name="create_question",
     ),
+    path(
+        "create-question/",
+        views.create_question,
+        name="create_question",
+    ),
     path("create_acc/", views.create_acc, name="create_acc"),
     path("create_org/", views.create_org, name="create_org"),
     path(
         "delete_question/<int:question_id>/<int:survey_id>/",
+        views.delete_question,
+        name="delete_question",
+    ),
+    path(
+        "delete_question/<int:question_id>/",
         views.delete_question,
         name="delete_question",
     ),
@@ -71,7 +81,17 @@ urlpatterns = [
         name="edit_question_new",
     ),
     path(
+        "edit-question/<str:question_format>/",
+        views.edit_question_view,
+        name="edit_question_new",
+    ),
+    path(
         "edit-question/<int:survey_id>/<str:question_format>/<int:question_id>/",
+        views.edit_question_view,
+        name="edit_question",
+    ),
+    path(
+        "edit-question/<str:question_format>/<int:question_id>/",
         views.edit_question_view,
         name="edit_question",
     ),
@@ -95,6 +115,14 @@ urlpatterns = [
         "templates_and_drafts/<str:search_str>/",
         views.templates_and_drafts,
         name="templates_and_drafts",
+    ),
+    path(
+        "organization_templates/", views.organization_templates, name="organization_templates"
+    ),
+    path(
+        "organization_templates/<str:search_str>/",
+        views.organization_templates,
+        name="organization_templates",
     ),
     path("settings-admin/", views.settings_admin_view, name="settings_admin"),
     path("settings-name/", views.settings_change_name, name="settings_name"),

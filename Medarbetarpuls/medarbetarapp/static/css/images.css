@@ -134,12 +134,12 @@
 }
 
 .question-icon {
-  width: 20% auto;
+  width: 40%;
   height: 40px;
   margin-right: 10px;
+  object-fit: contain;
 }
 
 .question-icon.result {
-  width: 25px;
-  height: 25px;
+  height: 40px;
 }

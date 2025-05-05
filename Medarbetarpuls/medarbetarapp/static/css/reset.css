@@ -37,7 +37,7 @@ button {
     border-radius: 10px;
     font-size: 16px auto;
     cursor: pointer;
-  }
+}
   
 button:hover {
     background-color: var(--soft_blue);
