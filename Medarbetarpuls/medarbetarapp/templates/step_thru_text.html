@@ -1,0 +1,47 @@
+{% load static %}
+<div x-data="{ index: 0, answers: {{ list_ }} }">
+  <table>
+    <tr>
+      <td>
+        <button @click="if(index > 0) index--" :disabled="index === 0">
+          Föregående
+        </button>
+      </td>
+
+      <td>
+        <p
+          x-text="answers.length > 0 ? `${index+1}/${answers.length}` : '0/0'"
+        ></p>
+      </td>
+
+      <td>
+        <img
+          src="{% static 'images/text' %}.png"
+          alt="Text"
+          class="question-icon result"
+        />
+      </td>
+
+      <td>
+        <button
+          @click="if(index < answers.length - 1) index++"
+          :disabled="index === answers.length - 1"
+        >
+          Nästa
+        </button>
+      </td>
+    </tr>
+  </table>
+
+  {% if is_answer %}
+  <p
+    x-text="answers.length > 0 ? answers[index] : 'Det finns inga svar'"
+    class="result-text"
+  ></p>
+  {% else %}
+  <p
+    x-text="answers.length > 0 ? answers[index] : 'Det finns inga kommentarer'"
+    class="result-text"
+  ></p>
+  {% endif %}
+</div>

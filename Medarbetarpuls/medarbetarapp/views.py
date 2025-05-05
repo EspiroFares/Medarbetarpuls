@@ -684,6 +684,8 @@ def create_question(request, survey_id: int | None = None) -> HttpResponse:
         HttpResponse: Returns status 404 if the survey template does not exist
     """
     user: models.CustomUser = request.user
+
+    source = request.GET.get("source")
     # Retrieve the survey template from the database if it belongs to the user
     survey_temp: models.SurveyTemplate = user.survey_templates.filter(
         id=survey_id
@@ -696,7 +698,7 @@ def create_question(request, survey_id: int | None = None) -> HttpResponse:
         organization: models.Organization = user.admin
     organization_questions: models.Question = organization.question_bank.all()
 
-    if survey_temp is None:
+    if survey_temp is None and source != "organization_templates":
         # Handle the case where the survey template does not exist
         return HttpResponse("Survey template not found", status=404)
 
@@ -709,7 +711,10 @@ def create_question(request, survey_id: int | None = None) -> HttpResponse:
     }
 
     source = request.GET.get("source")
+<<<<<<< HEAD
     print(f"Source: {source}")
+=======
+>>>>>>> dev
 
     return render(
         request,
@@ -814,7 +819,10 @@ def delete_question(
     """
 
     source = request.GET.get("source")
+<<<<<<< HEAD
     print(f"Source: {source}")
+=======
+>>>>>>> dev
 
     if request.method == "POST":
         if request.headers.get("HX-Request"):
@@ -825,7 +833,7 @@ def delete_question(
 
             if survey_id is None:
                 # If no survey_id is given, redirect to create_survey
-                hx_redirect_url = source
+                hx_redirect_url = ""
             else:
                 hx_redirect_url = f"/create-survey/{survey_id}"
                 if source:  # Only append source if it's not None or empty
@@ -965,9 +973,17 @@ def create_survey_view(request, survey_id: int | None = None) -> HttpResponse:
     # If survey_id is given, fetch the corresponding survey template
     # from the database and render the create_survey view
     user: models.CustomUser = request.user
-    survey_temp: models.SurveyTemplate = user.survey_templates.filter(
-        id=survey_id
-    ).first()
+    if source == "readonly":
+        # User is trying to access a survey from the organizations survey bank
+        organization = find_organization_by_email(email=user.email)
+        survey_temp: models.SurveyTemplate = organization.survey_template_bank.filter(
+            id=survey_id
+        ).first()
+    else:
+        survey_temp: models.SurveyTemplate = user.survey_templates.filter(
+            id=survey_id
+        ).first()
+
     if survey_temp is None:
         # Handle the case where the survey template does not exist
         return HttpResponse("Survey template not found", status=404)
@@ -1016,9 +1032,13 @@ def edit_question_view(
     """
     user: models.CustomUser = request.user
     options = None  # Use later to show options
+<<<<<<< HEAD
 
     source = request.GET.get("source")
     print(f"SOURCE: {source}")
+=======
+    source = request.GET.get("source")
+>>>>>>> dev
 
     # SurveyCreator needs a help-function to access organization
     if user.admin is None:
@@ -1028,43 +1048,76 @@ def edit_question_view(
 
     bank_question = organization.question_bank.filter(id=question_id).exists()
 
-    # Get the survey from given id
-    survey_temp: models.SurveyTemplate = user.survey_templates.filter(
-        id=survey_id
-    ).first()
-    if survey_temp is None:
-        # Handle the case where the survey template does not exist
-        return HttpResponse("Survey template not found", status=404)
+    if source == "readonly":
+        # If the question is from the bank, get it from the bank
+
+        survey_temp: models.SurveyTemplate = organization.survey_template_bank.filter(
+            id=question_id
+        ).first()
+
+    elif survey_id is not None:
+        # Get the survey from given id
+        survey_temp: models.SurveyTemplate = user.survey_templates.filter(
+            id=survey_id
+        ).first()
+        if survey_temp is None:
+            # Handle the case where the survey template does not exist
+            return HttpResponse("Survey template not found", status=404)
 
     if request.method == "POST":
-        print(f"POST request with question_id: {question_id}")
         if request.headers.get("HX-Request"):
             # Special case for when a question is created
+
             if question_id is None:
                 question: models.Question = models.Question()
                 question.save()
 
-                # Figure out the current max order for this survey
-                current_max = (
-                    models.QuestionOrder.objects.filter(survey_temp=survey_temp)
-                    .aggregate(m=Max("order"))
-                    .get("m")
-                    or 0
-                )
+                if (
+                    source == "organization_templates"
+                    and request.user.admin
+                    and survey_id is None
+                ):
+                    # If the source is from organization templates, add the question to the survey template
+                    organization.question_bank.add(question)
+                    # Add the question to the survey template
+                else:
+                    # Figure out the current max order for this survey
+                    current_max = (
+                        models.QuestionOrder.objects.filter(survey_temp=survey_temp)
+                        .aggregate(m=Max("order"))
+                        .get("m")
+                        or 0
+                    )
+                    # The new questions order is one higher
+                    next_order = current_max + 1
+                    # Use through_defaults to set the right order
+                    survey_temp.questions.add(
+                        question, through_defaults={"order": next_order}
+                    )
 
-                # The new questions order is one higher
-                next_order = current_max + 1
-
-                # Use through_defaults to set the right order
-                survey_temp.questions.add(
-                    question, through_defaults={"order": next_order}
-                )
+            elif survey_id is not None:
+                question = survey_temp.questions.filter(id=question_id).exists()
+                if question:
+                    question = survey_temp.questions.filter(id=question_id).first()
+                else:
+                    question = organization.question_bank.filter(id=question_id).exists
+                    if question:
+                        question = organization.question_bank.filter(
+                            id=question_id
+                        ).first()
+                        print("Question found in bank")
+                    else:
+                        # Handle the case where the question does not exist
+                        return HttpResponse("Question not found", status=404)
             else:
-                question = survey_temp.questions.filter(id=question_id).first()
+                question = organization.question_bank.filter(id=question_id).exists
+                if question:
+                    question = organization.question_bank.filter(id=question_id).first()
+                else:
+                    # Handle the case where the question does not exist
+                    return HttpResponse("Question not found", status=404)
 
-            if question is None:
-                question = organization.question_bank.filter(id=question_id).first()
-
+            if source != "organization_templates" or survey_id is not None:
                 current_max = (
                     models.QuestionOrder.objects.filter(survey_temp=survey_temp)
                     .aggregate(m=Max("order"))
@@ -1090,6 +1143,12 @@ def edit_question_view(
             question.question_format = question_format
             question.save()
 
+            question_title = request.POST.get("question_name")
+
+            if question_title is not None:
+                question.question_title = question_title
+                question.save()
+
             # Add testcase for multiplechoice questions
             if question_format == models.QuestionFormat.MULTIPLE_CHOICE:
                 options = request.POST.getlist("options")
@@ -1109,9 +1168,12 @@ def edit_question_view(
             question.question = request.POST.get("question")
             question.save()
 
-            # Update last edited date of survey
-            survey_temp.last_edited = timezone.now()
-            survey_temp.save()
+            if source != "organization_templates" or survey_id is not None:
+                # Update last edited date of survey
+                survey_temp.last_edited = timezone.now()
+                survey_temp.save()
+            else:
+                return HttpResponse(headers={"HX-Redirect": "/organization_templates/"})
 
             hx_redirect_url = f"/create-survey/{survey_id}"
             if source and source != "None":  # Only append if source is valid
@@ -1134,9 +1196,22 @@ def edit_question_view(
                 .multiple_choice_question.options
             )
 
+    context = {
+        "question_format": question_format,
+        "question_id": question_id,
+        "question_text": question_text,
+        "options": options,
+        "bank_question": bank_question,
+        "source": source,
+    }
+    if survey_id is not None:
+        context.update({"survey_id": survey_id})
+        context.update({"survey_temp": survey_temp})
+
     return render(
         request,
         "edit_question.html",
+<<<<<<< HEAD
         {
             "survey_temp": survey_temp,
             "question_format": question_format,
@@ -1146,6 +1221,9 @@ def edit_question_view(
             "bank_question": bank_question,
             "source": source,
         },
+=======
+        context,
+>>>>>>> dev
     )
 
 
@@ -1159,7 +1237,24 @@ def publish_survey(request, survey_id: int) -> HttpResponse:
             user: models.CustomUser = request.user
             survey_temp: models.SurveyTemplate = user.survey_templates.filter(
                 id=survey_id
-            ).first()
+            ).exists()
+            if survey_temp:
+                survey_temp = user.survey_templates.filter(id=survey_id).first()
+            else:
+                organization: models.Organization = find_organization_by_email(
+                    email=user.email
+                )
+                survey_temp = organization.survey_template_bank.filter(
+                    id=survey_id
+                ).exists()
+                if survey_temp:
+                    survey_temp = organization.survey_template_bank.filter(
+                        id=survey_id
+                    ).first()
+                else:
+                    # Handle the case where the survey template does not exist
+                    return HttpResponse("Survey template not found", status=404)
+
             if survey_temp is None:
                 # Handle the case where the survey template does not exist
                 return HttpResponse("Survey template not found", status=404)
@@ -1359,12 +1454,14 @@ def logout_view(request):
     """
     if request.method == "POST":
         if request.headers.get("HX-Request"):
-            print("here")
             logout(request)
             request.session.flush()  # Make sure session is cleared
             response = HttpResponse(status=200)
             response["HX-Redirect"] = "/"
+<<<<<<< HEAD
             print("also here")
+=======
+>>>>>>> dev
             return response
     return HttpResponse(status=400)
 
@@ -1481,7 +1578,7 @@ def my_results_view(request):
 
 
 @csrf_protect
-@allowed_roles("surveycreator")
+@allowed_roles("surveycreator", "admin")
 def delete_survey_template(request, survey_id: int) -> HttpResponse:
     """
     Deletes a survey template via HTMX.
@@ -1494,13 +1591,18 @@ def delete_survey_template(request, survey_id: int) -> HttpResponse:
     Returns:
         HttpResponse: Redirects to "/templates_and_drafts/" on success or returns status 400 on failure.
     """
+    source = request.GET.get("source")
+
     if request.method == "POST":
         if request.headers.get("HX-Request"):
             survey_temp = get_object_or_404(
                 models.SurveyTemplate, id=survey_id, creator=request.user
             )
             survey_temp.delete()
-            return HttpResponse(headers={"HX-Redirect": "/templates_and_drafts/"})
+            if source == "organization_templates":
+                return HttpResponse(headers={"HX-Redirect": "/organization_templates/"})
+            else:
+                return HttpResponse(headers={"HX-Redirect": "/templates_and_drafts/"})
 
     return HttpResponse(status=400)
 
@@ -1526,6 +1628,9 @@ def templates_and_drafts(request, search_str: str | None = None) -> HttpResponse
     empty_templates: models.SurveyTemplate = request.user.survey_templates.annotate(
         num_questions=Count("questions")
     ).filter(num_questions=0)
+
+    organization = find_organization_by_email(email=request.user.email)
+    organization_survey_templates = organization.survey_template_bank.all()
 
     # Delete them
     empty_templates.delete()
@@ -1558,7 +1663,12 @@ def templates_and_drafts(request, search_str: str | None = None) -> HttpResponse
                 )
 
     return render(
-        request, "templates_and_drafts.html", {"survey_templates": survey_templates}
+        request,
+        "templates_and_drafts.html",
+        {
+            "survey_templates": survey_templates,
+            "organization_survey_templates": organization_survey_templates,
+        },
     )
 
 
@@ -1571,6 +1681,7 @@ def organization_templates(request, search_str: str | None = None) -> HttpRespon
     question_templates = organization.question_bank.all()
     source = "organization_templates"
 
+<<<<<<< HEAD
     # # Annotate and filter templates with 0 questions
     # empty_templates: models.SurveyTemplate = request.user.survey_templates.annotate(
     #     num_questions=Count("questions")
@@ -1607,6 +1718,14 @@ def organization_templates(request, search_str: str | None = None) -> HttpRespon
                         "HX-Redirect": "/organization_templates/" + search_str_input
                     }
                 )
+=======
+    empty_templates: models.SurveyTemplate = survey_templates.annotate(
+        num_questions=Count("questions")
+    ).filter(num_questions=0)
+
+    # Delete them
+    empty_templates.delete()
+>>>>>>> dev
 
     return render(
         request,
@@ -1943,19 +2062,20 @@ def survey_result_view(request, survey_id):
 
     # Retrievs all survey results of this survey
     survey_results = survey.survey_results.all()
+    user = request.user
 
     summary_context = analysis_handler.get_survey_summary(survey.id)
+    for summary in summary_context["summaries"]:
+        summary["my_result"] = analysis_handler.get_answers(
+            summary["question"], user=user, survey=survey
+        ).first()
 
     if survey_results is None:
         # This survey has no answers (should not even be displayed to the user then)
         return HttpResponse(400)
 
     # Proceed to render the survey results
-    return render(
-        request,
-        "survey_result.html",
-        summary_context,
-    )
+    return render(request, "survey_result.html", summary_context)
 
 
 @login_required
@@ -2033,7 +2153,10 @@ def correct_name(name: str) -> Boolean | str:
 def analysis_view(request):
     group_id = request.GET.get("group_id")
     survey_count = request.GET.get("surveys", "1")
+<<<<<<< HEAD
     user_id = request.GET.get("user_id")
+=======
+>>>>>>> dev
     analysisHandler = AnalysisHandler()
 
     context = {
@@ -2070,9 +2193,12 @@ def analysis_view(request):
         return render(request, "analysis.html", context)
 
     latest_survey = filtered_surveys[0]
+<<<<<<< HEAD
     respondents_dict = analysisHandler.get_respondents(latest_survey, group)
     context["respondents"] = respondents_dict
     context["selected_user_id"] = user_id
+=======
+>>>>>>> dev
 
     summary = analysisHandler.get_survey_summary(
         survey_id=latest_survey.id,
@@ -2108,8 +2234,12 @@ def analysis_view(request):
     context["lineLabels"] = [entry["sending_date"] for entry in trends]
 
     context["lineData"] = [entry["summary"]["enpsScore"] for entry in trends]
+<<<<<<< HEAD
 
     bank_questions = analysisHandler.get_bank_questions()
     print("QUESTION BANK", bank_questions)
+=======
+    print(context["lineData"])
+>>>>>>> dev
 
     return render(request, "analysis.html", context)

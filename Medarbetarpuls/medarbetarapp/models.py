@@ -231,7 +231,7 @@ class Survey(models.Model):
 
 # What this model does needs to be explained here
 class SurveyTemplate(models.Model):
-    name = models.CharField(max_length=255)  # Do we want names for surveyTemplates???
+    name = models.CharField(max_length=255) 
     questions = ManyToManyManager["Question"]
     creator = models.ForeignKey(
         CustomUser, on_delete=models.CASCADE, related_name="survey_templates", null=True

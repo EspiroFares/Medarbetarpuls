@@ -33,10 +33,9 @@
             type="text"
             id="search-bar"
             name="search-bar"
-            class="search-bar"
             placeholder="Sök bland enkätmallar..."
           />
-          <button type="submit" class="search-button">Sök</button>
+          <button type="submit" >Sök</button>
         </form>
       </div>
       <!-- Change name to variable -->
@@ -85,6 +84,33 @@
           </div>
         </a>
       </div>
+      
+      {% if organization_survey_templates is not None %}
+      <div class="title-background">
+        <h2>Organisationens standardformulär</h2>
+      </div>
+      <div class="grid-container">
+        {% for survey in organization_survey_templates %}
+        <a
+          href="{% url 'create_survey_with_id' survey.id%}?source=readonly"
+          class="grid-item blue"
+        >
+          <div class="question-title">
+            <h1>{{ survey.name }}</h1>
+          </div>
+
+          <div class="question-background">
+            <p>{{ survey.last_edited }}</p>
+          </div>
+          <div class="question-result">
+            
+          </div>
+        </a>
+        {% endfor %}
+
+      {%endif %}
+
+
     </div>
     <script>
       document.body.addEventListener("htmx:configRequest", (event) => {
