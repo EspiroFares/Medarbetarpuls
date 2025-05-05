@@ -366,7 +366,7 @@ class AnalysisHandler:
         comments = self.get_comments(
             question, survey, user=user, employee_group=employee_group
         )
-        mean = self.calculate_mean(answers)
+        mean = round(self.calculate_mean(answers), 2)
         return {
             "question": question,
             "answers": answers,
