@@ -83,6 +83,7 @@ def createQuestions(
     questionFormat: QuestionFormat,
     questionType: QuestionType,
     survey: Survey,
+    bank_question_org: Organization | None = None, 
 ):
     result = []
     text_pool = {
@@ -106,6 +107,7 @@ def createQuestions(
             question=question_text,
             question_format=questionFormat,
             question_type=questionType,
+            bank_question=bank_question_org if bank_question_org else None,
         )
         if questionFormat == QuestionFormat.MULTIPLE_CHOICE:
             mcq = MultipleChoiceQuestion.objects.create(
@@ -136,6 +138,8 @@ def createQuestions(
         q.save()
         q.connected_surveys.add(survey)
         survey.questions.add(q)
+        if bank_question_org:
+            bank_question_org.question_bank.add(q)
         survey.save()
         result.append(q)
     return result
@@ -223,6 +227,8 @@ for s in surveys:
     for result in s.survey_results.all():
         for q in s.questions.all():
             createAnswers(result, q)
+
+
 
 print("✅ Successfully created test data!")
 print("Admin:", admin)

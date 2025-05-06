@@ -477,6 +477,12 @@
   min-width: 720px;
 }
 
+.analysis-item.ratio-1-4 {
+  aspect-ratio: 1 / 1;
+  width: 100%;        
+  height: auto;     
+}
+
 .analysis-item-title {
   position: absolute; /* Position the title absolutely */
   top: -10px; /* Distance from the top */
@@ -505,6 +511,16 @@
   height: 90%;
   min-width: 20%;
   overflow-x: hidden;
+}
+
+.statistics-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); 
+  grid-template-rows: repeat(2, auto);   
+  gap: 10px;
+  width: calc(33.33% - 10px);
+  max-width: 600px;
+  margin: 0;
 }
 
 .topbar {
@@ -658,6 +674,8 @@
   height: 30px;
   padding: 10px;
 }
+
+
 
 .notification-container {
   display: flex;

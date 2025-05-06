@@ -78,7 +78,12 @@ class AnalysisHandler:
         Returns:
             QuerySet[Survey]: A distinct queryset of Survey objects linked to the given group.
         """
-        return Survey.objects.filter(employee_groups=employee_group).distinct()
+        return (
+        Survey.objects
+        .filter(employee_groups=employee_group)
+        .order_by('-sending_date')
+        .distinct()
+    )
 
     def get_answers(
         self,
@@ -178,7 +183,7 @@ class AnalysisHandler:
         return text_comments
 
     def get_participation_metrics(
-        self, survey: Survey, employee_group: EmployeeGroup
+        self, surveys: List[Survey], employee_group: EmployeeGroup
     ) -> Dict[str, float]:
         """
         Calculate participation metrics for a given survey and employee group.
@@ -193,18 +198,46 @@ class AnalysisHandler:
             answered_count (float): Number of users in the group who have answered the survey.
             answer_pct (float): Percentage of participants who answered (rounded to 1 decimal).
         """
-        total_participants = employee_group.employees.count()
-        answered_count = SurveyUserResult.objects.filter(
-            published_survey=survey,
-            user__in=employee_group.employees.all(),
-            is_answered=True,
-        ).count()
-        answer_pct = round((answered_count / total_participants) * 100, 1)
-        return {
+        result = []
+        for survey in surveys:
+            total_participants = employee_group.employees.count()
+            answered_count = SurveyUserResult.objects.filter(
+                published_survey=survey,
+                user__in=employee_group.employees.all(),
+                is_answered=True,
+            ).count()
+            answer_pct = round((answered_count / total_participants) * 100, 1)
+            result.append({
+            "survey":survey,
             "participant_count": total_participants,
             "answered_count": answered_count,
             "answer_pct": answer_pct,
-        }
+        })
+        return result
+
+    def get_respondents(
+        self, survey: Survey, employee_group: EmployeeGroup | None = None
+    ):
+        filters = {"published_survey": survey}  # add is answered here?
+
+        if employee_group:
+            filters["user__in"] = employee_group.employees.all()
+
+        users = list(
+            CustomUser.objects.filter(
+                survey_results__in=SurveyUserResult.objects.filter(**filters)
+            ).distinct()
+        )
+        anonymous_users = {f"User {i}": users[i] for i in range(len(users))}
+        return anonymous_users
+
+    def get_bank_questions(self):
+        """
+        Returns all questions that are part of an organization's question bank.
+        """
+        bank_questions = Question.objects.filter(bank_question__isnull=False).distinct()
+
+        return bank_questions
 
     # --------- SLIDER-QUESTION FUNCTIONALITY -------------
     def calculate_enps_data(self, answers) -> tuple[int, int, int]:
@@ -325,7 +358,7 @@ class AnalysisHandler:
         mean = self.calculate_mean(answers)
         variance = sum((x - mean) ** 2 for x in values) / n
         standard_deviation = math.sqrt(variance)
-        return standard_deviation
+        return round(standard_deviation, 2)
 
     def calculate_variation_coefficient(self, answers) -> float:
         """Calculate coefficient of variation for slider answers."""
@@ -600,46 +633,50 @@ class AnalysisHandler:
         trend = []
 
         for survey in sorted(surveys, key=lambda s: s.sending_date):
-            question = (
-                survey.questions.filter(question=question.question).first()
+            _question = question
+            
+            question_obj = (
+                survey.questions.filter(question=_question.question).first()
             )  # fetch the question object corresponding to the same string as the
-            if question.question_format == QuestionFormat.MULTIPLE_CHOICE:
+            if question_obj is None:
+                continue
+            
+            if question_obj.question_format == QuestionFormat.MULTIPLE_CHOICE:
                 question_summary = self.get_multiple_choice_summary(
-                    question=question,
+                    question=question_obj,
                     survey=survey,
                     user=user,
                     employee_group=employee_group,
                 )
-            elif question.question_format == QuestionFormat.YES_NO:
+            elif question_obj.question_format == QuestionFormat.YES_NO:
                 question_summary = self.get_yes_no_summary(
-                    question=question,
+                    question=question_obj,
                     survey=survey,
                     user=user,
                     employee_group=employee_group,
                 )
-            elif question.question_format == QuestionFormat.TEXT:
+            elif question_obj.question_format == QuestionFormat.TEXT:
                 # cant show any trends on text questions, should we show participation metrics here instead?
                 question_summary = self.get_free_text_summary(
-                    question=question,
+                    question=question_obj,
                     survey=survey,
                     user=user,
                     employee_group=employee_group,
                 )
-            elif question.question_type == QuestionType.ENPS:
+            elif question_obj.question_type == QuestionType.ENPS:
                 question_summary = self.get_enps_summary(
-                    question=question,
+                    question=question_obj,
                     survey=survey,
                     user=user,
                     employee_group=employee_group,
                 )
-            elif question.question_format == QuestionFormat.SLIDER:
+            elif question_obj.question_format == QuestionFormat.SLIDER:
                 question_summary = self.get_slider_summary(
-                    question_id=question.id,
-                    survey_id=survey.id,
+                    question=question_obj,
+                    survey=survey,
                     user=user,
                     employee_group=employee_group,
                 )
-
             trend.append(
                 {
                     "survey_id": survey.id,
@@ -649,3 +686,29 @@ class AnalysisHandler:
             )
 
         return trend
+    
+    def get_survey_answer_distribution(
+        self,
+        survey: Survey,
+        user: CustomUser | None = None,
+        employee_group: EmployeeGroup | None = None,
+    ) -> list[dict[str, Any]]:
+        result = []
+        total_participants = survey.survey_results.count()     
+
+        for q in survey.questions.all().order_by("id"):
+            answers_qs = self.get_answers(
+                question=q,
+                survey=survey,
+                user=user,
+                employee_group=employee_group,
+            )
+
+            result.append(
+                {
+                    "question": q,
+                    "answered_count": answers_qs.count(),
+                    "total_participants": total_participants,
+                }
+            )
+        return result
