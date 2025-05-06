@@ -1349,9 +1349,6 @@ def publish_survey(request, survey_id: int) -> HttpResponse:
             # Only tries scheduling if we are on linux system!
             os_type = platform.system()
             
-            if settings.DEBUG:
-                survey.publish_survey()
-
             if os_type == "Linux":
                 publish_survey_async.apply_async(
                     args=[survey.id], eta=survey.sending_date
@@ -2119,7 +2116,7 @@ def analysis_view(request):
         context["message"] = "Gruppen har inga enkäter ännu."
         return render(request, "analysis.html", context)
 
-    # Sortera innan slicing för att undvika "Cannot reorder..."-fel
+    
     surveys = surveys.order_by("-sending_date")
     if survey_count != "all":
         try:
@@ -2133,23 +2130,22 @@ def analysis_view(request):
     if not filtered_surveys:
         context["message"] = "Inga filtrerade enkäter hittades."
         return render(request, "analysis.html", context)
-
     latest_survey = filtered_surveys[0]
     respondents_dict = analysisHandler.get_respondents(latest_survey, group)
     context["respondents"] = respondents_dict
-
-    summary = analysisHandler.get_survey_summary(
-        survey_id=latest_survey.id,
-        user=respondents_dict.get(user_id) if user_id else None,
-        employee_group=group,
-    )
-
-    context.update(
-        analysisHandler.get_participation_metrics(
-            summary["survey"], summary["employee_group"]
+ 
+    participation_metrics = analysisHandler.get_participation_metrics(
+            list(filtered_surveys), group
         )
-    )
+    print(participation_metrics)
+    context["answerFrequencyData"] = [entry["answer_pct"] for entry in participation_metrics]
+    context["answer_pct"] = context["answerFrequencyData"][0]
+    context["answerFrequencyLabels"] = [str(entry["survey"].sending_date) for entry in participation_metrics]
 
+    survey_answer_dist = analysisHandler.get_survey_answer_distribution(latest_survey, user=respondents_dict.get(user_id) if user_id else None, employee_group=group)
+    context["answerDistributionLabels"] = [entry["question"].question for entry in survey_answer_dist]
+    context["answerDistributionData"] = [entry["answered_count"] for entry in survey_answer_dist]
+    
     selected_question_format = None
     if question_id:
         selected_question = get_object_or_404(models.Question, id=question_id)
@@ -2167,7 +2163,7 @@ def analysis_view(request):
             group,
             respondents_dict.get(user_id) if user_id else None,
         )
-        print(trend_data)
+
         if trend_data:
             last_summary = trend_data[-1]["summary"]
 
@@ -2185,6 +2181,13 @@ def analysis_view(request):
             context["enpsPieLabels"] = last_summary.get("enpsPieLabels")
             context["enpsPieData"] = last_summary.get("enpsPieData")
             context["enpsDistribution"] = last_summary.get("enpsDistribution") 
+            
+            context["multipleChoiceLabels"] = last_summary.get("answer_options") 
+            context["multipleChoiceData"] =last_summary.get("distribution") 
+            
+            context["yesNoLabels"] = last_summary.get("answer_options") 
+            context["yesNoData"] =last_summary.get("distribution") 
+            
 
 
     context["selected_question_format"] = selected_question_format

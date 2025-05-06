@@ -183,7 +183,7 @@ class AnalysisHandler:
         return text_comments
 
     def get_participation_metrics(
-        self, survey: Survey, employee_group: EmployeeGroup
+        self, surveys: List[Survey], employee_group: EmployeeGroup
     ) -> Dict[str, float]:
         """
         Calculate participation metrics for a given survey and employee group.
@@ -198,18 +198,22 @@ class AnalysisHandler:
             answered_count (float): Number of users in the group who have answered the survey.
             answer_pct (float): Percentage of participants who answered (rounded to 1 decimal).
         """
-        total_participants = employee_group.employees.count()
-        answered_count = SurveyUserResult.objects.filter(
-            published_survey=survey,
-            user__in=employee_group.employees.all(),
-            is_answered=True,
-        ).count()
-        answer_pct = round((answered_count / total_participants) * 100, 1)
-        return {
+        result = []
+        for survey in surveys:
+            total_participants = employee_group.employees.count()
+            answered_count = SurveyUserResult.objects.filter(
+                published_survey=survey,
+                user__in=employee_group.employees.all(),
+                is_answered=True,
+            ).count()
+            answer_pct = round((answered_count / total_participants) * 100, 1)
+            result.append({
+            "survey":survey,
             "participant_count": total_participants,
             "answered_count": answered_count,
             "answer_pct": answer_pct,
-        }
+        })
+        return result
 
     def get_respondents(
         self, survey: Survey, employee_group: EmployeeGroup | None = None
@@ -673,7 +677,6 @@ class AnalysisHandler:
                     user=user,
                     employee_group=employee_group,
                 )
-
             trend.append(
                 {
                     "survey_id": survey.id,
@@ -683,3 +686,29 @@ class AnalysisHandler:
             )
 
         return trend
+    
+    def get_survey_answer_distribution(
+        self,
+        survey: Survey,
+        user: CustomUser | None = None,
+        employee_group: EmployeeGroup | None = None,
+    ) -> list[dict[str, Any]]:
+        result = []
+        total_participants = survey.survey_results.count()     
+
+        for q in survey.questions.all().order_by("id"):
+            answers_qs = self.get_answers(
+                question=q,
+                survey=survey,
+                user=user,
+                employee_group=employee_group,
+            )
+
+            result.append(
+                {
+                    "question": q,
+                    "answered_count": answers_qs.count(),
+                    "total_participants": total_participants,
+                }
+            )
+        return result
