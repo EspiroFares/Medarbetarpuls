@@ -71,21 +71,36 @@
           <!-- Question number and title -->
           <div class="question-title result">
             <!-- Button for toggle between personal answer and result -->
-            <button
+             <!-- Must override the width for this specific case -->
+            <button class="default-button"
               @click="toggle_answer(STATES.PERSONAL_ANSWER)"
-              x-text="show_state === STATES.PERSONAL_ANSWER ? 'Stäng svar' : 'Visa svar'"
+              x-text="show_state === STATES.PERSONAL_ANSWER ? 'Resultat' : 'Ditt svar'"
+              style="width: 35%;"
             ></button>
 
             <h1>Fråga {{ forloop.counter }}</h1>
 
             <!-- Button for toggle between comment and result -->
-            <img
-              @click="toggle_answer(STATES.COMMENT)"
-              style="cursor: pointer"
-              src="{% static 'images/text' %}.png"
-              alt="Kommentarer"
-              class="question-icon result"
-            />
+            <!-- Must add styling because Alpine removes the styling for question-icon -->
+            <div @click="toggle_answer(STATES.COMMENT)" style="cursor: pointer; width: 30%;">
+              <!-- Show 'close' icon if comment view is active -->
+              <template x-if="show_state === STATES.COMMENT">
+                <img
+                  src="{% static 'images/go-back-btn.png' %}"
+                  alt="Stäng kommentarer"
+                  class="question-icon result"
+                />
+              </template>
+            
+              <!-- Show 'open comment' icon if not in comment view -->
+              <template x-if="show_state !== STATES.COMMENT">
+                <img
+                  src="{% static 'images/comment2.png' %}"
+                  alt="Visa kommentarer"
+                  class="question-icon result"
+                />
+              </template>
+            </div>
           </div>
 
           <!-- Shows the question -->
@@ -95,13 +110,15 @@
 
           <!-- Shows comments for the question. Is only showned when toggled 
                by one of the earlier buttons -->
-          <div class="question-result" x-show="show_state === STATES.COMMENT">
+          <div class="question-result" x-show="show_state === STATES.COMMENT"
+           style="flex-direction: column;">
             <strong>Kommentarer:</strong>
-            {% with list_=summary.text_comments %}
-            <!---->
-            {% include "step_thru_text.html" with list_=list_ is_answer=False %}
-            <!---->
-            {% endwith %}
+              {% with list_=summary.text_comments %}
+              <!---->
+              {% include "step_thru_text.html" with list_=list_ is_answer=False %}
+              <!---->
+              {% endwith %}
+            
           </div>
 
           <!-- Shows personal answer for the question. Is only showned when toggled 
