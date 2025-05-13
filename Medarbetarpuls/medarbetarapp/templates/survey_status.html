@@ -90,7 +90,7 @@
                         <!-- See result -->
                         <div>
                           <!-- Should be able to see result if everyone has answered, at least 3 people has answered, or the deadline has passed -->
-                            {% if survey.collected_answer_count == survey.published_count or survey.collected_answer_count >= 3 or survey.deadline < current_time %}
+                            {% if survey.collected_answer_count >= survey.published_count or survey.collected_answer_count >= 3 or survey.deadline < current_time %}
                               <button
                                 class="view-survey-button"
                                 onclick="window.location.href='{% url 'survey_result' survey.id %}'">
