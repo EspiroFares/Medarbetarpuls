@@ -251,8 +251,6 @@
   font-weight: bold;
   gap: 20px;
   overflow: auto;
-  overflow-wrap: break-word;
-  max-width: 100%;
 }
 
 .question-result.yesno {
