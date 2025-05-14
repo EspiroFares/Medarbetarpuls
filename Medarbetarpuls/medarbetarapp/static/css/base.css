@@ -201,7 +201,6 @@
 }
 
 .question-title h1 {
-  white-space: nowrap;
   margin: 0px;
   /* Remove default margin */
   padding: 0;
