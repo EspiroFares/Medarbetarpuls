@@ -212,9 +212,9 @@
           <!-- Buttons -->
           <div class="popup-buttons">
             <button
+              type="button"
               class="image-button"
-              onclick="window.location.href='{% url 'create_survey_with_id' survey_temp.id %}
-              {% if source and source != 'None' %}?source={{ source }}{% endif %}'"
+              onclick="navigateBack()"
             >
               <img
                 src="{% static 'images/go-back-btn.png' %}"
@@ -354,7 +354,25 @@
       document.onkeypress = resetTimer;
       document.onscroll = resetTimer;
       document.onclick = resetTimer;
-  
+      
+      function navigateBack() {
+        // The previous URL that linked to this page
+        const popup = document.getElementById("error-box");
+        let previousUrl = document.referrer;
+        if (previousUrl) {
+          if (document.getElementById("publish-popup").style.display == "flex"){
+            // Pressed back button while popup was open
+            closePopup();
+          }
+          else{
+            window.location.href = previousUrl;
+          }       
+        } else {
+          // Fallback if referrer is empty
+          // This simulates the user pressing the back button
+          window.history.back();
+        }
+      }
     </script>
     <form id="logout-form" method="post" hx-post="/logout/" hx-target="body" hx-swap="outerHTML" style="display:none;">
       {% csrf_token %}
