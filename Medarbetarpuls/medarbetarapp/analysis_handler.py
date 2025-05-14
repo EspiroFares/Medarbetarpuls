@@ -350,7 +350,15 @@ class AnalysisHandler:
         return mean
 
     def calculate_standard_deviation(self, answers) -> float:
-        """Calculate standard deviation for slider answers."""
+        """
+        Calculate the standard deviation of slider answers.
+
+        Args:
+            answers (QuerySet[Answer] or Iterable[Answer]): Collection of Answer objects with a `slider_answer` attribute.
+
+        Returns:
+            float: Standard deviation of all non-null `slider_answer` values, or 0.0 if there are none.
+        """
         values = [a.slider_answer for a in answers if a.slider_answer is not None]
         n = len(values)
         if n == 0:
@@ -361,7 +369,16 @@ class AnalysisHandler:
         return round(standard_deviation, 2)
 
     def calculate_variation_coefficient(self, answers) -> float:
-        """Calculate coefficient of variation for slider answers."""
+        """
+        Calculate the coefficient of variation for slider answers.
+
+        Args:
+            answers (QuerySet[Answer] or Iterable[Answer]): Collection of Answer objects with a `slider_answer` attribute.
+
+        Returns:
+            float: The coefficient of variation (std deviation / mean * 100), rounded to two decimals;
+                returns 0.0 if there are no values or the mean is zero.
+        """
 
         values = [a.slider_answer for a in answers if a.slider_answer is not None]
         n = len(values)
