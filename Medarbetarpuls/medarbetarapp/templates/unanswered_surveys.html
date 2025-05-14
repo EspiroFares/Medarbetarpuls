@@ -36,6 +36,19 @@
           <p>Publicerades: {{ survey.published_survey.sending_date }}</p>
           <p><strong>*{{ survey.published_survey.name }}*</strong></p>
           <p>Deadline: {{ survey.published_survey.deadline }}</p>
+          {% if survey.published_survey.is_anonymous %}
+            <span class="tooltip" data-tooltip="Samtliga svar är anonymiserade">
+                <div class="icon-wrapper">
+                <img src="{% static 'images/is-anonymous.png' %}" />
+                </div>
+            </span>
+          {% else %}
+            <span class="tooltip" data-tooltip="Svar är inte anonymiserade">
+                <div class="icon-wrapper">
+                <img src="{% static 'images/is-not-anonymous.png' %}" />
+                </div>
+            </span>
+          {% endif %}
         </a>
         {% endfor %}
       </div>
