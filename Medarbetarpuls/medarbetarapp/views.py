@@ -1217,6 +1217,7 @@ def publish_survey(request, survey_id: int) -> HttpResponse:
             survey_temp: models.SurveyTemplate = user.survey_templates.filter(
                 id=survey_id
             ).exists()
+
             if survey_temp:
                 survey_temp = user.survey_templates.filter(id=survey_id).first()
             else:
@@ -1237,6 +1238,10 @@ def publish_survey(request, survey_id: int) -> HttpResponse:
             if survey_temp is None:
                 # Handle the case where the survey template does not exist
                 return HttpResponse("Survey template not found", status=404)
+            
+            if not survey_temp.questions.first():
+                # Handle the case where the survey template has no questions
+                return HttpResponse("Enkäten saknar frågor", status=404) 
 
             # Get the input information:
 
