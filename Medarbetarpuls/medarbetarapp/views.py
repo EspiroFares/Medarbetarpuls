@@ -925,6 +925,7 @@ def move_question_right(request, survey_temp_id: int, question_id: int) -> HttpR
     return render(request, "partials/question-list.html", context)
 
 
+@login_required
 def create_survey_view(request, survey_id: int | None = None) -> HttpResponse:
     """
     Creates a survey template. If no survey_id is given, a new
@@ -1238,10 +1239,10 @@ def publish_survey(request, survey_id: int) -> HttpResponse:
             if survey_temp is None:
                 # Handle the case where the survey template does not exist
                 return HttpResponse("Survey template not found", status=404)
-            
+
             if not survey_temp.questions.first():
                 # Handle the case where the survey template has no questions
-                return HttpResponse("Enkäten saknar frågor", status=404) 
+                return HttpResponse("Enkäten saknar frågor", status=404)
 
             # Get the input information:
 
@@ -1353,7 +1354,7 @@ def publish_survey(request, survey_id: int) -> HttpResponse:
 
             # Only tries scheduling if we are on linux system!
             os_type = platform.system()
-            
+
             if os_type == "Linux":
                 publish_survey_async.apply_async(
                     args=[survey.id], eta=survey.sending_date
@@ -1558,6 +1559,7 @@ def my_results_view(request):
 
 
 @csrf_protect
+@login_required
 @allowed_roles("surveycreator", "admin")
 def delete_survey_template(request, survey_id: int) -> HttpResponse:
     """
@@ -1685,6 +1687,7 @@ def my_surveys_view(request):
 
 
 @csrf_protect
+@login_required
 def remove_employee_from_employee_group_view(request):
     """
     Removes the given employee group from the given users employee groups
@@ -1707,6 +1710,7 @@ def remove_employee_from_employee_group_view(request):
 
 
 @csrf_protect
+@login_required
 def remove_employee_from_survey_group_view(request):
     """
     Removes the given survey group from the given users survey groups
@@ -1728,6 +1732,7 @@ def remove_employee_from_survey_group_view(request):
     return HttpResponse(status=400)
 
 
+@login_required
 @allowed_roles("admin")
 def settings_admin_view(request):
     """
@@ -1990,6 +1995,7 @@ def start_admin_view(request):
     )
 
 
+@login_required
 @allowed_roles("surveycreator", "surveyresponder")
 def survey_result_view(request, survey_id):
     survey = models.Survey.objects.filter(id=survey_id).first()
@@ -2121,7 +2127,6 @@ def analysis_view(request):
         context["message"] = "Gruppen har inga enkäter ännu."
         return render(request, "analysis.html", context)
 
-    
     surveys = surveys.order_by("-sending_date")
     if survey_count != "all":
         try:
@@ -2138,19 +2143,31 @@ def analysis_view(request):
     latest_survey = filtered_surveys[0]
     respondents_dict = analysisHandler.get_respondents(latest_survey, group)
     context["respondents"] = respondents_dict
- 
-    participation_metrics = analysisHandler.get_participation_metrics(
-            list(filtered_surveys), group
-        )
-    print(participation_metrics)
-    context["answerFrequencyData"] = [entry["answer_pct"] for entry in participation_metrics]
-    context["answer_pct"] = context["answerFrequencyData"][0]
-    context["answerFrequencyLabels"] = [str(entry["survey"].sending_date) for entry in participation_metrics]
 
-    survey_answer_dist = analysisHandler.get_survey_answer_distribution(latest_survey, user=respondents_dict.get(user_id) if user_id else None, employee_group=group)
-    context["answerDistributionLabels"] = [entry["question"].question for entry in survey_answer_dist]
-    context["answerDistributionData"] = [entry["answered_count"] for entry in survey_answer_dist]
-    
+    participation_metrics = analysisHandler.get_participation_metrics(
+        list(filtered_surveys), group
+    )
+    print(participation_metrics)
+    context["answerFrequencyData"] = [
+        entry["answer_pct"] for entry in participation_metrics
+    ]
+    context["answer_pct"] = context["answerFrequencyData"][0]
+    context["answerFrequencyLabels"] = [
+        str(entry["survey"].sending_date) for entry in participation_metrics
+    ]
+
+    survey_answer_dist = analysisHandler.get_survey_answer_distribution(
+        latest_survey,
+        user=respondents_dict.get(user_id) if user_id else None,
+        employee_group=group,
+    )
+    context["answerDistributionLabels"] = [
+        entry["question"].question for entry in survey_answer_dist
+    ]
+    context["answerDistributionData"] = [
+        entry["answered_count"] for entry in survey_answer_dist
+    ]
+
     selected_question_format = None
     if question_id:
         selected_question = get_object_or_404(models.Question, id=question_id)
@@ -2177,23 +2194,27 @@ def analysis_view(request):
             context["slider_cv"] = last_summary.get("variation_coefficient", 0)
             context["slider_median"] = last_summary.get("median", 0)  # om tillgänglig
 
-            context["slider_values"] = last_summary.get("labels", [str(i) for i in range(11)])
-            context["sliderDistribution"] = last_summary.get("distribution", [0]*11)
-            context["sliderTrendData"] = [entry["summary"].get("mean", 0) for entry in trend_data]
-            context["sliderTrendLabels"] = [entry["sending_date"] for entry in trend_data]
-        
+            context["slider_values"] = last_summary.get(
+                "labels", [str(i) for i in range(11)]
+            )
+            context["sliderDistribution"] = last_summary.get("distribution", [0] * 11)
+            context["sliderTrendData"] = [
+                entry["summary"].get("mean", 0) for entry in trend_data
+            ]
+            context["sliderTrendLabels"] = [
+                entry["sending_date"] for entry in trend_data
+            ]
+
             context["enpsScore"] = last_summary.get("enpsScore")
             context["enpsPieLabels"] = last_summary.get("enpsPieLabels")
             context["enpsPieData"] = last_summary.get("enpsPieData")
-            context["enpsDistribution"] = last_summary.get("enpsDistribution") 
-            
-            context["multipleChoiceLabels"] = last_summary.get("answer_options") 
-            context["multipleChoiceData"] =last_summary.get("distribution") 
-            
-            context["yesNoLabels"] = last_summary.get("answer_options") 
-            context["yesNoData"] =last_summary.get("distribution") 
-            
+            context["enpsDistribution"] = last_summary.get("enpsDistribution")
 
+            context["multipleChoiceLabels"] = last_summary.get("answer_options")
+            context["multipleChoiceData"] = last_summary.get("distribution")
+
+            context["yesNoLabels"] = last_summary.get("answer_options")
+            context["yesNoData"] = last_summary.get("distribution")
 
     context["selected_question_format"] = selected_question_format
     context["bank_questions"] = analysisHandler.get_bank_questions()
