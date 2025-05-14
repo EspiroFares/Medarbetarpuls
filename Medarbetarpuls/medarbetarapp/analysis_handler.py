@@ -317,6 +317,7 @@ class AnalysisHandler:
         comments = self.get_comments(
             question, survey, user=user, employee_group=employee_group
         )
+        mean = round(self.calculate_mean(answers), 2)
         return {
             "question": question,
             "answers": answers,
@@ -329,6 +330,7 @@ class AnalysisHandler:
             "enpsDistribution": distribution,
             "standard_deviation": standard_deviation,
             "variation_coefficient": variation_coefficient,
+            "mean": mean,
         }
 
     def calculate_mean(self, answers) -> float:
