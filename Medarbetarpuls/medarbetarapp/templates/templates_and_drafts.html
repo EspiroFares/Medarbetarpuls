@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="sv">
   <head>
     {% load static %}
@@ -11,7 +11,10 @@
   <body>
     <div class="main-container">
       <!-- Go back button-->
-      <button class="image-button" onclick="navigateBack()">
+      <button
+        class="image-button"
+        onclick="navigateBack()"
+      >
         <img
           src="{% static 'images/go-back-btn.png' %}"
           alt="Gå Tillbaka"
@@ -31,7 +34,6 @@
             id="search-bar"
             name="search-bar"
             placeholder="Sök bland enkätmallar..."
-            value="{{ search_term|default:'' }}"
           />
           <button type="submit" >Sök</button>
         </form>
@@ -41,7 +43,7 @@
         {% for survey_temp in survey_templates %}
         <a
           href="{% url 'create_survey_with_id' survey_temp.id %}"
-          class="grid-item"
+          class="grid-item blue"
         >
           <div class="question-title">
             <h1>{{ survey_temp.name }}</h1>
@@ -67,7 +69,7 @@
                 src="{% static 'images/share-icon.png' %}"
                 class="icon-img"
                 onclick="event.stopPropagation(); event.preventDefault();"
-                hx-get="{% url 'create_survey_with_id' survey_temp.id %}?trigger_popup=true"
+                hx-get="{% url 'create_survey_with_id' survey_temp.id %}"
                 hx-target="body"
                 hx-swap="outerHTML"
               />
@@ -76,11 +78,11 @@
         </a>
         {% endfor %}
 
-        <button type="button" class="add-button-link" onclick="openNamePopup()">
+        <a href="{% url 'create_survey' %}" class="add-button-link">
           <div class="add-button">
             <span>+</span>
           </div>
-        </button>
+        </a>
       </div>
       
       {% if organization_survey_templates is not None %}
@@ -91,7 +93,7 @@
         {% for survey in organization_survey_templates %}
         <a
           href="{% url 'create_survey_with_id' survey.id%}?source=readonly"
-          class="grid-item"
+          class="grid-item blue"
         >
           <div class="question-title">
             <h1>{{ survey.name }}</h1>
@@ -110,56 +112,10 @@
 
 
     </div>
-    <!-- Namnge-ny-mall–popup -->
-    <div id="name-popup" class="popup-overlay" style="display: none">
-      <div class="popup-content">
-        <h2>Namnge ny mall</h2>
-        <form
-          id="name-template-form"
-          hx-post="{% url 'create_survey' %}"
-          hx-trigger="submit"
-          hx-target="body"
-          hx-swap="outerHTML"
-        >
-          {% csrf_token %}
-          <label for="template-name">Mallens namn:</label>
-          <input
-            type="text"
-            id="template-name"
-            name="name"
-            class="text-input"
-            placeholder="Ange namn"
-            required
-          />
-          <div
-            id="error-box"
-            class="error-msg"
-            style="color: red; font-weight: bold"
-          >
-            {{ message }}
-          </div>
-          <div class="popup-buttons">
-            <button
-              class="image-button"
-              type="button"
-              onclick="closeNamePopup()"
-            >
-              <img
-                src="{% static 'images/go-back-btn.png' %}"
-                alt="Tillbaka"
-                class="back-icon"
-              />
-            </button>
-            <button type="submit">Fortsätt</button>
-          </div>
-        </form>
-      </div>
-    </div>
-
     <script>
       document.body.addEventListener("htmx:configRequest", (event) => {
         const csrfToken = document.querySelector(
-          'meta[name="csrf-token"]'
+          'meta[name="csrf-token"]',
         ).content;
         event.detail.headers["X-CSRFToken"] = csrfToken;
       });
@@ -168,13 +124,10 @@
         // The previous URL that linked to this page
         let previousUrl = document.referrer;
         if (previousUrl) {
-          if (
-            previousUrl.includes("create-survey") ||
-            previousUrl.includes("templates_and_drafts")
-          ) {
+          if (previousUrl.includes("create-survey") || previousUrl.includes("templates_and_drafts")){
             // Avoid redirecting back to this page to prevent an infinite loop
             // Only creator and reponder can see results from one survey
-            previousUrl = "/start-creator/";
+            previousUrl = '/start-creator/';
           }
           window.location.href = previousUrl;
         } else {
@@ -188,8 +141,8 @@
       function resetTimer() {
         clearTimeout(logoutTimer);
         logoutTimer = setTimeout(() => {
-          document.getElementById("logout-form").requestSubmit();
-        }, 10 * 60 * 1000); // 10 minutes
+          document.getElementById('logout-form').requestSubmit();
+          }, 10 * 60 * 1000); // 10 minutes
       }
 
       window.onload = resetTimer;
@@ -197,33 +150,9 @@
       document.onkeypress = resetTimer;
       document.onscroll = resetTimer;
       document.onclick = resetTimer;
-      // Öppna popup
-      function openNamePopup() {
-        document.getElementById("name-popup").style.display = "flex";
-        document.getElementById("template-name").focus();
-      }
-
-      // Stäng popup och nollställ input
-      function closeNamePopup() {
-        document.getElementById("name-popup").style.display = "none";
-        document.getElementById("template-name").value = "";
-      }
-
-      // Klick på backdrop stänger också
-      document
-        .getElementById("name-popup")
-        .addEventListener("click", function (e) {
-          if (e.target === this) closeNamePopup();
-        });
+  
     </script>
-    <form
-      id="logout-form"
-      method="post"
-      hx-post="/logout/"
-      hx-target="body"
-      hx-swap="outerHTML"
-      style="display: none"
-    >
+    <form id="logout-form" method="post" hx-post="/logout/" hx-target="body" hx-swap="outerHTML" style="display:none;">
       {% csrf_token %}
     </form>
   </body>
