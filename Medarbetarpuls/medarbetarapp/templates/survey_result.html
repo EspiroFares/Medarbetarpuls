@@ -1,5 +1,5 @@
 {% load static %}
-<!DOCTYPE html>
+<!doctype html>
 <html lang="sv">
   <head>
     <meta charset="UTF-8" />
@@ -23,10 +23,7 @@
       <!-- Static test version -->
 
       <div class="title-background">
-        <button
-          class="title-back-button"
-          onclick="navigateBack()"
-        >
+        <button class="title-back-button" onclick="navigateBack()">
           Tillbaka
         </button>
         <h2>Resultat</h2>
@@ -35,10 +32,7 @@
       {% elif survey %}
       <!-- Dynamic survey result view -->
       <div class="title-background">
-        <button
-          class="title-back-button"
-          onclick="navigateBack()"
-        >
+        <button class="title-back-button" onclick="navigateBack()">
           Tillbaka
         </button>
         <h2>{{ survey.name }}</h2>
@@ -71,18 +65,31 @@
           <!-- Question number and title -->
           <div class="question-title result">
             <!-- Button for toggle between personal answer and result -->
-             <!-- Must override the width for this specific case -->
-            <button class="default-button"
+            <!-- Must override the width for this specific case -->
+            {% if has_result %}
+            <button
+              class="default-button"
               @click="toggle_answer(STATES.PERSONAL_ANSWER)"
               x-text="show_state === STATES.PERSONAL_ANSWER ? 'Resultat' : 'Ditt svar'"
-              style="width: 35%;"
+              style="width: 35%"
             ></button>
+            {% else %}
+            <button
+              class="default-button"
+              @click="toggle_answer(STATES.PERSONAL_ANSWER)"
+              x-text="show_state === STATES.PERSONAL_ANSWER ? 'Resultat' : 'Ditt svar'"
+              style="width: 35%; visibility: hidden"
+            ></button>
+            {% endif %}
 
             <h1>Fråga {{ forloop.counter }}</h1>
 
             <!-- Button for toggle between comment and result -->
             <!-- Must add styling because Alpine removes the styling for question-icon -->
-            <div @click="toggle_answer(STATES.COMMENT)" style="cursor: pointer; width: 30%;">
+            <div
+              @click="toggle_answer(STATES.COMMENT)"
+              style="cursor: pointer; width: 30%"
+            >
               <!-- Show 'close' icon if comment view is active -->
               <template x-if="show_state === STATES.COMMENT">
                 <img
@@ -91,7 +98,8 @@
                   class="question-icon result"
                 />
               </template>
-            
+
+              {% if not has_result %}
               <!-- Show 'open comment' icon if not in comment view  -->
               <template x-if="show_state !== STATES.COMMENT">
                 <img
@@ -100,6 +108,7 @@
                   class="question-icon result"
                 />
               </template>
+              {% endif %}
             </div>
           </div>
 
@@ -110,15 +119,17 @@
 
           <!-- Shows comments for the question. Is only showned when toggled 
                by one of the earlier buttons -->
-          <div class="question-result" x-show="show_state === STATES.COMMENT"
-           style="flex-direction: column;">
+          <div
+            class="question-result"
+            x-show="show_state === STATES.COMMENT"
+            style="flex-direction: column"
+          >
             <strong>Kommentarer:</strong>
-              {% with list_=summary.text_comments %}
-              <!---->
-              {% include "step_thru_text.html" with list_=list_ is_answer=False %}
-              <!---->
-              {% endwith %}
-            
+            {% with list_=summary.text_comments %}
+            <!---->
+            {% include "step_thru_text.html" with list_=list_ is_answer=False %}
+            <!---->
+            {% endwith %}
           </div>
 
           <!-- Shows personal answer for the question. Is only showned when toggled 
@@ -138,7 +149,8 @@
               <!---->
               {% if answer %}
               <!---->
-              {{ forloop.counter }}<br />
+              {{ forloop.counter }}
+              <br />
               {% endif %}
               <!---->
               {% endfor %}
@@ -153,7 +165,8 @@
             <!---->
             {% if summary.my_result.comment %}
             <p>
-              <strong>Din kommentar:</strong> <br />
+              <strong>Din kommentar:</strong>
+              <br />
               {{ summary.my_result.comment }}
             </p>
             {% else %}
@@ -258,10 +271,7 @@
       <!-- No access or no survey -->
       <div class="start-container">
         <div class="title-background">
-          <button
-            class="title-back-button"
-            onclick="navigateBack()"
-          >
+          <button class="title-back-button" onclick="navigateBack()">
             Tillbaka
           </button>
           <h2>Resultat</h2>
@@ -276,9 +286,12 @@
       let logoutTimer;
       function resetTimer() {
         clearTimeout(logoutTimer);
-        logoutTimer = setTimeout(() => {
-          document.getElementById("logout-form").requestSubmit();
-        }, 10 * 60 * 1000); // 10 minutes
+        logoutTimer = setTimeout(
+          () => {
+            document.getElementById("logout-form").requestSubmit();
+          },
+          10 * 60 * 1000,
+        ); // 10 minutes
       }
 
       window.onload = resetTimer;
@@ -300,9 +313,9 @@
   </body>
   <script>
     function navigateBack() {
-        // The previous URL that linked to this page 
-        let previousUrl = document.referrer;
-        window.location.href = previousUrl;
-      }
+      // The previous URL that linked to this page
+      let previousUrl = document.referrer;
+      window.location.href = previousUrl;
+    }
   </script>
 </html>
