@@ -21,7 +21,6 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Case, When, IntegerField, Value
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from .standard_questions import STANDARD_QUESTIONS
-from django.conf import settings
 
 
 logger = logging.getLogger(__name__)
@@ -2011,11 +2010,20 @@ def survey_result_view(request, survey_id):
     survey_results = survey.survey_results.all()
     user = request.user
 
+    # Check if user has answered this survey
+    has_result: bool = False
+    for result in survey_results: 
+        if result.user == user: 
+            has_result = True
+
     summary_context = analysis_handler.get_survey_summary(survey.id)
     for summary in summary_context["summaries"]:
         summary["my_result"] = analysis_handler.get_answers(
             summary["question"], user=user, survey=survey
         ).first()
+    
+    # Add context to summary_context
+    summary_context["has_result"] = has_result
 
     if survey_results is None:
         # This survey has no answers (should not even be displayed to the user then)
