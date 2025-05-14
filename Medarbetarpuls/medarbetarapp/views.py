@@ -2003,7 +2003,7 @@ def survey_result_view(request, survey_id):
         # This survey has no answers (should not even be displayed to the user then)
         return HttpResponse(400)
 
-    # TODO : Ändra så att analysis handler fås från organization
+    # TODO : Change so gets analysis handler from organization
     analysis_handler = AnalysisHandler()
 
     # Retrievs all survey results of this survey

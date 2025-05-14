@@ -125,11 +125,12 @@
             style="flex-direction: column"
           >
             <strong>Kommentarer:</strong>
-            {% with list_=summary.text_comments %}
-            <!---->
-            {% include "step_thru_text.html" with list_=list_ is_answer=False %}
-            <!---->
-            {% endwith %}
+              {% with list_=summary.text_comments %}
+              <!---->
+              {% include "step_thru_text.html" with list_=list_ is_answer=False %}
+              <!---->
+              {% endwith %}
+            
           </div>
 
           <!-- Shows personal answer for the question. Is only showned when toggled 
