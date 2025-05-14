@@ -25,7 +25,7 @@
       <div class="title-background">
         <button
           class="title-back-button"
-          onclick="window.location.href='{% url 'my_results' %}'"
+          onclick="navigateBack()"
         >
           Tillbaka
         </button>
@@ -37,7 +37,7 @@
       <div class="title-background">
         <button
           class="title-back-button"
-          onclick="window.location.href='{% url 'survey_status' %}'"
+          onclick="navigateBack()"
         >
           Tillbaka
         </button>
@@ -260,7 +260,7 @@
         <div class="title-background">
           <button
             class="title-back-button"
-            onclick="window.location.href='{% url 'my_results' %}'"
+            onclick="navigateBack()"
           >
             Tillbaka
           </button>
@@ -298,4 +298,11 @@
       {% csrf_token %}
     </form>
   </body>
+  <script>
+    function navigateBack() {
+        // The previous URL that linked to this page 
+        let previousUrl = document.referrer;
+        window.location.href = previousUrl;
+      }
+  </script>
 </html>
