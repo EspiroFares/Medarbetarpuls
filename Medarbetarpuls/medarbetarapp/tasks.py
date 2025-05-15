@@ -1,6 +1,7 @@
 from celery import shared_task
 from django.utils import timezone
-from datetime import timedelta
+from django.utils.timezone import make_aware
+from datetime import timedelta, datetime, time
 from django.core.mail import send_mail
 
 
@@ -56,10 +57,19 @@ def schedule_notification(survey_id: int, reminders: list[str]):
     to days in reminders list.
     """
     for reminder in reminders: 
+        # Target day = today + reminder days
+        target_date = timezone.now().date() + timedelta(days=int(reminder))
+
+        # Set desired time of arrival on the day
+        target_datetime = datetime.combine(target_date, time(hour=8, minute=0))
+
+        # Make timezone-aware
+        target_eta = make_aware(target_datetime)
+
         # Onetime notification to be sent in reminder days
         send_notifications.apply_async(
             args=[survey_id],
-            eta=timezone.now() + timedelta(days=int(reminder))
+            eta=target_eta
         )
 
 

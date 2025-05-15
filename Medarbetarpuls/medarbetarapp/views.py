@@ -1297,6 +1297,17 @@ def publish_survey(request, survey_id: int) -> HttpResponse:
             else:
                 sending_date = None
 
+            # Add standard notifications for the last two days before deadline
+            if deadline and sending_date:
+                days_difference = (deadline - sending_date).days
+
+                # Only schedule if there are days left!
+                if days_difference >= 2: 
+                    reminders.append(str(days_difference))
+                    reminders.append(str(days_difference-1))
+                elif days_difference == 1: 
+                    reminders.append(str(days_difference))
+
             # Assuming survey deadline is converted to UTC-timezone
             current_time = timezone.now()
 
