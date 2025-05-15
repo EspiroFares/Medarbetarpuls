@@ -11,7 +11,7 @@
   <body>
     <div class="main-container">
       {% include "topbar.html" with pagetitle=pagetitle %}
-      
+      <!-- The analysis bar at the top of the screen -->
       <div class ="analysis-bar">
         <div class="analysis-bar-container">
           <div class="analysis-bar-item"> 
@@ -38,6 +38,7 @@
         </div>   
       </div>
 
+      <!-- The different pages available for admin -->
       <div class="grid-container">
         <a href="{% url 'my_org' %}" class="grid-item pink">
             <img
@@ -47,6 +48,7 @@
           <h2>Min organisation</h2>
           <p>Se och administrera din organisation</p>
         </a>
+
         <a href="{% url 'organization_templates' %}" class="grid-item lightblue">
           <img
           src="{% static 'images/templates-surveys.png' %}"
@@ -55,6 +57,7 @@
           <h2>Mallar</h2>
           <p>Skapa standardformulär och standardfrågor till hela organisationen</p>
         </a>
+        
         <a href="{% url 'settings_admin' %}" class="grid-item blue">
             <img
             src="{% static 'images/settings.png' %}"

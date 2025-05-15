@@ -26,6 +26,8 @@
       <div class="title-background">
         <h2>Dina utkast</h2>
       </div>
+
+      <!-- Search bar -->
       <div class="search-container">
         <form hx-post="{% url 'templates_and_drafts' %}" hx-trigger="submit">
           {% csrf_token %}
@@ -38,7 +40,8 @@
           <button type="submit" >Sök</button>
         </form>
       </div>
-      <!-- Change name to variable -->
+
+      <!-- The available templates-->
       <div class="grid-container">
         {% for survey_temp in survey_templates %}
         <a
@@ -54,6 +57,7 @@
           </div>
           <div class="question-result">
             <div class="grid-icon">
+              <!-- Comment here, why stopPropagation and preventDefault? -->
               <img
                 src="{% static 'images/trashcan.png' %}"
                 class="icon-img"
@@ -78,6 +82,7 @@
         </a>
         {% endfor %}
 
+        <!-- Button to create a new survey -->
         <a href="{% url 'create_survey' %}" class="add-button-link">
           <div class="add-button">
             <span>+</span>
@@ -85,6 +90,7 @@
         </a>
       </div>
       
+      <!-- Show organization templates -->
       {% if organization_survey_templates is not None %}
       <div class="title-background">
         <h2>Organisationens standardformulär</h2>
@@ -109,8 +115,6 @@
         {% endfor %}
 
       {%endif %}
-
-
     </div>
     <script>
       document.body.addEventListener("htmx:configRequest", (event) => {
@@ -157,22 +161,3 @@
     </form>
   </body>
 </html>
-
-{% comment %}
-<img
-  src="{% static 'images/trashcan.png' %}"
-  class="action-icon"
-  onclick="event.stopPropagation(); event.preventDefault();"
-  hx-post="{% url 'delete_survey_template' survey_temp.id %}"
-  hx-confirm="Är du säker att du vill ta bort den här enkäten?"
-  hx-target=".survey-item"
-/>
-<meta name="csrf-token" content="{{ csrf_token }}" />
-<img src="{% static 'images/edit-icon.png' %}" class="action-icon" />
-<a
-  href="{% url 'create_survey_with_id' survey_temp.id %}?trigger_popup=true"
-  onclick="event.stopPropagation();"
->
-  <img src="{% static 'images/share-icon.png' %}" class="action-icon" />
-</a>
-{% endcomment %}

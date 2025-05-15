@@ -10,7 +10,7 @@ This template is designed to be used by including it and was specifically design
   {% if user.admin %}
   <a href={% url 'start_admin' %}>Startsida</a>
   <a href={% url 'my_org' %}>Min organisation</a>
-  <a href={% url 'analysis' %}>Analys</a>
+  <a href={% url 'organization_templates' %}>Mallar</a>
   <a href={% url 'settings_admin' %}>Inställningar</a>
   {% elif user.user_role == "surveyresponder" %}
   <a href={% url 'start_user' %}>Startsida</a>

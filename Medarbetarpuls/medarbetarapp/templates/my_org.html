@@ -27,7 +27,7 @@
       </button>
 
         <div class="search-container">
-          <!-- Form för att trigga sökning via HTMX -->
+          <!-- Form to trigger search via HTMX -->
           <form
             id="searchForm"
             hx-get="{% url 'my_org' %}"
@@ -45,6 +45,7 @@
             <button type="submit">Sök</button>
           </form>
         </div>
+
         <!-- Employee table -->
         <div class="table-container">
           <table>
@@ -100,8 +101,7 @@
                         <span class="edit-icon">✏️</span></a>
                       </form>
                     </div>
-                  </div>
-                  
+                  </div>                 
                 </td>
                 {% if employee.user_role == "surveycreator" %}
                 <td>
@@ -335,15 +335,13 @@
       const popup = document.getElementById("edit-user-popup");
       const errorBox = document.getElementById("popup-error");
 
-      //if (!popup || !errorBox) return;
-
     if (event.detail.xhr.status === 200) {
       // if success reload the page after a short delay
       setTimeout(function() {
         location.reload();
       }, 200);
     }else if (!event.detail.xhr.ok) {
-      // if error show returned message or "Fel"
+      // if error, show returned message or "Fel"
       const message = event.detail.xhr.responseText;
       popup.classList.remove("hidden");
       errorBox.textContent = message;

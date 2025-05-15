@@ -31,6 +31,7 @@
         method="POST"
       >
         {% csrf_token %}
+        <!-- Input fields for the mail and team of the employee -->
         <label for="email">Medarbetarens mejladress:</label>
           <input
             type="email"
@@ -42,9 +43,11 @@
 
           <label for="team">Medarbetarens team:</label>
           <input type="text" id="team" name="team" placeholder="Team" required />
+          <!-- Open confirmation popup when the employee is added-->
           <button type="submit" onclick="openPopup()">Lägg till</button>
-
         </form>
+
+        <!-- Confirmation popup -->
         <div id="added-popup" class="popup-overlay" style="display: none">
           <div class="popup-content">
             <h2>Din medarbetare är nu tillagd i systemet.</h2>
@@ -63,7 +66,7 @@
       }
 
       function closePopup() {
-        document.getElementById("added-popup").style.display = "none";
+        document.getElementById("added-popup").style.display = "none"; 
         window.location.href='{% url 'add_employee' %}'
       }
       // Timer that calls logout form after specified time

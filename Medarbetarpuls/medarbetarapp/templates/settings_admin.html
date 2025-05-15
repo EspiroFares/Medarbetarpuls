@@ -23,10 +23,10 @@
         />
       </button>
 
-      <!-- Change later, if time, so user.profile_pic shows here (or default)  -->
       <div class=pagetitle>
         <h2>Administratör för<br>{{organization.name}}</h2>
       </div>
+      <!-- Table with user name, mail and password -->
       <div class="info-table">
         <div class="table-header">Inloggningsuppgifter</div>
         <div class="table-row">
@@ -51,7 +51,7 @@
       <button class="delete-button"onclick="openTransfer()">Överlämna organisation</button>
 
 
-      <!-- Transfer Confirmation Popup -->
+    <!-- Transfer Confirmation Popup -->
     <div id="transfer-popup" class="popup-overlay" style="display: none;">
         <div id="content" class="popup-content">
           <form 

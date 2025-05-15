@@ -23,6 +23,8 @@
       </button>
 
       {% include "topbar.html" with pagetitle="Organisationens enkätmallar och frågebank" %}
+
+      <!-- Survey bank -->
       <div class="title-background">
         <h2>Enkätmallar</h2>
       </div>
@@ -42,6 +44,7 @@
           </div>
           <div class="question-result">
             <div class="grid-icon">
+              <!-- Comment here, what does the hx-post and onclick do?-->
               <img
                 src="{% static 'images/trashcan.png' %}"
                 class="icon-img"
@@ -63,6 +66,7 @@
         </a>
       </div>
 
+      <!-- Question bank -->
       <div class="title-background">
         <h2>Frågemallar</h2>
       </div>
@@ -112,6 +116,7 @@
       
     </div>
     <script>
+      // comment here, what does this do?
       document.body.addEventListener("htmx:configRequest", (event) => {
         const csrfToken = document.querySelector(
           'meta[name="csrf-token"]',
