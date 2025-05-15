@@ -10,9 +10,9 @@
     <link rel="stylesheet" href="{% static 'css/main.css' %}" />
   </head>
   <body>
-    <!-- To test this, switch to create_acc.html in views.py -->
     <div class="create-container">
       <h1>Skapa ditt nya konto</h1>
+
       <!-- Go back button-->
       <button
         class="image-button"
@@ -42,6 +42,7 @@
         </div>
 
         {% csrf_token %}
+        <!-- Input for name, mail and password -->
         <label for="name">För- och Efternamn:</label>
         <input type="text" id="name" name="name" placeholder="Namn" required />
 
@@ -86,7 +87,6 @@
         }
       });
     });
-
   </script>
   </body>
 </html>

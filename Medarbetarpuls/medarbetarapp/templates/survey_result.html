@@ -18,10 +18,8 @@
   <body>
     <div class="main-container">
       {% include "topbar.html" with pagetitle="Resultat på enkät"%}
-      <!---->
-      {% if request.path == '/survey-result/420/' %}
       <!-- Static test version -->
-
+      {% if request.path == '/survey-result/420/' %}
       <div class="title-background">
         <button class="title-back-button" onclick="navigateBack()">
           Tillbaka
@@ -135,7 +133,6 @@
 
           <!-- Shows personal answer for the question. Is only showned when toggled 
                by one of the earlier buttons -->
-
           <div
             class="question-result"
             x-show="show_state === STATES.PERSONAL_ANSWER"
@@ -175,7 +172,7 @@
             {% endif %}
           </div>
 
-          <!-- Shows question-result. It is showned by default but is toggled 
+          <!-- Shows question-result. It is shown by default but is toggled 
                by the earlier buttons.-->
           <div class="question-result" x-show="show_state === STATES.ANSWER">
             {% if summary.question.question_format == "yesno" %}

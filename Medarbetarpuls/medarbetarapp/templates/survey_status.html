@@ -27,7 +27,9 @@
       <div class="grid-container">
             {% for survey in published_surveys.all %}
                 <!-- prettier-ignore -->
-                {% if survey.deadline > current_time %}
+
+                 <!-- if this survey is still ongoing -->
+                {% if survey.deadline > current_time and survey.collected_answer_count < survey.published_count %}
                     <a href="#" class="grid-item yellow">
                 {% else %}
                     <a href="{% url 'survey_result' survey.id %}" class="grid-item green">

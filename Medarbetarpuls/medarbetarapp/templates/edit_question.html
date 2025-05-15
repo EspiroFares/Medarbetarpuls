@@ -11,6 +11,7 @@
   <body>
     <div class="popup-overlay">
       <div class="popup-content">
+        <!-- If we are editing an organization template -->
         {% if source == "organization_templates" and not survey_id%}
           <input
             type="text"
@@ -22,6 +23,7 @@
           />
         {% else %}
           {% if bank_question or source == "readonly"%}
+          <!-- Not admin, can only read questions from organization template" -->
               <h2> Förhandsvisa fråga</h2>
           {% else %}
             <h2> Redigera fråga</h2>
@@ -33,9 +35,10 @@
         />
 
         {% if question_id is None %} 
+          <!-- Comment here (explain the hx-post and if statement)-->
           <form
             class="question-form"
-            {% if survey_id %}
+            {% if survey_id %}              
               hx-post="{% url 'edit_question_new' survey_id question_format %}{% if source %}?source={{ source }}{% endif %}"
             {% else %}
               hx-post="{% url 'edit_question_new' question_format %}?source={{ source }}"
@@ -184,27 +187,28 @@
       </div>
     </div>
   <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const addOptionBtn = document.getElementById("add-option-btn");
-    const optionsContainer = document.getElementById("options-container");
+    document.addEventListener("DOMContentLoaded", function () {
+      // For multiple choice question
+      const addOptionBtn = document.getElementById("add-option-btn");
+      const optionsContainer = document.getElementById("options-container");
 
-    let optionCount = 3;
+      let optionCount = 3;
 
-    addOptionBtn.addEventListener("click", () => {
-      const newOption = document.createElement("div");
-      newOption.classList.add("option-input");
+      addOptionBtn.addEventListener("click", () => {
+        const newOption = document.createElement("div");
+        newOption.classList.add("option-input");
 
-      const input = document.createElement("input");
-      input.type = "text";
-      input.name = "options";
-      input.placeholder = `Alternativ ${optionCount}`;
+        const input = document.createElement("input");
+        input.type = "text";
+        input.name = "options";
+        input.placeholder = `Alternativ ${optionCount}`;
 
-      newOption.appendChild(input);
-      optionsContainer.appendChild(newOption);
-      optionCount++;
-      optionsContainer.scrollTop = optionsContainer.scrollHeight;
+        newOption.appendChild(input);
+        optionsContainer.appendChild(newOption);
+        optionCount++;
+        optionsContainer.scrollTop = optionsContainer.scrollHeight;
+      });
     });
-  });
     // Timer that calls logout form after specified time
     let logoutTimer;
     function resetTimer() {

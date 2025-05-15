@@ -11,7 +11,7 @@
   <body>
     <div class="main-container">
       {% include "topbar.html" with pagetitle=pagetitle %}
-
+      <!-- The analysis bar at the top of the screen -->
       <div class ="analysis-bar">
         <div class="analysis-bar-container">
           <div class="analysis-bar-item"> 
@@ -37,7 +37,8 @@
           </div>
         </div>   
       </div>
-    
+      
+      <!-- The different pages available for creators -->
       <div class="grid-container">
         {% if unanswered_count > 0 %}
         <div class="notification-container">
@@ -63,6 +64,7 @@
           <h2>Obesvarade enkäter</h2>
           <p>Se dina obesvarade enkäter</p>
         </a>
+
         <a href="{% url 'my_results' %}" class="grid-item orange">
           <img
                 src="{% static 'images/my-results.png' %}"
@@ -71,6 +73,7 @@
           <h2>Se resultat</h2>
           <p>Se resultaten av dina tidigare svarade enkäter</p>
         </a>
+
         <a href="{% url 'survey_status' %}" class="grid-item pink">
           <img
                 src="{% static 'images/published-surveys.png' %}"
@@ -79,6 +82,7 @@
           <h2>Mina publicerade enkäter</h2>
           <p>Se status och svar på dina publicerade enkäter</p>
         </a>
+
         <a href="{% url 'templates_and_drafts' %}" class="grid-item lightblue">
           <img
               src="{% static 'images/templates-surveys.png' %}"
@@ -87,6 +91,7 @@
           <h2>Mallar & Utkast</h2>
           <p>Se dina tidigare skapade och utkast av enkäter</p>
         </a>
+
         <a href="{% url 'analysis' %}" class="grid-item green">
           <img
           src="{% static 'images/analysis-surveys.png' %}"
@@ -95,6 +100,7 @@
           <h2>Analys</h2>
           <p>Analysera svar på dina utskickade enkäter</p>
         </a>
+
         <a href="{% url 'settings_user' %}" class="grid-item blue">
           <img
                 src="{% static 'images/settings.png' %}"
