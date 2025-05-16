@@ -1302,10 +1302,10 @@ def publish_survey(request, survey_id: int) -> HttpResponse:
                 days_difference = (deadline - sending_date).days
 
                 # Only schedule if there are days left!
-                if days_difference >= 2: 
+                if days_difference >= 2:
                     reminders.append(str(days_difference))
-                    reminders.append(str(days_difference-1))
-                elif days_difference == 1: 
+                    reminders.append(str(days_difference - 1))
+                elif days_difference == 1:
                     reminders.append(str(days_difference))
 
             # Assuming survey deadline is converted to UTC-timezone
@@ -2022,19 +2022,20 @@ def survey_result_view(request, survey_id):
     user = request.user
 
     # Check if user has answered this survey
-    has_result: bool = False
-    for result in survey_results: 
-        if result.user == user: 
-            has_result = True
+    has_result: bool = survey_results.filter(user=user, is_answered=True).exists()
+
+    # Check if user is the creator
+    is_creator: bool = survey.creator == user
 
     summary_context = analysis_handler.get_survey_summary(survey.id)
     for summary in summary_context["summaries"]:
         summary["my_result"] = analysis_handler.get_answers(
             summary["question"], user=user, survey=survey
         ).first()
-    
+
     # Add context to summary_context
     summary_context["has_result"] = has_result
+    summary_context["is_creator"] = is_creator
 
     if survey_results is None:
         # This survey has no answers (should not even be displayed to the user then)

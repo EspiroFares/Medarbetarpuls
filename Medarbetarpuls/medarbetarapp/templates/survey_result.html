@@ -1,5 +1,5 @@
 {% load static %}
-<!doctype html>
+<!DOCTYPE html>
 <html lang="sv">
   <head>
     <meta charset="UTF-8" />
@@ -97,7 +97,7 @@
                 />
               </template>
 
-              {% if not has_result %}
+              {% if is_creator %}
               <!-- Show 'open comment' icon if not in comment view  -->
               <template x-if="show_state !== STATES.COMMENT">
                 <img
@@ -123,12 +123,11 @@
             style="flex-direction: column"
           >
             <strong>Kommentarer:</strong>
-              {% with list_=summary.text_comments %}
-              <!---->
-              {% include "step_thru_text.html" with list_=list_ is_answer=False %}
-              <!---->
-              {% endwith %}
-            
+            {% with list_=summary.text_comments %}
+            <!---->
+            {% include "step_thru_text.html" with list_=list_ is_answer=False %}
+            <!---->
+            {% endwith %}
           </div>
 
           <!-- Shows personal answer for the question. Is only showned when toggled 
@@ -284,12 +283,9 @@
       let logoutTimer;
       function resetTimer() {
         clearTimeout(logoutTimer);
-        logoutTimer = setTimeout(
-          () => {
-            document.getElementById("logout-form").requestSubmit();
-          },
-          10 * 60 * 1000,
-        ); // 10 minutes
+        logoutTimer = setTimeout(() => {
+          document.getElementById("logout-form").requestSubmit();
+        }, 10 * 60 * 1000); // 10 minutes
       }
 
       window.onload = resetTimer;
