@@ -1,17 +1,28 @@
+<!-- Is used showing text-answers or comments by showing one of 
+      the strings in the given list at a time. The shown string 
+      is dynamically changed by stepping through the list with
+      the buttons. -->
+
+<!-- Args:
+        list_ : A list of strings 
+        is_answer : Bool for showing if the texts in the list are 
+                    text-answers or comments. -->
+
 {% load static %}
-<div x-data="{ index: 0, answers: {{ list_ }} }">
+<!-- Uses the index for going showing one of the strings in the list -->
+<div x-data="{ index: 0, texts: {{ list_ }} }">
   <table>
     <tr>
       <td>
+        <!-- Button for showing the previous string in the list -->
         <button @click="if(index > 0) index--" :disabled="index === 0">
           Föregående
         </button>
       </td>
 
       <td>
-        <p
-          x-text="answers.length > 0 ? `${index+1}/${answers.length}` : '0/0'"
-        ></p>
+        <!-- Shows the 1-based index of the current shown string -->
+        <p x-text="texts.length > 0 ? `${index+1}/${texts.length}` : '0/0'"></p>
       </td>
 
       <td>
@@ -20,14 +31,15 @@
           src="{% static 'images/text' %}.png"
           alt="Text"
           class="question-icon result"
-          style="width: 225%;"
+          style="width: 225%"
         />
       </td>
 
       <td>
+        <!-- Button for showing the next string in the list -->
         <button
-          @click="if(index < answers.length - 1) index++"
-          :disabled="index === answers.length - 1"
+          @click="if(index < texts.length - 1) index++"
+          :disabled="index === texts.length - 1"
         >
           Nästa
         </button>
@@ -35,14 +47,17 @@
     </tr>
   </table>
 
+  <!-- Shows the current string in the list. The message for if the 
+        list is empty differs if the given list are text-answers or
+        comments. -->
   {% if is_answer %}
   <p
-    x-text="answers.length > 0 ? answers[index] : 'Det finns inga svar'"
+    x-text="texts.length > 0 ? texts[index] : 'Det finns inga svar'"
     class="result-text"
   ></p>
   {% else %}
   <p
-    x-text="answers.length > 0 ? answers[index] : 'Det finns inga kommentarer'"
+    x-text="texts.length > 0 ? texts[index] : 'Det finns inga kommentarer'"
     class="result-text"
   ></p>
   {% endif %}
