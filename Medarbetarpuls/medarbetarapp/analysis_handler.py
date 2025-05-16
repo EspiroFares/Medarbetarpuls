@@ -79,11 +79,10 @@ class AnalysisHandler:
             QuerySet[Survey]: A distinct queryset of Survey objects linked to the given group.
         """
         return (
-        Survey.objects
-        .filter(employee_groups=employee_group)
-        .order_by('-sending_date')
-        .distinct()
-    )
+            Survey.objects.filter(employee_groups=employee_group)
+            .order_by("-sending_date")
+            .distinct()
+        )
 
     def get_answers(
         self,
@@ -104,7 +103,7 @@ class AnalysisHandler:
         Returns:
             QuerySet[Answer]: A queryset of Answer objects matching the provided filters, or an empty queryset if none found.
         """
-        filters = {"question": question, "is_answered": True}
+        filters = {"question": question, "survey__is_answered": True}
 
         if survey:
             results = SurveyUserResult.objects.filter(published_survey=survey)
@@ -148,7 +147,11 @@ class AnalysisHandler:
         Returns:
             QuerySet[Answer]: A queryset of Answer objects with non-empty comments matching the provided filters.
         """
-        filters = {"question": question, "is_answered": True, "comment__isnull": False}
+        filters = {
+            "question": question,
+            "survey__is_answered": True,
+            "comment__isnull": False,
+        }
 
         if survey:
             results = self.get_survey_result(survey)
@@ -207,12 +210,14 @@ class AnalysisHandler:
                 is_answered=True,
             ).count()
             answer_pct = round((answered_count / total_participants) * 100, 1)
-            result.append({
-            "survey":survey,
-            "participant_count": total_participants,
-            "answered_count": answered_count,
-            "answer_pct": answer_pct,
-        })
+            result.append(
+                {
+                    "survey": survey,
+                    "participant_count": total_participants,
+                    "answered_count": answered_count,
+                    "answer_pct": answer_pct,
+                }
+            )
         return result
 
     def get_respondents(
@@ -636,13 +641,13 @@ class AnalysisHandler:
 
         for survey in sorted(surveys, key=lambda s: s.sending_date):
             _question = question
-            
+
             question_obj = (
                 survey.questions.filter(question=_question.question).first()
             )  # fetch the question object corresponding to the same string as the
             if question_obj is None:
                 continue
-            
+
             if question_obj.question_format == QuestionFormat.MULTIPLE_CHOICE:
                 question_summary = self.get_multiple_choice_summary(
                     question=question_obj,
@@ -688,7 +693,7 @@ class AnalysisHandler:
             )
 
         return trend
-    
+
     def get_survey_answer_distribution(
         self,
         survey: Survey,
@@ -696,7 +701,7 @@ class AnalysisHandler:
         employee_group: EmployeeGroup | None = None,
     ) -> list[dict[str, Any]]:
         result = []
-        total_participants = survey.survey_results.count()     
+        total_participants = survey.survey_results.count()
 
         for q in survey.questions.all().order_by("id"):
             answers_qs = self.get_answers(
