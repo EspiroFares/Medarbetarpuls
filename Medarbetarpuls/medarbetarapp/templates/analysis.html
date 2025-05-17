@@ -205,46 +205,11 @@
           </div>
         </div>
 
-        <div class="statistics-container">
-          <div class="analysis-item ratio-1-4">
-            <div class="analysis-item-title"><h2><b>Medel</b></h2></div>
-            <div class="graph-container flex flex-col items-center justify-center text-sm">
-              <p>{{ slider_mean }}</p>
-            </div>
-          </div>
-        
-          <div class="analysis-item ratio-1-4">
-            <div class="analysis-item-title"><h2><b>Std.avv</b></h2></div>
-            <div class="graph-container flex flex-col items-center justify-center text-sm">
-              <p>{{ slider_std}}</p>
-            </div>
-          </div>
-        
-          <div class="analysis-item ratio-1-4">
-            <div class="analysis-item-title"><h2><b>V.Koeff</b></h2></div>
-            <div class="graph-container flex flex-col items-center justify-center text-sm">
-              <p>{{ slider_cv}}</p>
-            </div>
-          </div>
-        
-          <div class="analysis-item ratio-1-4">
-            <div class="analysis-item-title"><h2><b>Median</b></h2></div>
-            <div class="graph-container flex flex-col items-center justify-center text-sm">
-              <p>{{ slider_cv}}</p>
-            </div>
-          </div>
-        </div>
         
           <div class="analysis-item ratio-1-1">
             <div class="analysis-item-title"><h2><b>Svarsfrekvens</b></h2></div>
             <div class="graph-container">
               <canvas id="responseRateGauge" width="400" height="400"></canvas>
-            </div>
-          </div>
-          <div class="analysis-item ratio-2-1">
-            <div class="analysis-item-title"><h2><b>Fördelning av val</b></h2></div>
-            <div class="graph-container" style="height: 90%">
-              <canvas id="barChartMultipleChoice"></canvas>
             </div>
           </div>
         {% elif selected_question_format == "yesno" %}
@@ -402,24 +367,34 @@ const responseVolumeCounts      = {{ answered_counts |default:"[0,0,0]" |safe }}
 const lineColors                = ["rgb(140,214,16)","rgb(16,23,214)"];
 
 // === Slider Page ===
-const sliderOptionLabels        = {{ slider_values_trend.0 |default:"['0','1','2','3','4','5','6','7','8','9','10']" |safe }};
+const sliderOptionLabels         = {{ slider_values_trend.0 |default:"['0','1','2','3','4','5','6','7','8','9','10']" |safe }};
 const sliderResponseDistribution = {{ slider_distribution_trend.0 |default:"[0,0,0,0,0,0,0,0,0,0,0]" |safe }};
-const sliderTrendDates          = {{ sending_dates_trend |default:"['####-##-##','####-##-##','####-##-##']" |safe }};
-const sliderTrendValues         = {{ slider_mean_trend |default:"[0,0,0]" |safe }};
+const sliderTrendDates           = {{ sending_dates_trend |default:"['####-##-##','####-##-##','####-##-##']" |safe }};
+const sliderTrendValues          = {{ slider_mean_trend |default:"[0,0,0]" |safe }};
 
-const stackedSliderLabels = {{ slider_values_trend.0 |default:"['1','2','3','4','5','6','7','8','9','10']" |safe }};
-const stackedColors = ["#8dd3c7", "#ffffb3", "#bebada", "#fb8072", "#80b1d3"]; // extend if more surveys
-const stackedSurveyLabels = {{ sending_dates_trend|default:"[]"|safe }};
-const stackedRawDistributions = {{ slider_distribution_trend|default:"[]"|safe }};
+const sliderStackedLabels        = {{ slider_values_trend.0 |default:"['1','2','3','4','5','6','7','8','9','10']" |safe }};
+const sliderStackedSurveyLabels  = {{ sending_dates_trend|default:"[]"|safe }};
+const sliderStackedDistributions = {{ slider_distribution_trend|default:"[]"|safe }};
+const sliderStackedColors        = ["#8dd3c7", "#ffffb3", "#bebada", "#fb8072", "#80b1d3"];
 
-const stackedChartData = (stackedSurveyLabels || []).map((label, index) => ({
+const sliderStackedChartData = (sliderStackedSurveyLabels || []).map((label, index) => ({
   label: label,
-  data: (stackedRawDistributions[index] || []),
+  data: (sliderStackedDistributions[index] || []),
 }));
 
+
 // === Multiple Choice Page ===
-const multipleChoiceOptionLabels = {{ barChartLabels |default:"[]" |safe }};
-const multipleChoiceSelections   = {{ barChartData |default:"[]" |safe }};
+const mcOptionLabels         = {{ multiple_choice_labels_trend.0 |default:"[]" |safe }};
+const mcStackedSurveyLabels  = {{ sending_dates_trend |default:"[]" |safe }};
+const mcStackedDistributions = {{ multiple_choice_distribution_trend |default:"[]" |safe }};
+const mcStackedColors        = ["#ff9999", "#66b3ff", "#99ff99", "#ffcc99", "#c2c2f0"]; // different palette if desired
+
+const mcStackedChartData = (mcStackedSurveyLabels || []).map((label, index) => ({
+  label: label,
+  data: (mcStackedDistributions[index] || []),
+}));
+
+
 
 // === Yes/No Page ===
 const yesNoOptionLabels         = {{ yes_no_labels |default:"['Ja','Nej']" |safe }};
@@ -459,12 +434,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Slider
   safeInit(initLineChart, "lineTrendChartSlider", sliderTrendDates, sliderTrendValues, lineColors);
-  safeInit(initStackedBarChart, "sliderStackedBarChart", stackedSliderLabels, stackedChartData, stackedColors);
-
+  safeInit(initStackedBarChart, "sliderStackedBarChart", sliderStackedLabels, sliderStackedChartData, sliderStackedColors);
 
   // Multiple Choice
-  safeInit(initBarChart, "barChartMultipleChoice", multipleChoiceOptionLabels, multipleChoiceSelections);
-
+  safeInit(initStackedBarChart, "barChartMultipleChoice", mcOptionLabels, mcStackedChartData, mcStackedColors);
   // Text Response
   safeInit(initAnswerFrequency, "textResponseRateGauge", textQuestionResponseRate, textQuestionRateChange);
 
