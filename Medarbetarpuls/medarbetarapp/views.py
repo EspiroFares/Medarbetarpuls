@@ -1348,7 +1348,10 @@ def publish_survey(request, survey_id: int) -> HttpResponse:
 
             # Only tries scheduling if we are on linux system!
             os_type = platform.system()
-            
+
+            # FOR TESTING ON ASTRIDS DATOR :)
+            survey.publish_survey()
+            """
             if os_type == "Linux":
                 publish_survey_async.apply_async(
                     args=[survey.id], eta=survey.sending_date
@@ -1356,7 +1359,7 @@ def publish_survey(request, survey_id: int) -> HttpResponse:
                 schedule_notification(survey.id, reminders)
             else:
                 survey.publish_survey()
-
+            """
             return render(
                 request,
                 "partials/error_message.html",
@@ -2110,15 +2113,17 @@ def analysis_view(request):
         return render(request, "analysis.html", context)
 
     group = get_object_or_404(EmployeeGroup, id=group_id)
+
     surveys = analysisHandler.get_surveys_for_group(group)
 
     if not surveys.exists():
         context["message"] = "Gruppen har inga enkäter ännu."
         return render(request, "analysis.html", context)
-
-    
+    # Filter surveys in descending order (Newest first)
     surveys = surveys.order_by("-sending_date")
+
     if survey_count != "all":
+        # Get filtered surveys to the chosen amount
         try:
             count = int(survey_count)
             filtered_surveys = surveys[:count]
@@ -2130,69 +2135,54 @@ def analysis_view(request):
     if not filtered_surveys:
         context["message"] = "Inga filtrerade enkäter hittades."
         return render(request, "analysis.html", context)
-    latest_survey = filtered_surveys[0]
-    respondents_dict = analysisHandler.get_respondents(latest_survey, group)
-    context["respondents"] = respondents_dict
- 
-    participation_metrics = analysisHandler.get_participation_metrics(
-            list(filtered_surveys), group
-        )
-    print(participation_metrics)
-    context["answerFrequencyData"] = [entry["answer_pct"] for entry in participation_metrics]
-    context["answer_pct"] = context["answerFrequencyData"][0]
-    context["answerFrequencyLabels"] = [str(entry["survey"].sending_date) for entry in participation_metrics]
 
-    survey_answer_dist = analysisHandler.get_survey_answer_distribution(latest_survey, user=respondents_dict.get(user_id) if user_id else None, employee_group=group)
-    context["answerDistributionLabels"] = [entry["question"].question for entry in survey_answer_dist]
-    context["answerDistributionData"] = [entry["answered_count"] for entry in survey_answer_dist]
-    
+    participation_metrics = analysisHandler.get_participation_metrics(
+        list(filtered_surveys), group
+    )
+    context.update(participation_metrics)
+
+    # Get anonymous respondents for the most recent survey, used for the user filter
+    latest_survey = filtered_surveys[0]
+    respondents_dict = analysisHandler.get_respondents(
+        survey=latest_survey, employee_group=group
+    )
+    context["respondents"] = respondents_dict
+    survey_answer_dist = analysisHandler.get_survey_answer_distribution(
+        latest_survey,
+        user=respondents_dict.get(user_id) if user_id else None,
+        employee_group=group,
+    )
+
+    context.update(survey_answer_dist)
+
     selected_question_format = None
     if question_id:
         selected_question = get_object_or_404(models.Question, id=question_id)
         context["selected_question_text"] = selected_question.question
 
-        if selected_question.question_type == QuestionType.ENPS:
-            selected_question_format = QuestionType.ENPS
-        else:
-            selected_question_format = selected_question.question_format
-
         # Trenddata för alla format
         trend_data = analysisHandler.get_question_trend(
-            selected_question,
-            list(filtered_surveys),
-            group,
-            respondents_dict.get(user_id) if user_id else None,
+            question=selected_question,
+            surveys=list(filtered_surveys),
+            employee_group=group,
+            user=respondents_dict.get(user_id) if user_id else None,
         )
 
         if trend_data:
-            last_summary = trend_data[-1]["summary"]
-
-            context["slider_mean"] = last_summary.get("mean", 0)
-            context["slider_std"] = last_summary.get("standard_deviation", 0)
-            context["slider_cv"] = last_summary.get("variation_coefficient", 0)
-            context["slider_median"] = last_summary.get("median", 0)  # om tillgänglig
-
-            context["slider_values"] = last_summary.get("labels", [str(i) for i in range(11)])
-            context["sliderDistribution"] = last_summary.get("distribution", [0]*11)
-            context["sliderTrendData"] = [entry["summary"].get("mean", 0) for entry in trend_data]
-            context["sliderTrendLabels"] = [entry["sending_date"] for entry in trend_data]
-        
-            context["enpsScore"] = last_summary.get("enpsScore")
-            context["enpsPieLabels"] = last_summary.get("enpsPieLabels")
-            context["enpsPieData"] = last_summary.get("enpsPieData")
-            context["enpsDistribution"] = last_summary.get("enpsDistribution") 
-            
-            context["multipleChoiceLabels"] = last_summary.get("answer_options") 
-            context["multipleChoiceData"] =last_summary.get("distribution") 
-            
-            context["yesNoLabels"] = last_summary.get("answer_options") 
-            context["yesNoData"] =last_summary.get("distribution") 
-            
-
-
+            for key, item in trend_data.items():
+                print(key, item)
+            # Get the question format
+            selected_question_format = trend_data["question_format_trend"][0]
+            context.update(trend_data)
     context["selected_question_format"] = selected_question_format
-    context["bank_questions"] = analysisHandler.get_bank_questions()
+    filtered_bank_questions = analysisHandler.get_bank_questions(filtered_surveys)
+
+    context["bank_questions"] = filtered_bank_questions
+    # pass these to frontend for typing
     context["QuestionFormat"] = QuestionFormat
     context["QuestionType"] = QuestionType
+
+    # for key, item in context.items():
+    #   print(key, item)
 
     return render(request, "analysis.html", context)

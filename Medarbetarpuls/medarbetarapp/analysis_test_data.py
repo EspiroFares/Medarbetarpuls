@@ -24,16 +24,6 @@ from django.utils import timezone
 # python manage.py flush
 
 
-Answer.objects.all().delete()
-Question.objects.all().delete()
-SurveyUserResult.objects.all().delete()
-Survey.objects.all().delete()
-CustomUser.objects.all().delete()
-EmployeeGroup.objects.all().delete()
-EmailList.objects.all().delete()
-Organization.objects.all().delete()
-
-
 def createUsers(userRole: UserRole, amount: int):
     first_names = ["Hannah", "Liam", "Ava", "Noah", "Sophia"]
     last_names = ["Smith", "Johnson", "Williams", "Brown", "Jones"]
@@ -60,14 +50,17 @@ def createUsers(userRole: UserRole, amount: int):
     return users
 
 
-def createSurveys(amount: int, surveyCreator: CustomUser, ):
+def createSurveys(
+    amount: int,
+    surveyCreator: CustomUser,
+):
     surveys = []
     for i in range(amount):
         survey = Survey.objects.create(
             name=f"Weekly Pulse Check {i}",
             creator=surveyCreator,
-            deadline=f"2024-12-{(i % 28) + 1} 12:00:00",
-            sending_date=f"2024-11-{(i % 28) + 1} 10:00:00",
+            deadline=f"2025-12-{(i % 28) + 1} 12:00:00",
+            sending_date="2025-05-14 10:00:00",
             last_notification=timezone.now(),
             collected_answer_count=0,
             published_count=0,
@@ -83,7 +76,7 @@ def createQuestions(
     questionFormat: QuestionFormat,
     questionType: QuestionType,
     survey: Survey,
-    bank_question_org: Organization | None = None, 
+    bank_question_org: Organization | None = None,
 ):
     result = []
     text_pool = {
@@ -151,7 +144,7 @@ def createAnswers(result: SurveyUserResult, question: Question):
             is_answered=True,
             survey=result,
             question=question,
-            multiple_choice_answer=[random.choice([True,False]) for i in range(4)],
+            multiple_choice_answer=[random.choice([True, False]) for i in range(4)],
         )
     elif question.question_format == QuestionFormat.SLIDER:
         Answer.objects.create(
@@ -174,6 +167,16 @@ def createAnswers(result: SurveyUserResult, question: Question):
             question=question,
             free_text_answer="This is a text answer",
         )
+
+
+Answer.objects.all().delete()
+# Question.objects.all().delete()
+SurveyUserResult.objects.all().delete()
+Survey.objects.all().delete()
+CustomUser.objects.all().delete()
+EmployeeGroup.objects.all().delete()
+EmailList.objects.all().delete()
+Organization.objects.all().delete()
 
 
 org = Organization.objects.create(name="TestOrg")
@@ -222,14 +225,12 @@ for s in surveys:
     questions += createQuestions(1, QuestionFormat.TEXT, QuestionType.REOCCURRING, s)
 
 for s in surveys:
-    s.employee_groups.add(base_group,hr_team, it_team)
+    s.employee_groups.add(base_group, hr_team, it_team)
     s.publish_survey()
     for result in s.survey_results.all():
         for q in s.questions.all():
             createAnswers(result, q)
 
 
-
 print("✅ Successfully created test data!")
 print("Admin:", admin)
-

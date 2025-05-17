@@ -79,11 +79,10 @@ class AnalysisHandler:
             QuerySet[Survey]: A distinct queryset of Survey objects linked to the given group.
         """
         return (
-        Survey.objects
-        .filter(employee_groups=employee_group)
-        .order_by('-sending_date')
-        .distinct()
-    )
+            Survey.objects.filter(employee_groups=employee_group)
+            .order_by("-sending_date")
+            .distinct()
+        )
 
     def get_answers(
         self,
@@ -105,11 +104,9 @@ class AnalysisHandler:
             QuerySet[Answer]: A queryset of Answer objects matching the provided filters, or an empty queryset if none found.
         """
         filters = {"question": question, "is_answered": True}
-
         if survey:
             results = SurveyUserResult.objects.filter(published_survey=survey)
             filters["survey__in"] = results
-
         if user:
             filters["survey__user"] = user
 
@@ -126,7 +123,6 @@ class AnalysisHandler:
                 return Answer.objects.none()
             logger.info("No answers available.")
             return Answer.objects.none()
-
         return answers
 
     def get_comments(
@@ -155,9 +151,6 @@ class AnalysisHandler:
             filters["survey__in"] = results
 
         if user:
-            if user == survey.creator:
-                logger.info("No comments available for the creator of the survey.")
-                return Answer.objects.none()
             filters["survey__user"] = user
 
         elif employee_group:
@@ -184,7 +177,7 @@ class AnalysisHandler:
 
     def get_participation_metrics(
         self, surveys: List[Survey], employee_group: EmployeeGroup
-    ) -> Dict[str, float]:
+    ) -> Dict[str, list]:
         """
         Calculate participation metrics for a given survey and employee group.
 
@@ -198,7 +191,12 @@ class AnalysisHandler:
             answered_count (float): Number of users in the group who have answered the survey.
             answer_pct (float): Percentage of participants who answered (rounded to 1 decimal).
         """
-        result = []
+        result = {
+            "survey_sending_dates": [],
+            "participant_count_list": [],
+            "answered_count_list": [],
+            "answer_pct_list": [],
+        }
         for survey in surveys:
             total_participants = employee_group.employees.count()
             answered_count = SurveyUserResult.objects.filter(
@@ -207,12 +205,11 @@ class AnalysisHandler:
                 is_answered=True,
             ).count()
             answer_pct = round((answered_count / total_participants) * 100, 1)
-            result.append({
-            "survey":survey,
-            "participant_count": total_participants,
-            "answered_count": answered_count,
-            "answer_pct": answer_pct,
-        })
+            result["survey_sending_dates"].append(survey.sending_date)
+            result["participant_count_list"].append(total_participants)
+            result["answered_count_list"].append(answered_count)
+            result["answer_pct_list"].append(answer_pct)
+
         return result
 
     def get_respondents(
@@ -231,11 +228,33 @@ class AnalysisHandler:
         anonymous_users = {f"User {i}": users[i] for i in range(len(users))}
         return anonymous_users
 
-    def get_bank_questions(self):
+    def get_bank_questions(self, surveys: list | None = None):
         """
         Returns all questions that are part of an organization's question bank.
         """
-        bank_questions = Question.objects.filter(bank_question__isnull=False).distinct()
+        bank_questions = []
+        if surveys:
+            all_survey_questions = []
+            for survey in surveys:
+                all_survey_questions += survey.questions.all()
+
+            # Filter bank questions that are used in the surveys
+            filtered_bank_questions = [
+                question
+                for question in all_survey_questions
+                if question.bank_question_tag is not None
+            ]
+
+            # This part of the code makes sure we only get singular bank_question objects
+            seen_questions = []
+            for question in filtered_bank_questions:
+                if question.question not in seen_questions:
+                    bank_questions.append(question)
+                    seen_questions.append(question.question)
+        else:
+            bank_questions = Question.objects.filter(
+                bank_question__isnull=False
+            ).distinct()
 
         return bank_questions
 
@@ -307,6 +326,8 @@ class AnalysisHandler:
         answers = self.get_answers(
             question, survey, user=user, employee_group=employee_group
         )
+        print("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB")
+        print("BBBBBBBBBBB", answers)
 
         # answers = self.get_answers(question)
         promoters, passives, detractors = self.calculate_enps_data(answers)
@@ -319,6 +340,7 @@ class AnalysisHandler:
         )
         return {
             "question": question,
+            "question_format": question.question_type,
             "answers": answers,
             "enpsScore": score,
             "comments": comments,
@@ -402,14 +424,15 @@ class AnalysisHandler:
         mean = round(self.calculate_mean(answers), 2)
         return {
             "question": question,
+            "question_format": question.question_format,
             "answers": answers,
             "slider_values": [str(i) for i in range(1, 11)],
             "comments": comments,
             "text_comments": self.get_text_comments(comments),
-            "distribution": distribution,
-            "standard_deviation": standard_deviation,
-            "variation_coefficient": variation_coefficient,
-            "mean": mean,
+            "slider_distribution": distribution,
+            "slider_std": standard_deviation,
+            "slider_cv": variation_coefficient,
+            "slider_mean": mean,
         }
 
     # ---------------- MULTIPLE CHOICE ------------
@@ -439,10 +462,11 @@ class AnalysisHandler:
             # Om question eller specific_question inte finns
             return {
                 "question": question,
+                "question_format": question.question_format,
                 "answers": [],
                 "comments": [],
                 "text_comments": [],
-                "answer_options": [],
+                "multiple_choice_labels": [],
                 "distribution": [],
             }
 
@@ -455,11 +479,12 @@ class AnalysisHandler:
         comments = self.get_comments(question, survey)
         return {
             "question": question,
+            "question_format": question.question_format,
             "answers": answers,
             "comments": comments,
             "text_comments": self.get_text_comments(comments),
-            "answer_options": answer_options,
-            "distribution": distribution,
+            "multiple_choice_labels": answer_options,
+            "multiple_choice_distribution": distribution,
         }
 
     # ----------- YES NO --------------------
@@ -497,11 +522,12 @@ class AnalysisHandler:
         comments = self.get_comments(question, survey)
         return {
             "question": question,
+            "question_format": question.question_format,
             "comments": comments,
             "answers": answers,
             "text_comments": self.get_text_comments(comments),
-            "answer_options": answer_options,
-            "distribution": distribution,
+            "yes_no_labels": answer_options,
+            "yes_no_distribution": distribution,
             "yes_percentage": yes_percentage,
             "no_percentage": no_percentage,
         }
@@ -527,6 +553,7 @@ class AnalysisHandler:
 
         return {
             "question": question,
+            "question_format": question.question_format,
             "answers": answers,
             "text_answers": text_answers,
             "answer_count": answer_count,
@@ -630,17 +657,20 @@ class AnalysisHandler:
         Returns a trend over time for a single question across multiple surveys.
 
         """
-        trend = []
+        trend_summary = {
+            "survey_ids_trend": [],
+            "sending_dates_trend": [],
+        }
 
-        for survey in sorted(surveys, key=lambda s: s.sending_date):
+        for survey in sorted(surveys, key=lambda s: s.sending_date, reverse=True):
             _question = question
-            
-            question_obj = (
-                survey.questions.filter(question=_question.question).first()
-            )  # fetch the question object corresponding to the same string as the
+
+            question_obj = survey.questions.filter(
+                question=_question.question
+            ).first()  # fetch the question object corresponding to the same string as the input question
             if question_obj is None:
                 continue
-            
+
             if question_obj.question_format == QuestionFormat.MULTIPLE_CHOICE:
                 question_summary = self.get_multiple_choice_summary(
                     question=question_obj,
@@ -648,6 +678,7 @@ class AnalysisHandler:
                     user=user,
                     employee_group=employee_group,
                 )
+
             elif question_obj.question_format == QuestionFormat.YES_NO:
                 question_summary = self.get_yes_no_summary(
                     question=question_obj,
@@ -656,7 +687,6 @@ class AnalysisHandler:
                     employee_group=employee_group,
                 )
             elif question_obj.question_format == QuestionFormat.TEXT:
-                # cant show any trends on text questions, should we show participation metrics here instead?
                 question_summary = self.get_free_text_summary(
                     question=question_obj,
                     survey=survey,
@@ -677,24 +707,33 @@ class AnalysisHandler:
                     user=user,
                     employee_group=employee_group,
                 )
-            trend.append(
-                {
-                    "survey_id": survey.id,
-                    "sending_date": survey.sending_date.strftime("%Y-%m-%d"),
-                    "summary": question_summary,
-                }
+            else:
+                continue
+            trend_summary["survey_ids_trend"].append(survey.id)
+            trend_summary["sending_dates_trend"].append(
+                survey.sending_date.strftime("%Y-%m-%d")
             )
 
-        return trend
-    
+            for key, value in question_summary.items():
+                key = f"{key}_trend"
+                if key not in trend_summary:
+                    trend_summary[key] = []
+                trend_summary[key].append(value)
+
+        return trend_summary
+
     def get_survey_answer_distribution(
         self,
         survey: Survey,
         user: CustomUser | None = None,
         employee_group: EmployeeGroup | None = None,
-    ) -> list[dict[str, Any]]:
-        result = []
-        total_participants = survey.survey_results.count()     
+    ) -> dict[str, Any]:
+        result = {
+            "questions": [],
+            "answered_counts": [],
+            "total_participants": [],
+        }
+        total_participants = survey.survey_results.count()
 
         for q in survey.questions.all().order_by("id"):
             answers_qs = self.get_answers(
@@ -704,11 +743,8 @@ class AnalysisHandler:
                 employee_group=employee_group,
             )
 
-            result.append(
-                {
-                    "question": q,
-                    "answered_count": answers_qs.count(),
-                    "total_participants": total_participants,
-                }
-            )
+            result["questions"].append(q)
+            result["answered_counts"].append(answers_qs.count())
+            result["total_participants"].append(total_participants)
+
         return result
