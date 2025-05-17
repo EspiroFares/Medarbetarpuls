@@ -14,6 +14,7 @@ from .models import (
     QuestionType,
     Organization,
 )
+from statistics import median
 
 logger = logging.getLogger(__name__)
 
@@ -205,7 +206,9 @@ class AnalysisHandler:
                 is_answered=True,
             ).count()
             answer_pct = round((answered_count / total_participants) * 100, 1)
-            result["survey_sending_dates"].append(survey.sending_date)
+            result["survey_sending_dates"].append(
+                survey.sending_date.strftime("%Y-%m-%d")
+            )
             result["participant_count_list"].append(total_participants)
             result["answered_count_list"].append(answered_count)
             result["answer_pct_list"].append(answer_pct)
@@ -308,7 +311,12 @@ class AnalysisHandler:
         Returns:
             list[int]: A list of 10 integers where the element at index i-1 is the count of responses with `slider_answer == i` for i from 1 to 10.
         """
-        return [answers.filter(slider_answer=i).count() for i in range(1, 11)]
+        return [
+            answers.filter(
+                slider_answer__gte=i - 0.5, slider_answer__lt=i + 0.5
+            ).count()
+            for i in range(1, 11)
+        ]
 
     def get_enps_summary(
         self,
@@ -397,6 +405,13 @@ class AnalysisHandler:
         cv = (std_dev / mean) * 100
         return round(cv, 2)
 
+    def calculate_median(self, answers) -> float:
+        """Calculate median for slider answers."""
+        values = [a.slider_answer for a in answers if a.slider_answer is not None]
+        if not values:
+            return 0.0
+        return round(median(values), 2)
+
     def get_slider_summary(
         self,
         question: Question,
@@ -418,6 +433,8 @@ class AnalysisHandler:
         distribution = self.get_response_distribution_slider(answers)
         standard_deviation = self.calculate_standard_deviation(answers)
         variation_coefficient = self.calculate_variation_coefficient(answers)
+        median = self.calculate_median(answers)
+
         comments = self.get_comments(
             question, survey, user=user, employee_group=employee_group
         )
@@ -433,6 +450,7 @@ class AnalysisHandler:
             "slider_std": standard_deviation,
             "slider_cv": variation_coefficient,
             "slider_mean": mean,
+            "slider_median": median,
         }
 
     # ---------------- MULTIPLE CHOICE ------------
@@ -555,7 +573,7 @@ class AnalysisHandler:
             "question": question,
             "question_format": question.question_format,
             "answers": answers,
-            "text_answers": text_answers,
+            "free_text_answers": text_answers,
             "answer_count": answer_count,
             "comments": comments,
             "text_comments": self.get_text_comments(comments),

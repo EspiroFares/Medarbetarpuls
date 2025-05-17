@@ -120,12 +120,6 @@
             <canvas id="responseRateGauge" width="400" height="400"></canvas>
           </div>
         </div>
-        <div class="analysis-item ratio-1-1">
-          <div class="analysis-item-title"><h2><b>eNPS</b></h2></div>
-          <div class="graph-container">
-            <canvas id="enpsGauge" width="400" height="400"></canvas>
-          </div>
-        </div>
         <div class="analysis-item ratio-2-1">
           <div class="analysis-item-title"><h2><b>Svarsuppdelning på frågor</b></h2></div>
           <div class="graph-container" style="height: 90%">
@@ -156,35 +150,35 @@
         <div class="analysis-item ratio-2-1">
           <div class="analysis-item-title"><h2><b>Svarsfördelning slider</b></h2></div>
           <div class="graph-container" style="height: 90%">
-            <canvas id="barChartSlider"></canvas>
+            <canvas id="sliderStackedBarChart"></canvas>
           </div>
         </div>
         <div class="statistics-container">
           <div class="analysis-item ratio-1-4">
             <div class="analysis-item-title"><h2><b>Medel</b></h2></div>
             <div class="graph-container flex flex-col items-center justify-center text-sm">
-              <p>{{ slider_mean }}</p>
+              <p>{{ slider_mean_trend.0 }}</p>
             </div>
           </div>
         
           <div class="analysis-item ratio-1-4">
             <div class="analysis-item-title"><h2><b>Std.avv</b></h2></div>
             <div class="graph-container flex flex-col items-center justify-center text-sm">
-              <p>{{ slider_std}}</p>
+              <p>{{ slider_std_trend.0}}</p>
             </div>
           </div>
         
           <div class="analysis-item ratio-1-4">
             <div class="analysis-item-title"><h2><b>V.Koeff</b></h2></div>
             <div class="graph-container flex flex-col items-center justify-center text-sm">
-              <p>{{ slider_cv}}</p>
+              <p>{{ slider_cv_trend.0}}</p>
             </div>
           </div>
         
           <div class="analysis-item ratio-1-4">
             <div class="analysis-item-title"><h2><b>Median</b></h2></div>
             <div class="graph-container flex flex-col items-center justify-center text-sm">
-              <p>{{ slider_cv}}</p>
+              <p>{{ slider_median_trend.0}}</p>
             </div>
           </div>
         </div>
@@ -196,7 +190,7 @@
           </div>
         </div>
         <div class="analysis-item ratio-2-1">
-          <div class="analysis-item-title"><h2><b>Historik</b></h2></div>
+          <div class="analysis-item-title"><h2><b>Historik för medelvärde</b></h2></div>
           <div class="graph-container" style="height: 90%">
             <canvas id="lineTrendChartSlider"></canvas>
           </div>
@@ -401,20 +395,27 @@ const enpsPieColors             = ["rgb(140,214,16)","rgb(16,23,214)","rgb(16,19
 
 
 // === General Survey Page ===
-const responseTrendDates        = {{ answerFrequencyLabels |default:"['####-##-##','####-##-##','####-##-##']" |safe }};
-const responseTrendPercentages  = {{ answerFrequencyPct |default:"[0,0,0]" |safe }};
+const responseTrendDates        = {{ survey_sending_dates |default:"['####-##-##','####-##-##','####-##-##']" |safe }};
+const responseTrendPercentages  = {{ answer_pct_list |default:"[0,0,0]" |safe }};
 const responseVolumeDates       = {{ answerDistributionLabels |default:"['####-##-##','####-##-##','####-##-##']" |safe }};
 const responseVolumeCounts      = {{ answered_counts |default:"[0,0,0]" |safe }};
 const lineColors                = ["rgb(140,214,16)","rgb(16,23,214)"];
 
 // === Slider Page ===
-const sliderOptionLabels        = {{ slider_values |default:"['0','1','2','3','4','5','6','7','8','9','10']" |safe }};
-const sliderResponseDistribution = {{ slider_distribution |default:"[0,0,0,0,0,0,0,0,0,0,0]" |safe }};
-const sliderMeanValue           = {{ slider_mean |default:"0" |safe }};
-const sliderStandardDeviation   = {{ slider_std |default:"0" |safe }};
-const sliderVariationCoefficient = {{ slider_cv |default:"0" |safe }};
-const sliderTrendDates          = {{ lineLabels |default:"['####-##-##','####-##-##','####-##-##']" |safe }};
-const sliderTrendValues         = {{ lineData |default:"[0,0,0]" |safe }};
+const sliderOptionLabels        = {{ slider_values_trend.0 |default:"['0','1','2','3','4','5','6','7','8','9','10']" |safe }};
+const sliderResponseDistribution = {{ slider_distribution_trend.0 |default:"[0,0,0,0,0,0,0,0,0,0,0]" |safe }};
+const sliderTrendDates          = {{ sending_dates_trend |default:"['####-##-##','####-##-##','####-##-##']" |safe }};
+const sliderTrendValues         = {{ slider_mean_trend |default:"[0,0,0]" |safe }};
+
+const stackedSliderLabels = {{ slider_values_trend.0 |default:"['1','2','3','4','5','6','7','8','9','10']" |safe }};
+const stackedColors = ["#8dd3c7", "#ffffb3", "#bebada", "#fb8072", "#80b1d3"]; // extend if more surveys
+const stackedSurveyLabels = {{ sending_dates_trend|default:"[]"|safe }};
+const stackedRawDistributions = {{ slider_distribution_trend|default:"[]"|safe }};
+
+const stackedChartData = (stackedSurveyLabels || []).map((label, index) => ({
+  label: label,
+  data: (stackedRawDistributions[index] || []),
+}));
 
 // === Multiple Choice Page ===
 const multipleChoiceOptionLabels = {{ barChartLabels |default:"[]" |safe }};
@@ -454,11 +455,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // General Survey
   safeInit(initLineChart, "answerFrequencyTrend", responseTrendDates, responseTrendPercentages, lineColors);
-  safeInit(initBarChart, "answerDistributionQuestions", responseVolumeDates, responseVolumeCounts, lineColors);
+  safeInit(initBarChart, "answerDistributionQuestions", responseVolumeDates, responseVolumeCounts, lineColors, hideXAxis = true);
 
   // Slider
   safeInit(initLineChart, "lineTrendChartSlider", sliderTrendDates, sliderTrendValues, lineColors);
-  safeInit(initBarChart, "barChartSlider", sliderOptionLabels, sliderResponseDistribution);
+  safeInit(initStackedBarChart, "sliderStackedBarChart", stackedSliderLabels, stackedChartData, stackedColors);
+
 
   // Multiple Choice
   safeInit(initBarChart, "barChartMultipleChoice", multipleChoiceOptionLabels, multipleChoiceSelections);

@@ -2100,7 +2100,7 @@ def analysis_view(request):
     context = {
         "survey_ranges": [
             ("Senaste", "1"),
-            ("Senaste 3", "3"),
+            ("Senaste 2", "2"),
             ("Senaste 5", "5"),
             ("Alla", "all"),
         ],
@@ -2143,6 +2143,13 @@ def analysis_view(request):
 
     # Get anonymous respondents for the most recent survey, used for the user filter
     latest_survey = filtered_surveys[0]
+    # context["answerDistributionLabels"] = [
+    #    q.question for q in latest_survey.questions.all().order_by("id")
+    # ]
+    context["answerDistributionLabels"] = [
+        q.question for q in latest_survey.questions.all().order_by("id")
+    ]
+
     respondents_dict = analysisHandler.get_respondents(
         survey=latest_survey, employee_group=group
     )
