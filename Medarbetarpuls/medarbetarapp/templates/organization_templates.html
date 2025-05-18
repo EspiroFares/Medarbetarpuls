@@ -1,20 +1,17 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="sv">
   <head>
     {% load static %}
     <script src="https://unpkg.com/htmx.org@1.8.4"></script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Medarbetarpuls - Home</title>
+    <title>Medarbetarpuls - Organisationens enkätmallar</title>
     <link rel="stylesheet" href="{% static 'css/main.css' %}" />
   </head>
   <body>
     <div class="main-container">
-      <!-- Go back button-->
-      <button
-        class="image-button"
-        onclick="navigateBack()"
-      >
+      <!-- Go back button -->
+      <button class="image-button" onclick="navigateBack()">
         <img
           src="{% static 'images/go-back-btn.png' %}"
           alt="Gå Tillbaka"
@@ -22,9 +19,9 @@
         />
       </button>
 
-      {% include "topbar.html" with pagetitle="Organisationens enkätmallar och frågebank" %}
+      {% include "topbar.html" with pagetitle="Organisationens enkätmallar" %}
 
-      <!-- Survey bank -->
+      <!-- Enkätmallar -->
       <div class="title-background">
         <h2>Enkätmallar</h2>
       </div>
@@ -37,14 +34,12 @@
           <div class="question-title">
             <h1>{{ survey_temp.name }}</h1>
           </div>
-
           <div class="question-background">
-              <p>Senast redigerad: </p>
-              <p>{{ survey_temp.last_edited }}</p>
+            <p>Senast redigerad:</p>
+            <p>{{ survey_temp.last_edited }}</p>
           </div>
           <div class="question-result">
             <div class="grid-icon">
-              <!-- Comment here, what does the hx-post and onclick do?-->
               <img
                 src="{% static 'images/trashcan.png' %}"
                 class="icon-img"
@@ -59,14 +54,15 @@
         </a>
         {% endfor %}
 
-        <a href="{% url 'create_survey' %}?source={{ source }}" class="add-button-link">
+        <!-- Button to open create-survey popup -->
+        <a href="#" id="open-create-survey" class="add-button-link">
           <div class="add-button">
             <span>+</span>
           </div>
         </a>
       </div>
 
-      <!-- Question bank -->
+      <!-- Frågemallar -->
       <div class="title-background">
         <h2>Frågemallar</h2>
       </div>
@@ -77,7 +73,7 @@
           class="grid-item blue"
         >
           <div class="question-title">
-            <h3>{{question.question_title}}</h3>
+            <h3>{{ question.question_title }}</h3>
             <form
               hx-post="{% url 'delete_question' question.id %}?source={{ source }}"
               hx-trigger="submit"
@@ -89,57 +85,96 @@
               </button>
             </form>
           </div>
-
           <div class="question-background">
-            <p>{{question.question}}</p>
+            <p>{{ question.question }}</p>
           </div>
-
           <div class="question-result">
             <img
               src="{% static 'images/' %}{{ question.question_format }}.png"
-              alt="{{ question.question_format.label }} image"
+              alt="{{ question.question_format.label }}"
               class="question-icon"
             />
           </div>
         </a>
         {% endfor %}
 
+        <!-- Add question button -->
         <a
-          href="{% url 'create_question'%}?source={{ source }}"
+          href="{% url 'create_question' %}?source={{ source }}"
           class="add-button-link"
         >
-          <div class="add-button">
-            <span>+</span>
-          </div>
+          <div class="add-button"><span>+</span></div>
         </a>
       </div>
-      
     </div>
+
+    <!-- Skapa ny enkät-popup -->
+    <div
+      id="createSurveyOverlay"
+      class="popup-overlay"
+      style="display: none; align-items: center; justify-content: center"
+    >
+      <div class="popup-content">
+        <h2>Skapa ny enkät</h2>
+        <form
+          method="post"
+          action="{% url 'create_survey' %}?source={{ source }}"
+        >
+          {% csrf_token %}
+          <div class="form-group">
+            <label for="survey-name">Enkätnamn:</label>
+            <input
+              type="text"
+              id="survey-name"
+              name="name"
+              required
+              placeholder="Ange namn"
+            />
+          </div>
+          <div class="popup-buttons">
+            <button type="button" id="cancelCreate" class="image-button">
+              <img
+                src="{% static 'images/go-back-btn.png' %}"
+                alt="Avbryt"
+                class="back-icon"
+              />
+            </button>
+            <button type="submit">Skapa</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <script>
-      // comment here, what does this do?
-      document.body.addEventListener("htmx:configRequest", (event) => {
-        const csrfToken = document.querySelector(
-          'meta[name="csrf-token"]',
+      document.body.addEventListener("htmx:configRequest", (e) => {
+        e.detail.headers["X-CSRFToken"] = document.querySelector(
+          'meta[name="csrf-token"]'
         ).content;
-        event.detail.headers["X-CSRFToken"] = csrfToken;
       });
 
       function navigateBack() {
-        // The previous URL that linked to this page
-        let previousUrl = document.referrer;
-        if (previousUrl) {
-          if (previousUrl.includes("create-survey") || previousUrl.includes("templates_and_drafts") || previousUrl.includes("organization_templates")) {
-            // Avoid redirecting back to this page to prevent an infinite loop
-            // Only creator and reponder can see results from one survey
-            previousUrl = previousUrl;
-          }
-          window.location.href = previousUrl;
-        } else {
-          // Fallback if referrer is empty
-          // This simulates the user pressing the back button
-          window.history.back();
-        }
+        const prev = document.referrer;
+        if (prev) window.location.href = prev;
+        else window.history.back();
       }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const openBtn = document.getElementById("open-create-survey");
+        const overlay = document.getElementById("createSurveyOverlay");
+        const cancel = document.getElementById("cancelCreate");
+
+        openBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          overlay.style.display = "flex";
+        });
+        cancel.addEventListener(
+          "click",
+          () => (overlay.style.display = "none")
+        );
+        overlay.addEventListener("click", (e) => {
+          if (e.target === overlay) overlay.style.display = "none";
+        });
+      });
     </script>
   </body>
 </html>
