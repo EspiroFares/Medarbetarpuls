@@ -923,25 +923,14 @@ def move_question_right(request, survey_temp_id: int, question_id: int) -> HttpR
 
     return render(request, "partials/question-list.html", context)
 
-from django.http import HttpResponse, HttpResponseNotAllowed
-from django.shortcuts import render, redirect
-from django.urls import reverse
-from django.utils import timezone
-from django.contrib.auth.decorators import login_required
-
 @login_required
 def create_survey_view(request, survey_id: int | None = None) -> HttpResponse:
     source = request.GET.get("source")
 
-    # —————————————————————————————————————————
-    # 1) CREATE A NEW SURVEY (only via POST → require name)
-    # —————————————————————————————————————————
     if survey_id is None:
         if request.method == "POST":
-            # 1a) grab and trim the posted name
             raw_name = request.POST.get("name", "").strip()
 
-            # 1b) server-side validation: name is mandatory
             if not raw_name:
                 # re-fetch lists for the “templates_and_drafts” page:
                 survey_templates = request.user.survey_templates.all()
@@ -960,7 +949,6 @@ def create_survey_view(request, survey_id: int | None = None) -> HttpResponse:
                     },
                 )
 
-            # 1c) name is present → create the survey
             survey_temp = models.SurveyTemplate(
                 creator=request.user,
                 name=raw_name,
@@ -968,11 +956,9 @@ def create_survey_view(request, survey_id: int | None = None) -> HttpResponse:
             )
             survey_temp.save()
 
-            # 1d) if from org-templates, add it to that bank
             if source == "organization_templates" and request.user.admin:
                 request.user.admin.survey_template_bank.add(survey_temp)
 
-            # 1e) redirect into the edit page (no popup-trigger, no ID shown)
             redirect_url = reverse("create_survey_with_id", args=[survey_temp.id])
             if source:
                 redirect_url += f"?source={source}"
@@ -981,9 +967,6 @@ def create_survey_view(request, survey_id: int | None = None) -> HttpResponse:
         # disallow GET without an ID
         return HttpResponseNotAllowed(["POST"])
 
-    # —————————————————————————————————————————
-    # 2) EDIT AN EXISTING SURVEY (unchanged)
-    # —————————————————————————————————————————
     user = request.user
     if source == "readonly":
         org = find_organization_by_email(email=user.email)
