@@ -153,9 +153,23 @@
       });
 
       function navigateBack() {
-        const prev = document.referrer;
-        if (prev) window.location.href = prev;
-        else window.history.back();
+        // The previous URL that linked to this page
+        let previousUrl = document.referrer;
+        if (previousUrl) {
+          if (previousUrl.includes("my-org") || previousUrl.includes("settings-admin")){
+            // Only redirect to these pages if they are 
+            // the absolutely latest otherwise start page
+            previousUrl = previousUrl;
+          }else{
+            previousUrl = "/";
+          }
+          window.location.href = previousUrl;
+          
+        } else {
+          // Fallback if referrer is empty
+          // This simulates the user pressing the back button
+          window.history.back();
+        }
       }
 
       document.addEventListener("DOMContentLoaded", () => {
