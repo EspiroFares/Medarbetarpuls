@@ -55,7 +55,7 @@
         {% endfor %}
 
         <!-- Button to open create-survey popup -->
-        <a href="#" id="open-create-survey" class="add-button-link">
+        <a href="#" id="open-create-survey"  title="Skapa ny enkätmall" class="add-button-link">
           <div class="add-button">
             <span>+</span>
           </div>
@@ -101,6 +101,7 @@
         <!-- Add question button -->
         <a
           href="{% url 'create_question' %}?source={{ source }}"
+          title="Skapa ny mallfråga"
           class="add-button-link"
         >
           <div class="add-button"><span>+</span></div>
