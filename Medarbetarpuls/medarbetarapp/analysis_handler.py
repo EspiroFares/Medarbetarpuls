@@ -256,9 +256,13 @@ class AnalysisHandler:
                     seen_questions.append(question.question)
         else:
             bank_questions = Question.objects.filter(
-                bank_question__isnull=False
+                bank_question__isnull=False,
             ).distinct()
 
+        # Remove free text questions since it's not possible to analyze them
+        for idx, question in enumerate(bank_questions):
+            if question.question_format == QuestionFormat.TEXT:
+                bank_questions.pop(idx)
         return bank_questions
 
     # --------- SLIDER-QUESTION FUNCTIONALITY -------------

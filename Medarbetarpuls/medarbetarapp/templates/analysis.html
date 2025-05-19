@@ -29,55 +29,57 @@
       <div class="analysis-title">
           <!-- Filter for work-group -->
 
-          <div id="filterBar">
-            <strong>Välj grupp:</strong>
-            <span id="pillContainer"></span>
-            <form method="get" action="{% url 'analysis' %}">
-              <input type="hidden" name="surveys" value="{{ request.GET.surveys }}">
-              <select id="groupDropdown" name="group_id" onchange="this.form.submit()">
-                {% for group in user.survey_groups.all %}
-                  <option value="{{ group.id }}" {% if group.id|stringformat:"s" == request.GET.group_id %}selected{% endif %}>
-                    {{ group.name }}
-                  </option>
-                {% endfor %}
-              </select>
-            </form>
-          </div>
+        <div id="filterBar">
+          <strong>Välj grupp:</strong>
+          <!--<span id="pillContainer"></span>-->
+          <form method="get" action="{% url 'analysis' %}">
+            <input type="hidden" name="group_id"    value="{{ request.GET.group_id |default:selected_group_id}}">
+            <input type="hidden" name="surveys" value="{{ request.GET.surveys |default:selected_survey_range}}">
+            <select id="groupDropdown" name="group_id" onchange="this.form.submit()">
+              <option value="">— Välj användare —</option>
+              {% for group in available_groups %}
+                <option value="{{ group.id }}" {% if group.id|stringformat:"s" == request.GET.group_id %}selected{% endif %}>
+                  {{ group.name }}
+                </option>
+              {% endfor %}
+            </select>
+          </form>
+        </div>
 
 
-      <div id="filterBar">
-        <strong>Välj användare:</strong>
-        <form method="get" action="{% url 'analysis' %}">
-          <input type="hidden" name="group_id"    value="{{ request.GET.group_id }}">
-          <input type="hidden" name="surveys"     value="{{ request.GET.surveys }}">
-          <input type="hidden" name="question_id" value="{{ request.GET.question_id }}">
-          <select name="user_id" onchange="this.form.submit()">
-            <option value="">— Välj användare —</option>
-            {% for label, user in respondents.items %}
-              <option value="{{ label }}" {% if label == selected_user_id %}selected{% endif %}>
-                {{ label }}
-              </option>
-            {% endfor %}
-          </select>
-        </form>
-      </div>
+        <div id="filterBar">
+          <strong>Välj användare:</strong>
+          <form method="get" action="{% url 'analysis' %}">
+            <input type="hidden" name="group_id"    value="{{ request.GET.group_id }}">
+            <input type="hidden" name="surveys"     value="{{ request.GET.surveys }}">
+            <input type="hidden" name="question_id" value="{{ request.GET.question_id }}">
+            <select name="user_id" onchange="this.form.submit()">
+              <option value="">— Välj användare —</option>
+              {% for label, user in respondents.items %}
+                <option value="{{ label }}" {% if label == selected_user_id %}selected{% endif %}>
+                  {{ label }}
+                </option>
+              {% endfor %}
+            </select>
+          </form>
+        </div>
 
-      <div id="filterBar">
-        <strong>Välj bankfråga:</strong>
-        <form method="get" action="{% url 'analysis' %}">
-          <input type="hidden" name="group_id" value="{{ request.GET.group_id }}">
-          <input type="hidden" name="surveys"  value="{{ request.GET.surveys }}">
-          <input type="hidden" name="user_id"  value="{{ request.GET.user_id }}">
-          <select name="question_id" onchange="this.form.submit()">
-            <option value="">— Välj fråga —</option>
-            {% for question in bank_questions %}
-              <option value="{{ question.id }}" {% if question.id|stringformat:"s" == selected_question_id %}selected{% endif %}>
-                {{ question.question }}
-              </option>
-            {% endfor %}
-          </select>
-        </form>
-      </div>
+        <div id="filterBar">
+          <strong>Välj bankfråga:</strong>
+          <form method="get" action="{% url 'analysis' %}">
+            <input type="hidden" name="group_id" value="{{ request.GET.group_id }}">
+            <input type="hidden" name="surveys"  value="{{ request.GET.surveys }}">
+            <input type="hidden" name="user_id"  value="{{ request.GET.user_id }}">
+            <select name="question_id" onchange="this.form.submit()">
+              <option value="">— Välj fråga —</option>
+              {% for question in bank_questions %}
+                <option value="{{ question.id }}" {% if question.id|stringformat:"s" == selected_question_id %}selected{% endif %}>
+                  {{ question.question }}
+                </option>
+              {% endfor %}
+            </select>
+          </form>
+        </div>
 
       
       
@@ -270,26 +272,6 @@
               </div>
             </div>
           </div>
-
-        {% elif selected_question_format == "text" %}
-        <div class="analysis-item ratio-1-1">
-          <div class="analysis-item-title"><h2><b>Svarsfrekvens</b></h2></div>
-          <div class="graph-container">
-            <canvas id="textResponseRateGauge" width="400" height="400"></canvas>
-          </div>
-        </div>
-
-
-        <div class="analysis-item ratio-2-1">
-          <div class="analysis-item-title"><h2><b>Fritextsvar</b></h2></div>
-          <div class="graph-container" style="height: 90%; overflow-y: scroll;">
-            {% for answer in free_text_answers %}
-              <p>{{ answer }}</p>
-            {% empty %}
-              <p>Inga svar tillgängliga.</p>
-            {% endfor %}
-          </div>
-        </div>
         {% endif %}
 
     
@@ -365,6 +347,8 @@ const responseTrendPercentages  = {{ answer_pct_list |default:"[0,0,0]" |safe }}
 const responseVolumeDates       = {{ answerDistributionLabels |default:"['####-##-##','####-##-##','####-##-##']" |safe }};
 const responseVolumeCounts      = {{ answered_counts |default:"[0,0,0]" |safe }};
 const lineColors                = ["rgb(140,214,16)","rgb(16,23,214)"];
+
+
 
 // === Slider Page ===
 const sliderOptionLabels         = {{ slider_values_trend.0 |default:"['0','1','2','3','4','5','6','7','8','9','10']" |safe }};

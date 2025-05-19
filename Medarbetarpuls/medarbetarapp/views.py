@@ -2094,6 +2094,7 @@ def analysis_view(request):
     survey_count = request.GET.get("surveys", "1")
     user_id = request.GET.get("user_id")
     question_id = request.GET.get("question_id")
+    user = request.user
 
     analysisHandler = AnalysisHandler()
 
@@ -2107,13 +2108,22 @@ def analysis_view(request):
         "selected_survey_range": survey_count,
         "selected_user_id": user_id,
         "selected_question_id": question_id,
+        "selected_group_id": group_id,
     }
+
+    employee_groups_creator = user.survey_groups.all()
+    available_groups = []
+    for e_g in employee_groups_creator:
+        for survey in user.published_surveys.all():
+            if e_g in survey.employee_groups.all():
+                if e_g not in available_groups:
+                    available_groups.append(e_g)
+    context["available_groups"] = available_groups
 
     if not group_id:
         return render(request, "analysis.html", context)
 
     group = get_object_or_404(EmployeeGroup, id=group_id)
-
     surveys = analysisHandler.get_surveys_for_group(group)
 
     if not surveys.exists():
@@ -2143,9 +2153,7 @@ def analysis_view(request):
 
     # Get anonymous respondents for the most recent survey, used for the user filter
     latest_survey = filtered_surveys[0]
-    # context["answerDistributionLabels"] = [
-    #    q.question for q in latest_survey.questions.all().order_by("id")
-    # ]
+
     context["answerDistributionLabels"] = [
         q.question for q in latest_survey.questions.all().order_by("id")
     ]
@@ -2154,12 +2162,12 @@ def analysis_view(request):
         survey=latest_survey, employee_group=group
     )
     context["respondents"] = respondents_dict
+
     survey_answer_dist = analysisHandler.get_survey_answer_distribution(
         latest_survey,
         user=respondents_dict.get(user_id) if user_id else None,
         employee_group=group,
     )
-
     context.update(survey_answer_dist)
 
     selected_question_format = None
@@ -2188,8 +2196,5 @@ def analysis_view(request):
     # pass these to frontend for typing
     context["QuestionFormat"] = QuestionFormat
     context["QuestionType"] = QuestionType
-
-    # for key, item in context.items():
-    #   print(key, item)
 
     return render(request, "analysis.html", context)
