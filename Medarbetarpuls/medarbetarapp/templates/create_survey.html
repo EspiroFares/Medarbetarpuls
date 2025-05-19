@@ -66,6 +66,7 @@
               hx-target="#question-list"
               hx-swap="outerHTML"
               class="px-2"
+              title="Flytta fråga åt vänster"
             >
               {% csrf_token %}
               <button type="submit">&larr;</button>
@@ -83,6 +84,7 @@
               hx-target="#question-list"
               hx-swap="outerHTML"
               class="px-2"
+              title="Flytta fråga åt höger"
             >
               {% csrf_token %}
               <button type="submit">&rarr;</button>
@@ -95,6 +97,7 @@
         {% if source != "readonly" %}
         <a
           href="{% url 'create_question' survey_temp.id %}{% if source == 'organization_templates' %}?source={{ source }}{% endif %}"
+          title="Skapa ny fråga"
           class="add-button-link"
         >
           <div class="add-button">
