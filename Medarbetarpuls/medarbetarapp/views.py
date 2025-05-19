@@ -923,85 +923,67 @@ def move_question_right(request, survey_temp_id: int, question_id: int) -> HttpR
 
     return render(request, "partials/question-list.html", context)
 
-
 @login_required
 def create_survey_view(request, survey_id: int | None = None) -> HttpResponse:
-    """
-    Creates a survey template. If no survey_id is given, a new
-    survey template is created. If the survey_id is given, the
-    corresponding survey template is fetched from the database.
-
-    Args:
-        request: The input text from the question text field
-        survey_id (int): The id of the opened survey
-
-    Returns:
-        HttpResponse: Redirects to create_survey or renders create_survey_view
-    """
-
     source = request.GET.get("source")
 
-    # Check if survey_id is not given
     if survey_id is None:
-        # Create a new survey template and assign it to the user
-        survey_temp: models.SurveyTemplate = models.SurveyTemplate(
-            creator=request.user, last_edited=timezone.now()
-        )
-        survey_temp.save()
-        # Set a placeholder name for the survey
-        survey_id = survey_temp.id
-        survey_temp.name = "Survey " + str(survey_id)
-        survey_temp.save()
+        if request.method == "POST":
+            raw_name = request.POST.get("name", "").strip()
 
-        if source == "organization_templates" and request.user.admin:
-            # If the source is from organization templates, redirect to the create_survey page
-            organization: models.Organization = request.user.admin
-            organization.survey_template_bank.add(survey_temp)
+            if not raw_name:
+                # re-fetch lists for the “templates_and_drafts” page:
+                survey_templates = request.user.survey_templates.all()
+                org_templates = (
+                    request.user.admin.survey_template_bank.all()
+                    if source == "organization_templates" and request.user.admin
+                    else None
+                )
+                return render(
+                    request,
+                    "templates_and_drafts.html",
+                    {
+                        "survey_templates": survey_templates,
+                        "organization_survey_templates": org_templates,
+                        "error": "Du måste ange ett namn på enkäten",
+                    },
+                )
 
-        # Redirect to the create_survey view with the new survey_id
-        # This will allow the user to edit the survey template immediately
-        redirect_url = f"{reverse('create_survey_with_id', args=[survey_temp.id])}"
-        if source:  # Only append source if it's not None or empty
-            redirect_url += f"?source={source}"
-        return redirect(redirect_url)
+            survey_temp = models.SurveyTemplate(
+                creator=request.user,
+                name=raw_name,
+                last_edited=timezone.now(),
+            )
+            survey_temp.save()
 
-    # If survey_id is given, fetch the corresponding survey template
-    # from the database and render the create_survey view
-    user: models.CustomUser = request.user
+            if source == "organization_templates" and request.user.admin:
+                request.user.admin.survey_template_bank.add(survey_temp)
+
+            redirect_url = reverse("create_survey_with_id", args=[survey_temp.id])
+            if source:
+                redirect_url += f"?source={source}"
+            return redirect(redirect_url)
+
+        # disallow GET without an ID
+        return HttpResponseNotAllowed(["POST"])
+
+    user = request.user
     if source == "readonly":
-        # User is trying to access a survey from the organizations survey bank
-        organization = find_organization_by_email(email=user.email)
-        survey_temp: models.SurveyTemplate = organization.survey_template_bank.filter(
-            id=survey_id
-        ).first()
+        org = find_organization_by_email(email=user.email)
+        survey_temp = org.survey_template_bank.filter(id=survey_id).first()
     else:
-        survey_temp: models.SurveyTemplate = user.survey_templates.filter(
-            id=survey_id
-        ).first()
+        survey_temp = user.survey_templates.filter(id=survey_id).first()
 
-    if survey_temp is None:
-        # Handle the case where the survey template does not exist
+    if not survey_temp:
         return HttpResponse("Survey template not found", status=404)
 
-    # Redirect to publish survey
-    if request.method == "GET":
-        if request.headers.get("HX-Request"):
-            return HttpResponse(
-                headers={
-                    "HX-Redirect": "/create-survey/"
-                    + str(survey_id)
-                    + "?trigger_popup=true"
-                }
-            )
-
+    # this GET simply renders the edit page—no HX-Redirect anymore
     return render(
         request,
         "create_survey.html",
-        {
-            "survey_temp": survey_temp,
-            "source": source,
-        },
+        {"survey_temp": survey_temp, "source": source},
     )
+
 
 
 @login_required
