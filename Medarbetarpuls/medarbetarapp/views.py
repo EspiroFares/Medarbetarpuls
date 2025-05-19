@@ -1,3 +1,4 @@
+import random
 import logging
 import platform
 from . import models
@@ -2026,6 +2027,11 @@ def survey_result_view(request, survey_id):
         summary["my_result"] = analysis_handler.get_answers(
             summary["question"], user=user, survey=survey
         ).first()
+
+        if "text_answers" in summary and summary["text_answers"]:
+            answers = list(summary["text_answers"])
+            random.shuffle(answers)
+            summary["text_answers"] = answers
 
     # Add context to summary_context
     summary_context["has_result"] = has_result
