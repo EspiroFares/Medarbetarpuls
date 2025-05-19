@@ -925,6 +925,18 @@ def move_question_right(request, survey_temp_id: int, question_id: int) -> HttpR
 
 @login_required
 def create_survey_view(request, survey_id: int | None = None) -> HttpResponse:
+    """
+    Creates a survey template. If no survey_id is given, a new
+    survey template is created. If the survey_id is given, the
+    corresponding survey template is fetched from the database.
+
+    Args:
+        request: The input text from the question text field
+        survey_id (int): The id of the opened survey
+
+    Returns:
+        HttpResponse: Redirects to create_survey or renders create_survey_view
+    """
     source = request.GET.get("source")
 
     if survey_id is None:
