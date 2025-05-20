@@ -34,7 +34,7 @@ def create_acc(request):
     and redirecting to the authentication page (supports both HTMX and standard requests).
 
     Args:
-        request: The HTTP request containing name, email, password, and optional from_settings flag.
+        request: The HTTP request containing name, email and password.
 
     Returns:
         HttpResponse: For POST, sends an HX-Redirect header or standard redirect to "/authentication-acc/";
@@ -53,7 +53,6 @@ def create_acc(request):
 
         email = request.POST.get("email")
         password = request.POST.get("password")
-        from_settings = request.POST.get("from_settings") == "true"
 
         user = models.CustomUser.objects.filter(email=email).exists()
         if user:
@@ -86,7 +85,6 @@ def create_acc(request):
         request.session["user_data"] = {
             "name": correct_form_name,
             "password": password,
-            "from_settings": from_settings,
         }
         # Save the mail where the two factor code is sent
         request.session["email_two_factor_code"] = email
@@ -1771,13 +1769,8 @@ def settings_admin_view(request):
                     "Du kan inte lämna över konto till dig själv", status=400
                 )
 
-            # check if new email exist and then switch roles and save
-            if models.EmailList.objects.filter(email=new_admin_email).exists():
-                """user.is_active = False
-                user.is_superuser = False
-                user.admin = None
-                user.user_role = models.UserRole.SURVEY_RESPONDER
-                user.save()"""
+            # Check if new email exist and then switch roles and save
+            if models.CustomUser.objects.filter(email=new_admin_email).exists():
                 models.EmailList.objects.filter(email=user.email).delete()
                 user.delete()  # maybe not right because we want the users answers to be saved still
                 new_admin = models.CustomUser.objects.get(email=new_admin_email)
