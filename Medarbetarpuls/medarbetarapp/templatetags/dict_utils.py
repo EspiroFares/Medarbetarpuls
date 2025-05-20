@@ -11,3 +11,9 @@ register = template.Library()
 @register.filter
 def get_item(dictionary, key):
     return dictionary.get(key, key)  # fallback to key if not found
+@register.filter
+def index(sequence, i):
+    try:
+        return sequence[i]
+    except:
+        return ''

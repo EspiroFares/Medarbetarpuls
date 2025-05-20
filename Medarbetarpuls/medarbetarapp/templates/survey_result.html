@@ -1,4 +1,5 @@
 {% load static %}
+{% load dict_utils %}
 <!DOCTYPE html>
 <html lang="sv">
   <head>
@@ -132,44 +133,55 @@
 
           <!-- Shows personal answer for the question. Is only showned when toggled 
                by one of the earlier buttons -->
-          <div
-            class="question-result"
-            x-show="show_state === STATES.PERSONAL_ANSWER"
-          >
-            {% if summary.my_result %}
-            <p>
-              <strong>Ditt svar:</strong>
-              <!---->
-              {% if summary.question.question_format == "multiplechoice" %}
-              <!---->
-              {% for answer in summary.my_result.answer %}
-              <!---->
-              {% if answer %}
-              <!---->
-              {{ forloop.counter }}
-              <br />
-              {% endif %}
-              <!---->
-              {% endfor %}
-              <!---->
-              {% else %} {{ summary.my_result.answer }}
-              <!---->
-              {% endif %}
-            </p>
-            {% else %}
-            <p><em>Du har inte besvarat denna fråga.</em></p>
-            {% endif %}
-            <!---->
-            {% if summary.my_result.comment %}
-            <p>
-              <strong>Din kommentar:</strong>
-              <br />
-              {{ summary.my_result.comment }}
-            </p>
-            {% else %}
-            <p><strong>Du angav ingen kommentar</strong></p>
-            {% endif %}
-          </div>
+            <div
+  class="question-result"
+  x-show="show_state === STATES.PERSONAL_ANSWER"
+>
+  {% if summary.my_result %}
+    <div>
+      <strong>Ditt svar:</strong><br />
+
+      {% if summary.question.question_format == "multiplechoice" %}
+        {% for selected in summary.my_result.answer %}
+          {% if selected %}
+            {{ summary.question.multiple_choice_question.options|index:forloop.counter0 }}
+          {% endif %}
+        {% endfor %}
+
+      {% elif summary.question.question_format == "yesno" %}
+        {% if summary.my_result.answer == True %}
+          <em>Du svarade med tumme upp.</em>
+        {% else %}
+          <em>Du svarade med tumme ner.</em>
+        {% endif %}
+
+      {% elif summary.question.question_format == "slider" %}
+       
+           <div>
+          <p>{{ summary.my_result.answer }}</p>
+          <p> Svarsskalan går från 0 (lägst) till 10 (högst).</p>
+           </div>
+        
+
+      {% elif summary.question.question_format == "text" %}
+        <p>{{ summary.my_result.answer }}</p>
+
+      {% endif %}
+    </div>
+  {% else %}
+    <p><em>Du har inte besvarat denna fråga.</em></p>
+  {% endif %}
+
+  {% if summary.my_result and summary.my_result.comment %}
+    <p>
+      <strong>Din kommentar:</strong><br />
+      {{ summary.my_result.comment }}
+    </p>
+  {% else %}
+    <p><strong>Du angav ingen kommentar</strong></p>
+  {% endif %}
+</div>
+
 
           <!-- Shows question-result. It is shown by default but is toggled 
                by the earlier buttons.-->
@@ -219,7 +231,10 @@
 
             {% elif summary.question.question_format == "slider" %}
             <!-- Code for slider-question result -->
-
+             <div>
+               <p>Värdet visas utifrån en skala från 0 till 10.</p> 
+             </div>
+            <div>
             <p>Medelvärde:</p>
             <p>{{ summary.mean|safe }}</p>
             {% if summary.mean < 2 %}
@@ -262,6 +277,7 @@
           </div>
         </div>
         {% endfor %}
+      </div>
       </div>
       {% else %}
 
