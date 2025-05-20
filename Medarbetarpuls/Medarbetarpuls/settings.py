@@ -25,9 +25,20 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-!q2_ak4#xg9w)0mz67&y3+bc0$g@l0ljbzyq)z76a)_^%66w()"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False 
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1']
+
+# Add ngrok host if the proxy is used...
+ngrok_host = os.getenv("NGROK_HOST")
+if ngrok_host:
+    ALLOWED_HOSTS.append(ngrok_host)
+
+# Add ngrok to CSRF trusted origins
+if ngrok_host:
+    CSRF_TRUSTED_ORIGINS = [f"https://{ngrok_host}"]
+else:
+    CSRF_TRUSTED_ORIGINS = []
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
@@ -35,6 +46,10 @@ STATIC_URL = "/static/"
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "medarbetarapp", "static"),
 ]
+
+# Add static root for debug = False
+# Run: python manage.py collectstatic, to collect static files
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 TEMPLATES = [
     {
@@ -63,11 +78,11 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "medarbetarapp",
-    "django_celery_beat",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -75,6 +90,9 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+# Compressed static files...
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 ROOT_URLCONF = "Medarbetarpuls.urls"
 
@@ -180,11 +198,10 @@ AUTH_PASSWORD_VALIDATORS = [
 LANGUAGE_CODE = "en-us"
 
 USE_TZ = True
-TIME_ZONE = 'Europe/Stockholm'
-CELERY_TIMEZONE = 'Europe/Stockholm'
+TIME_ZONE = "Europe/Stockholm"
+CELERY_TIMEZONE = "Europe/Stockholm"
 
 USE_I18N = True
-
 
 
 # Default primary key field type
@@ -193,24 +210,23 @@ USE_I18N = True
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'  # Gmail's SMTP server
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"  # Gmail's SMTP server
 EMAIL_PORT = 587  # TLS port
 EMAIL_USE_TLS = True  # Use TLS encryption
 
-EMAIL_HOST_USER = 'medarbetarpuls@gmail.com'  # Your actual gmail
-EMAIL_HOST_PASSWORD = 'oejv vxry kwrn ezoe'   # Use app password if 2FA is on
+EMAIL_HOST_USER = "medarbetarpuls@gmail.com"  # Your actual gmail
+EMAIL_HOST_PASSWORD = "oejv vxry kwrn ezoe"  # Use app password if 2FA is on
 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 # Celery settings/setup for async task scheduling
 CELERY_BROKER_URL = "redis://localhost:6379/0"
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
 
 
 # Timeout after 10 minutes of inactivity
-#SESSION_COOKIE_AGE = 10
-#SESSION_SAVE_EVERY_REQUEST = True  # reset the timer on each request
+# SESSION_COOKIE_AGE = 10
+# SESSION_SAVE_EVERY_REQUEST = True  # reset the timer on each request
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True  # flush the session when window is closed
-
