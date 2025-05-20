@@ -1,93 +1,132 @@
 # Medarbetarpuls
 
+## Installation & Setup
 
+### Prerequisites
 
-## Getting started
+Before installing packages, ensure you have the following installed:
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+- **Python** (Recommended version: 3.10+)
+- **Redis**
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+### Installation steps
 
-## Add your files
+1. **Create a virtual environment**
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
-
-```
-cd existing_repo
-git remote add origin https://gitlab.liu.se/fares535/medarbetarpuls.git
-git branch -M main
-git push -uf origin main
+```sh
+python3 -m venv venv
 ```
 
-## Integrate with your tools
+2. **Activate the virtual environment:**
 
-- [ ] [Set up project integrations](https://gitlab.liu.se/fares535/medarbetarpuls/-/settings/integrations)
+```sh
+source venv/bin/activate
+```
 
-## Collaborate with your team
+2.1. **To deactivate the virtual environment:**
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+```sh
+deactivate
+```
 
-## Test and Deploy
+#### **Warning: From here on the virtual environment needs to be activated!**
 
-Use the built-in continuous integration in GitLab.
+If the virtual environment is deactivate or the terminal is restarted the
+venv needs to be activated again!
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+3. **Change directory to Django-project one:**
 
-***
+```sh
+cd Medarbetarpuls
+```
 
-# Editing this README
+4. **Upgrade/install pip:**
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+```sh
+python3 -m pip install --upgrade pip
+```
 
-## Suggestions for a good README
+5. **Install required packages:**
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+```sh
+python3 -m pip install -r requirements.txt --quiet --no-cache-dir
+```
 
-## Name
-Choose a self-explaining name for your project.
+6. **Verify installation:**
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+```sh
+django-admin --version
+```
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+Here a version of Django should be printed in the terminal!
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+### Running the server
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+1. **Migrate the database:**
+```sh
+python3 manage.py migrate
+```
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+2. **Collect static files so they can be served:**
+```sh
+python3 manage.py collectstatic
+```
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+3. Start Redis server (note that this requires sudo privileges):
+```sh
+sudo systemctl start redis
+```
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+3.1. Optionally enable Redis to be started on boot:
+```sh
+sudo systemctl enable redis
+```
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+#### **Warning: Redis should be configured with a separate systemd profile for security reasons**
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+4. **Start the Django server and Celery worker:**
+```sh
+python3 manage.py runserver & celery -A Medarbetarpuls worker -l info
+```
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+**Now, you can visit the host (http://127.0.0.1:8000/ if unspecified) to see the website!**       
+**To create a new organization visit https://yourhost.com/create_org (or http://127.0.0.1:8000/create_org if unspecified)** 
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
 
-## License
-For open source projects, say how it is licensed.
+## Code structure and overview
+The project is structured using the standard Django setup, where we have 
+separate dictionaries for the frontend and backend files.    
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+### Frontend 
+In the Django app dictionary (medarbetarapp), the dictionaries static and templates contains all 
+frontend files, such as static styles, Javascript and images and all html templates. 
+
+#### HTML templates
+For every page that is displayed in the GUI there is a specific html template file that is used. There 
+are also a partials dictionary inside the templates one, where partial html elements that are used to 
+replace/update specific parts of the GUI are stored. 
+
+#### Styling 
+To style all webpages the specific utility styling files, located in the css dictionary inside the static one, 
+are used. There is also an images dictionary that contains all images that needs to be displayed in the GUI. 
+
+### Backend
+
+#### Django project 
+The Django project dictionary (Medarbetarpuls) contains all necessary files to configure the project, files 
+such as settings.py, urls.py and celery.py. Below follows a description of relevant Django project files.  
+
+* **Settings**(settings.py) - Contains all configured settings and also third-party dependencies
+* **URLs**(urls.py) - Maps all Django app urls to the project, so all urls can be reached from the GUI
+* **Celery**(celery.py) - Handles the setup of celery as an app to used in the project
+
+#### Django apps
+The backend uses a single Django app (medarbetarapp) where files such as models.py, views.py, tasks.py and 
+analysis_handler.py make up the backend of the system. Below follows a description of relevant Django app files.
+
+* **Models**(models.py) - Defines the database structure with all the data needing to be saved  
+* **Views**(views.py) - Handles the logic for what the user can see and do with the GUI 
+* **URLs**(urls.py) - Maps all web requests to a function in views.py
+* **Tasks**(tasks.py) - Contains all functions that can be run in parallel with the rest of the system 
+* **Admin**(admin.py) - Makes it possible to easily manage the database when models are registered
+* **Analysis**(analysis_handler.py) - Contains all necessary functions to analyze survey answers  
