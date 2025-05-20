@@ -15,21 +15,21 @@ To include this template, use the following code and input the wanted value for 
     {% if user.admin %}
     <a href={% url 'start_admin' %}
       ><img
-        src="{% static 'logo.png' %}"
+        src="{% static 'images/logo.png' %}"
         alt="Medarbetarpuls"
         class="topbar-logo"
     /></a>
     {% elif user.user_role == "surveycreator" %}
     <a href={% url 'start_creator' %}
       ><img
-        src="{% static 'logo.png' %}"
+        src="{% static 'images/logo.png' %}"
         alt="Medarbetarpuls"
         class="topbar-logo"
     /></a>
     {% else %}
     <a href={% url 'start_user' %}
       ><img
-        src="{% static 'logo.png' %}"
+        src="{% static 'images/logo.png' %}"
         alt="Medarbetarpuls"
         class="topbar-logo"
     /></a>
