@@ -33,8 +33,9 @@
         
         <!-- Go back button-->
         <button
+        id="go-back-button"
         class="image-button"
-        onclick="window.location.href='{% url 'unanswered_surveys' %}'"
+        onclick = "submitForm('exit')"
         >
         <img
           src="{% static 'images/go-back-btn.png' %}"
@@ -373,7 +374,6 @@
           }
         }
       });
-
 
       // Timer that calls logout form after specified time
       let logoutTimer;
