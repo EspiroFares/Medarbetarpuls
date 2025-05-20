@@ -236,8 +236,12 @@
     </div>
     <script>
       function openPopup() {
-        document.getElementById("publish-popup").style.display = "flex";
-      }
+        // Set a flag in local storage to indicate that the popup should be opened
+        localStorage.setItem("showPopup", "true");
+
+        // Refresh the page
+        location.reload();
+    }
 
       function closePopup() {
         document.getElementById("publish-popup").style.display = "none";
@@ -324,8 +328,12 @@
         // Generate initial reminder options
         generateReminderOptions();
         const params = new URLSearchParams(window.location.search);
-        if (params.get("trigger_popup") === "true") {
-          openPopup();
+        if (localStorage.getItem("showPopup") === "true")  {
+          // Clear the flag
+          localStorage.removeItem("showPopup");
+
+          // Open the popup
+          document.getElementById("publish-popup").style.display = "flex";
         }
       });
 
@@ -334,7 +342,7 @@
       // To get survey id from the popup
       const surveyId = document.getElementById("publish-popup").dataset.surveyId;
       const errorBox = document.getElementById("error-box");
-      if (event.detail.xhr.status === 200) {
+      if (event.detail.xhr.status === 201) {
         errorBox.style.color = "green";
         errorBox.style.display = "block";
         // Display the message to the user for a short while before redirecting

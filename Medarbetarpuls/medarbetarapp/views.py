@@ -721,7 +721,6 @@ def create_question(request, survey_id: int | None = None) -> HttpResponse:
     }
 
     source = request.GET.get("source")
-    print(f"Source: {source}")
 
     return render(
         request,
@@ -826,7 +825,6 @@ def delete_question(
     """
 
     source = request.GET.get("source")
-    print(f"Source: {source}")
 
     if request.method == "POST":
         if request.headers.get("HX-Request"):
@@ -1034,7 +1032,6 @@ def edit_question_view(
     options = None  # Use later to show options
 
     source = request.GET.get("source")
-    print(f"SOURCE: {source}")
 
     # SurveyCreator needs a help-function to access organization
     if user.admin is None:
@@ -1091,7 +1088,7 @@ def edit_question_view(
                         question, through_defaults={"order": next_order}
                     )
 
-            elif survey_id is not None:
+            elif survey_temp is not None:
                 question = survey_temp.questions.filter(id=question_id).exists()
                 if question:
                     question = survey_temp.questions.filter(id=question_id).first()
@@ -1101,10 +1098,11 @@ def edit_question_view(
                         question = organization.question_bank.filter(
                             id=question_id
                         ).first()
-                        print("Question found in bank")
                     else:
                         # Handle the case where the question does not exist
                         return HttpResponse("Question not found", status=404)
+                    
+                
             else:
                 question = organization.question_bank.filter(id=question_id).exists
                 if question:
@@ -1113,7 +1111,7 @@ def edit_question_view(
                     # Handle the case where the question does not exist
                     return HttpResponse("Question not found", status=404)
 
-            if source != "organization_templates" or survey_id is not None:
+            if source != "organization_templates" and survey_temp is not None:
                 current_max = (
                     models.QuestionOrder.objects.filter(survey_temp=survey_temp)
                     .aggregate(m=Max("order"))
@@ -1135,40 +1133,41 @@ def edit_question_view(
             ]:
                 return HttpResponse("Invalid question type", status=404)
 
-            # Specify question format
-            question.question_format = question_format
-            question.save()
-
-            question_title = request.POST.get("question_name")
-
-            if question_title is not None:
-                question.question_title = question_title
+            if question is not None:
+                # Specify question format
+                question.question_format = question_format
                 question.save()
 
-            # Add testcase for multiplechoice questions
-            if question_format == models.QuestionFormat.MULTIPLE_CHOICE:
-                options = request.POST.getlist("options")
-                for option in options:
-                    if not option:
-                        options.remove(option)
-                # This is kinda fucked and can maybe be re-written better
-                question.multiple_choice_question = models.MultipleChoiceQuestion(
-                    question_format=question_format
-                )
-                question.multiple_choice_question.save()
-                question.multiple_choice_question.options.extend(options)
-                question.multiple_choice_question.save()
+                question_title = request.POST.get("question_name")
+
+                if question_title is not None:
+                    question.question_title = question_title
+                    question.save()
+
+                # Add testcase for multiplechoice questions
+                if question_format == models.QuestionFormat.MULTIPLE_CHOICE:
+                    options = request.POST.getlist("options")
+                    for option in options:
+                        if not option:
+                            options.remove(option)
+                    # This is kinda fucked and can maybe be re-written better
+                    question.multiple_choice_question = models.MultipleChoiceQuestion(
+                        question_format=question_format
+                    )
+                    question.multiple_choice_question.save()
+                    question.multiple_choice_question.options.extend(options)
+                    question.multiple_choice_question.save()
+                    question.save()
+
+                # Add question text
+                question.question = request.POST.get("question")
                 question.save()
 
-            # Add question text
-            question.question = request.POST.get("question")
-            question.save()
-
-            if source != "organization_templates" or survey_id is not None:
+            if survey_id is not None and survey_temp is not None:
                 # Update last edited date of survey
                 survey_temp.last_edited = timezone.now()
                 survey_temp.save()
-            else:
+            elif source == "organization_templates":
                 return HttpResponse(headers={"HX-Redirect": "/organization_templates/"})
 
             hx_redirect_url = f"/create-survey/{survey_id}"
@@ -1382,7 +1381,7 @@ def publish_survey(request, survey_id: int) -> HttpResponse:
                 request,
                 "partials/error_message.html",
                 {"message": "Enkäten har nu publicerats"},
-                status=200,
+                status=201,
             )
 
     return HttpResponse(status=400)
@@ -1480,7 +1479,6 @@ def my_org_view(request):
         user_email = request.POST.get("delete_user_email")
         if request.user.user_role == models.UserRole.ADMIN:
             employee_to_remove = models.CustomUser.objects.get(email=user_email)
-            print("removing ", employee_to_remove)
             employee_to_remove.is_active = False
             employee_to_remove.save()
             employee_to_remove.survey_groups.clear()
@@ -2213,7 +2211,6 @@ def analysis_view(request):
     participation_metrics = analysisHandler.get_participation_metrics(
         list(filtered_surveys), group
     )
-    print(participation_metrics)
     context["answerFrequencyData"] = [
         entry["answer_pct"] for entry in participation_metrics
     ]
