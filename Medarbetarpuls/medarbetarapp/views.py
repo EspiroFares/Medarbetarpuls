@@ -400,6 +400,13 @@ def answer_survey_view(
                             + str(next_question_index)
                         }
                     )
+                elif action == "exit":
+                     # Redirect back to all unanswered surveys
+                     return HttpResponse(
+                        headers={
+                            "HX-Redirect": "/unanswered-surveys/"
+                        }
+                    )
 
             return HttpResponse(status=400)
 
@@ -529,14 +536,13 @@ def authentication_acc_view(request):
                 existing_user.user_role = models.UserRole.SURVEY_RESPONDER
                 existing_user.set_password(password)
                 existing_user.save()
-                # get the email and get the correct employeegroups
+                # Get the email and get the correct employeegroups
                 email_from_list = models.EmailList.objects.get(email=email)
                 group = email_from_list.employee_groups.all()
-                # add group to employee
+                # Add group to employee
                 existing_user.employee_groups.add(*group)
                 existing_user.save()
                 return HttpResponse("Konto skapat. Nu kan du logga in.", status=200)
-                # check for basegroup??
             else:
                 # Check that email is registrated to an org
                 org = find_organization_by_email(email)
