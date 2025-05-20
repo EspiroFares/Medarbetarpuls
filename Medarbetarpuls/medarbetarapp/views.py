@@ -64,6 +64,7 @@ def create_acc(request):
                 )
 
         org = find_organization_by_email(email=email)
+        # Make sure email belongs to an org
         if not org:
             logger.error("This email is not authorized for registration.")
             return HttpResponse(
@@ -126,10 +127,10 @@ def edit_employee_group_view(request):
             if models.EmployeeGroup.objects.filter(name=employee_group).exists():
                 group = models.EmployeeGroup.objects.get(name=employee_group)
             else:
-                # create new employee group and tell the admin that they created
-                # a new one and that it will be empty
+                # Create new employee group
                 group = models.EmployeeGroup(name=employee_group, organization=org)
                 group.save()
+            # Add the employee group to the user
             edit_user.employee_groups.add(group)
             edit_user.save()
             return HttpResponse(status=200)
@@ -160,10 +161,10 @@ def edit_survey_group_view(request):
             if models.EmployeeGroup.objects.filter(name=survey_group).exists():
                 group = models.EmployeeGroup.objects.get(name=survey_group)
             else:
-                # create new employee group and tell the admin that they created
-                # a new one and that it will be empty
+                # Create new employee group
                 group = models.EmployeeGroup(name=survey_group, organization=org)
                 group.save()
+            # Add the employee group to the users survey groups
             edit_user.survey_groups.add(group)
             edit_user.save()
             return HttpResponse(status=200)
@@ -189,6 +190,7 @@ def edit_employee_view(request):
             email = request.POST.get("email")
             user_role = request.POST.get("edit_user_role")
             edit_user = models.CustomUser.objects.get(email=email)
+            # Give specified user the new role
             edit_user.user_role = user_role
             edit_user.save()
             return HttpResponse(status=200)
@@ -219,24 +221,29 @@ def add_employee_view(request):
         editGroup = request.POST.get("edit_employee")
         editName = request.POST.get("new_employee_group")
         editUserMail = request.POST.get("employee")
+        
+        # Check if sent to add new group to user
         if editGroup == "true":
             if models.EmailList.objects.filter(email=editUserMail).exists():
                 org = user.admin
                 if models.EmployeeGroup.objects.filter(name=editName).exists():
                     group = models.EmployeeGroup.objects.get(name=editName)
                 else:
-                    # create new employee group
+                    # Create new employee group
                     group = models.EmployeeGroup(name=editName, organization=org)
                     group.save()
                 editUser = models.CustomUser.objects.get(email=editUserMail)
+                # Add group to user
                 editUser.employee_groups.add(group)
                 user.survey_groups.add(group)
                 return HttpResponse("Successful", status=200)
 
             else:
+                # User does not exist
                 logger.warning("User does not exist")
                 return HttpResponse("Användaren finns inte", status=400)
         elif user.user_role == models.UserRole.ADMIN and hasattr(user, "admin"):
+            # if user admin then check if mail that has been added already exists
             org = user.admin
             existing_user = models.CustomUser.objects.filter(email=email).first()
             if existing_user:
@@ -247,15 +254,12 @@ def add_employee_view(request):
                         # create new employee group
                         group = models.EmployeeGroup(name=team, organization=org)
                         group.save()
+                    # if inactive user add group to user
                     email_instance = models.EmailList(email=email, org=org)
                     email_instance.save()
                     email_instance.employee_groups.add(group)
-                    # user.survey_groups.add(group) should not be used anymore
                 else:
                     logger.error("Existing user already have an active account")
-                    pass
-                    # Vad gör vi med folk som vill bli registerade till 2 organisationer
-
             else:
                 if models.EmployeeGroup.objects.filter(name=team).exists():
                     group = models.EmployeeGroup.objects.filter(name=team).first()
@@ -266,7 +270,6 @@ def add_employee_view(request):
                 email_instance = models.EmailList(email=email, org=org)
                 email_instance.save()
                 email_instance.employee_groups.add(group)
-                # user.survey_groups.add(group) should not be used anymore
             return HttpResponse(status=204)
 
     return render(
@@ -511,6 +514,7 @@ def authentication_acc_view(request):
         expected_code = cache.get(f"verify_code_{email}")
 
         if str(auth_code) == str(expected_code):
+            # Get user data
             data = request.session.get("user_data")
             name = data["name"]
             password = data["password"]
@@ -522,7 +526,6 @@ def authentication_acc_view(request):
 
             existing_user = models.CustomUser.objects.filter(email=email).first()
             if existing_user and existing_user.is_active == False:
-                # Should they be able to reset name and password???
                 org = find_organization_by_email(email)
                 if org is None:
                     logger.error("This email is not authorized for registration.")
@@ -598,11 +601,13 @@ def authentication_org_view(request):
         email = request.session.get("email_two_factor_code_org")
         expected_code = cache.get(f"verify_code_{email}")
         if str(auth_code) == str(expected_code):
+            # Get org and user data
             data = request.session.get("user_org_data")
             org_name = str(data["org_name"])
             name = str(data["name"])
             password = str(data["password"])
 
+            # Delete everything in session and cache
             del request.session["user_org_data"]
             del request.session["email_two_factor_code_org"]
             cache.delete(f"verify_code_{email}")
@@ -625,8 +630,7 @@ def authentication_org_view(request):
             base_group = models.EmployeeGroup(name="Alla", organization=org)
             base_group.save()
 
-            # TODO: Remove this and replace with better employee group handling
-            # Add the admin as manager/survey creator to base group for TESTING!!!
+            # Add admin as manager for base group
             base_group.managers.add(admin_account)
             base_group.save()
 
@@ -636,9 +640,10 @@ def authentication_org_view(request):
                 options = (
                     question_data[4] if len(question_data) > 4 else None
                 )  # Check if options are provided
-
+                
+                # Init question bank for org
                 question: models.Question = models.Question()
-
+                
                 question.question_title = question_data[0]
                 question.question = question_data[1]
                 question.bank_question = org
@@ -915,6 +920,7 @@ def move_question_right(request, survey_temp_id: int, question_id: int) -> HttpR
         .first()
     )
     if nxt:
+        # swap their order values
         q_order.order, nxt.order = nxt.order, q_order.order
         q_order.save()
         nxt.save()
@@ -1395,22 +1401,17 @@ def login_view(request):
         HttpResponse: Redirects to the appropriate page on success or renders the login page on failure.
     """
 
-    # maybe implement sesion timer so you dont get logged out??
-    # if request.user.is_authenticated:
-    # logger.debug("User %e is already logged in.", request.user)
-    # logger.debug("User %e is already logged in.", request.user)
-    # return HttpResponse("Användaren %e är redan inloggad", status=400)
-    # return redirect('start_user')
-
     if request.method == "POST":
         email = request.POST.get("email")
         password = request.POST.get("password")
+        # Get user from mail and password
         user = authenticate(request, username=email, password=password)
         if user is not None:
             logger.debug("User %e has role: %e", email, user.user_role)
             if user.is_active:
                 login(request, user)
                 response = HttpResponse(status=200)
+                # Redirect user to specific start page depending on role
                 if user.user_role == models.UserRole.ADMIN:
                     response["HX-Redirect"] = "/start-admin/"
                     logger.debug("Admin %e successfully logged in.", email)
@@ -1424,9 +1425,11 @@ def login_view(request):
                     logger.debug("User %e successfully logged in.", email)
                     return response
             else:
+                # Handle login attempt for inactive user
                 logger.warning("Login attempt for inactive user %e", email)
                 return HttpResponse("Användare %e är en inaktiv användare", status=400)
         else:
+            # Handle failed login attempt
             logger.warning("Failed login attempt for %e", email)
             return HttpResponse("Felaktiga inloggningsuppgifter", status=400)
 
@@ -1589,6 +1592,7 @@ def delete_survey_template(request, survey_id: int) -> HttpResponse:
             survey_temp = get_object_or_404(
                 models.SurveyTemplate, id=survey_id, creator=request.user
             )
+            # Delete survey template and then redirect depending on source
             survey_temp.delete()
             if source == "organization_templates":
                 return HttpResponse(headers={"HX-Redirect": "/organization_templates/"})
@@ -1676,7 +1680,7 @@ def organization_templates(request, search_str: str | None = None) -> HttpRespon
         num_questions=Count("questions")
     ).filter(num_questions=0)
 
-    # Delete them
+    # Delete empty templates
     empty_templates.delete()
 
     return render(
@@ -1711,6 +1715,7 @@ def remove_employee_from_employee_group_view(request):
         if request.headers.get("HX-Request"):
             email = request.POST.get("email")
             group = request.POST.get("group")
+            # Get group and user then remove group from users employee groups
             user = models.CustomUser.objects.get(email=email)
             group_to_remove = models.EmployeeGroup.objects.filter(name=group).first()
             user.employee_groups.remove(group_to_remove)
@@ -1734,6 +1739,7 @@ def remove_employee_from_survey_group_view(request):
         if request.headers.get("HX-Request"):
             email = request.POST.get("email")
             group = request.POST.get("group")
+            # Get group and user then remove group from users survey groups
             user = models.CustomUser.objects.get(email=email)
             group_to_remove = models.EmployeeGroup.objects.filter(name=group).first()
             user.survey_groups.remove(group_to_remove)
@@ -1772,7 +1778,7 @@ def settings_admin_view(request):
             # Check if new email exist and then switch roles and save
             if models.CustomUser.objects.filter(email=new_admin_email).exists():
                 models.EmailList.objects.filter(email=user.email).delete()
-                user.delete()  # maybe not right because we want the users answers to be saved still
+                user.delete()
                 new_admin = models.CustomUser.objects.get(email=new_admin_email)
                 new_admin.is_superuser = True
                 new_admin.is_staff = True
@@ -1787,10 +1793,9 @@ def settings_admin_view(request):
                 # Remove the user from the specific employee group
                 user.employee_groups.remove(*employee_groups)
 
-                # models.EmailList.objects.filter(email = newAdminEmail, org=org).delete() MAYBE should delete this from emaillist because the account is now admin
                 new_admin.save()
                 logout(request)
-                request.session.flush()  # Make sure session is cleared
+                request.session.flush()  # Clear session
 
                 return HttpResponse(headers={"HX-Redirect": "/"})
             else:
@@ -1825,8 +1830,6 @@ def settings_user_view(request):
         HttpResponse: Redirects to home on deletion or returns status 400 if authentication fails.
     """
 
-    # FIX - needs to fix so when wrong password is written the popup doesnt dissappear and a message is sent
-    # Delete user function
     # if pressed delete user
     if request.method == "POST":
         if request.headers.get("HX-Request"):
@@ -1835,13 +1838,10 @@ def settings_user_view(request):
             # Check so password is correct
             user = authenticate(request, username=email, password=password)
             if user is not None:
-                # set user to inactive and save then logout the user
-                # user.is_active = False
-                # user.save()
                 models.EmailList.objects.filter(email=user.email).delete()
-                user.delete()  # maybe not right because we want the users answers to be saved still
+                user.delete()  
                 logout(request)
-                request.session.flush()  # Make sure session is cleared
+                request.session.flush()  # Clear session
                 return HttpResponse(headers={"HX-Redirect": "/"})
             else:
                 logger.error("Wrong password entered")
@@ -1852,7 +1852,13 @@ def settings_user_view(request):
 @login_required
 @allowed_roles("surveycreator")
 def start_creator_view(request):
-    user = request.user  # Assuming the user is authenticated
+    """
+    View for start page for user with survey creator role
+
+    Returns:
+        Renders start_creator for user
+    """
+    user = request.user
     unanswered_count = user.count_unanswered_surveys()
     unanswered_surveys = user.get_unanswered_surveys()
     current_time = timezone.now()
@@ -1865,7 +1871,7 @@ def start_creator_view(request):
             "unanswered_surveys": unanswered_surveys,
             "current_time": current_time,
         },
-    )  # Fix so only works if the user is actually an admin
+    )
 
 
 @login_required
@@ -1975,7 +1981,13 @@ def settings_change_pass(request):
 @login_required
 @allowed_roles("surveyresponder")
 def start_user_view(request):
-    user = request.user  # Assuming the user is authenticated
+    """
+    View for start page for user with survey responder role
+
+    Returns:
+        Renders start_user for user
+    """
+    user = request.user
     unanswered_count = user.count_unanswered_surveys()
     unanswered_surveys = user.get_unanswered_surveys()
     current_time = timezone.now()
@@ -1994,6 +2006,12 @@ def start_user_view(request):
 @login_required
 @allowed_roles("admin")
 def start_admin_view(request):
+    """
+    View for start page for user with admin role
+
+    Returns:
+        Renders start_admin for user
+    """
     return render(
         request, "start_admin.html", {"pagetitle": f"Välkommen<br>{request.user.name}"}
     )
@@ -2002,13 +2020,21 @@ def start_admin_view(request):
 @login_required
 @allowed_roles("surveycreator", "surveyresponder")
 def survey_result_view(request, survey_id):
+    """
+    Shows the result from a survey
+
+    Args:
+        request: The survey_id for the survey
+
+    Returns:
+        HttpResponse: Renders survey_result if all is good, otherwise 400
+    """
     survey = models.Survey.objects.filter(id=survey_id).first()
 
     if survey is None:
         # This survey has no answers (should not even be displayed to the user then)
         return HttpResponse(400)
 
-    # TODO : Change so gets analysis handler from organization
     analysis_handler = AnalysisHandler()
 
     # Retrievs all survey results of this survey
@@ -2047,6 +2073,12 @@ def survey_result_view(request, survey_id):
 @login_required
 @allowed_roles("surveycreator")
 def survey_status_view(request):
+    """
+    Shows all the surveys published from the user
+
+    Returns:
+        Renders survey_status
+    """
     user = request.user
     published_count = user.published_surveys.count()
 
@@ -2067,7 +2099,14 @@ def survey_status_view(request):
 @login_required
 @allowed_roles("surveycreator", "surveyresponder")
 def unanswered_surveys_view(request):
-    user = request.user  # Assuming the user is authenticated
+    """
+    Shows all the unanswered surveys
+
+
+    Returns:
+        Renders unanswered_surveys
+    """
+    user = request.user
     unanswered_count = user.count_unanswered_surveys()
     unanswered_surveys = user.get_unanswered_surveys()
     current_time = timezone.now()
@@ -2085,6 +2124,14 @@ def unanswered_surveys_view(request):
 
 
 def find_organization_by_email(email: str) -> models.Organization | None:
+    """
+    Returns the organisation that the email belongs to
+    Args:
+        The input email
+
+    Returns:
+        Returns the organisation
+    """
     org = models.EmailList.objects.filter(email=email).exists()
     if not org:
         # No organization found
