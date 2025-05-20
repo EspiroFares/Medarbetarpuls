@@ -102,7 +102,7 @@
         </div>
       </div>
 
-      <!-- analysis items (answer frequency, enps, distribution)
+      <!-- Analysis items (answer frequency, enps, distribution)
            when no specific question is choosen -->
       <div class="analysis-container">
         {% if selected_question_format == None %}
@@ -151,7 +151,7 @@
           </div>
         </div>
 
-        <!-- analysis items (answer frequency, distribution) for slider -->
+        <!-- Analysis items (answer frequency, distribution) for slider -->
         {% elif selected_question_format == "slider" %}
         <div class="analysis-item ratio-2-1">
           <div class="analysis-item-title"><h2><b>Svarsfördelning slider</b></h2></div>
@@ -202,7 +202,7 @@
           </div>
         </div>
         
-        <!-- analysis items (mean, std variation, variance, median) for multiplechoice -->
+        <!-- Analysis items (mean, std variation, variance, median) for multiplechoice -->
         {% elif selected_question_format == "multiplechoice" %}
         <div class="analysis-item ratio-2-1">
           <div class="analysis-item-title"><h2><b>Svarsfördelning Multiple Choice</b></h2></div>
@@ -254,7 +254,7 @@
             </div>
           </div>
 
-        <!-- analysis items (answer frequency, distribution) for yes/no -->
+        <!-- Analysis items (answer frequency, distribution) for yes/no -->
         {% elif selected_question_format == "yesno" %}
           <div class="analysis-item ratio-2-1">
             <div class="analysis-item-title"><h2><b>Ja/Nej-resultat</b></h2></div>
@@ -313,7 +313,7 @@
             </div>
           </div>
 
-        <!-- analysis items (answer frequency) for text -->
+        <!-- Analysis items (answer frequency) for text -->
         {% elif selected_question_format == "text" %}
         <div class="analysis-item ratio-1-1">
           <div class="analysis-item-title"><h2><b>Svarsfrekvens</b></h2></div>
@@ -430,9 +430,9 @@
 
     function safeInit(fn, id, ...args) {
       const canvas = document.getElementById(id);
-      if (!canvas) return;                       // canvas saknas (t.ex. ingen data)
-      if (canvas._chartInstance) {               // chart finns – ta bort
-          canvas._chartInstance.destroy();
+      if (!canvas) return;                       // If canvas not found
+      if (canvas._chartInstance) {               // Canvas found
+          canvas._chartInstance.destroy(); // Destroy the previous chart instance to avoid memory leaks
           canvas._chartInstance = null;
       }
       const chart = fn(id, ...args); 

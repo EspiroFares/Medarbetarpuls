@@ -15,7 +15,6 @@
   max-width: 500px;
   text-align: center;
   background: var(--white);
-  /* white; */
   padding: 20px;
   border-radius: 10px;
 }
@@ -28,7 +27,6 @@
 
 .input-form label {
   color: var(--dark_blue);
-  /* #102b46 */
   display: block;
   margin-bottom: 1%;
   margin-left: -50%;
@@ -41,7 +39,6 @@
   border: none;
   border-radius: 10px;
   background-color: var(--almost_white);
-  /* #eef5fe; */
   margin-bottom: 3%;
   font-size: 16px;
 }
@@ -55,7 +52,6 @@
 }
 
 .account-help-links:has(a:only-child) {
-  /* If only one link, center it */
   justify-content: center;
   margin-top: 8%;
 }
@@ -63,17 +59,15 @@
 .account-help-links a {
   text-decoration: none;
   color: var(--dark_blue);
-  /* #102b46; */
   font-size: 14px;
 }
 
 .account-help-links a:hover {
-  /* In HTML, the <a> tag stands for “anchor”, and it’s used to create hyperlinks  */
   text-decoration: underline;
 }
 
+ /* For create org/acc */
 .create-form {
-  /* For create org/acc */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -84,10 +78,10 @@
   margin-left: 13%;
   margin-bottom: 5px;
   color: var(--dark_blue);
-  /* #102b46; */
   font-size: 16px;
 }
 
+/* Creates larger space between inputs */
 .create-form input {
   width: 70%;
   padding: 14px;
@@ -95,9 +89,7 @@
   border: none;
   border-radius: 10px;
   background-color: var(--almost_white);
-  /* #eef5fe; */
   margin-bottom: 20px;
-  /* Larger space between inputs */
 }
 
 .view-results {
@@ -112,11 +104,8 @@
 
 .title-background h2 {
   flex: 1;
-  /* Allow the heading to take up available space */
   text-align: center;
-  /* Center the text */
   margin: 0;
-  /* Remove default margin */
 }
 
 .editable-title {
@@ -125,12 +114,9 @@
   color: #102b46;
   border: none;
   background-color: transparent;
-  /* Remove input background */
   outline: none;
-  /* Remove focus outline */
   text-align: center;
   width: 100%;
-  /* Full width to look like a title */
   padding: 5px 0;
 }
 
@@ -203,13 +189,9 @@
 .question-title h1 {
   white-space: nowrap;
   margin: 0px;
-  /* Remove default margin */
   padding: 0;
-  /* Remove any padding if needed */
   font-size: 1.5em;
-  /* Adjust font size as needed */
   text-align: center;
-  /* Center the text if desired */
 }
 
 .settings-container {
@@ -242,8 +224,8 @@
   color: #4e8ce1;
 }
 
+/* For links in table */
 .value a {
-  /* For links in table */
   color: #4e8ce1;
   text-decoration: none;
 }
@@ -429,7 +411,6 @@
   border-radius: 10px;
   background-color: #eef5fe;
   margin-bottom: 20px;
-  /* Larger space between inputs */
 }
 
 .question-form.comment {
@@ -439,7 +420,6 @@
   width: 100%;
   height: 100%;
   background-color: rgba(0, 0, 0, 0.4);
-  /* Alpha: 0.4 = 40% opacity */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -459,14 +439,11 @@
 .analysis-container h2 {
   margin-bottom: 12%;
   font-weight: normal;
-  /* Heading automatically bold, wants normal */
   font-size: 20px;
   color: #102b46;
 }
 
 .topbar a {
-  /*color: var(--black);
-    background-color: var(--soft_blue);*/
   padding: 14px 16px;
   text-decoration: none;
   font-size: 17px;
@@ -531,7 +508,6 @@
 .main-container h1 {
   font-size: 28px;
   color: var(--blue);
-  /* #4e8ce1; */
 }
 
 .main-container h2 {

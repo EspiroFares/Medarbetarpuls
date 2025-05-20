@@ -11,7 +11,7 @@
   <body>
     <div class="popup-overlay">
       <div class="popup-content">
-        <!-- If we are editing an organization template -->
+        <!-- Makes it possible to name a question to be added to the survey-bank -->
         {% if source == "organization_templates" and not survey_id%}
           <input
             type="text"
@@ -23,7 +23,6 @@
           />
         {% else %}
           {% if bank_question or source == "readonly"%}
-          <!-- Not admin, can only read questions from organization template" -->
               <h2> Förhandsvisa fråga</h2>
           {% else %}
             <h2> Redigera fråga</h2>
@@ -34,11 +33,11 @@
             class="question-icon"
         />
 
+        <!-- New question -->
         {% if question_id is None %} 
-          <!-- Comment here (explain the hx-post and if statement)-->
           <form
             class="question-form"
-            {% if survey_id %}              
+            {% if survey_id %}
               hx-post="{% url 'edit_question_new' survey_id question_format %}{% if source %}?source={{ source }}{% endif %}"
             {% else %}
               hx-post="{% url 'edit_question_new' question_format %}?source={{ source }}"
@@ -47,6 +46,7 @@
             hx-target=".question-form"
             hx-trigger="submit"
           >
+        <!-- Edit existing question -->
         {% else %} 
           <form
             class="question-form"
@@ -61,6 +61,7 @@
           >
         {% endif %}
         {% csrf_token %}
+        <!-- Handle question with multiple options -->
         {% if question_format == "multiplechoice" %}
           {% if question_text is None %}
             <input
@@ -78,6 +79,7 @@
                 <input type="text" name="options" placeholder="Alternativ 2" required />
               </div>
             </div>
+          <!-- Prevents user from editing question in organisations bank if not admin -->
           {% elif bank_question and survey_id or source == "readonly"%}
             <input
               type="text"
@@ -123,9 +125,7 @@
             {% endif %}
             <button type="submit">Spara</button>
           {% endif %}
-
         {% else %}
-        
           {% csrf_token %}
           {% if question_text is None %}
           <input
@@ -134,30 +134,29 @@
             name="question"
             placeholder="Fråga"
             required
-          />
+          /> 
+          <!-- Prevents user from editing question in organisations bank if not admin -->
           {% elif bank_question and survey_id or source == "readonly"%}
-          <input
-            type="text"
-            id="question"
-            name="question"
-            value="{{ question_text }}"
-            required
-            readonly
-          />
+            <input
+              type="text"
+              id="question"
+              name="question"
+              value="{{ question_text }}"
+              required
+              readonly
+            />
           {% else %}
-          <input
-            type="text"
-            id="question"
-            name="question"
-            value="{{ question_text }}"
-            required
-          />
+            <input
+              type="text"
+              id="question"
+              name="question"
+              value="{{ question_text }}"
+              required
+            />    
           {% endif %}
-
           {% if source != "readonly" %}
-          <button type="submit">Spara</button>
+            <button type="submit">Spara</button>
           {% endif %}
-
         </form>
         {% endif %}
         {% if survey_id %}
@@ -187,8 +186,9 @@
       </div>
     </div>
   <script>
+    // Function to handle the addition of new options
+    // This function is called when the "Lägg till alternativ" button is clicked
     document.addEventListener("DOMContentLoaded", function () {
-      // For multiple choice question
       const addOptionBtn = document.getElementById("add-option-btn");
       const optionsContainer = document.getElementById("options-container");
 
