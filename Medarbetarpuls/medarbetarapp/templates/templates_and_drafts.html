@@ -54,7 +54,10 @@
           </div>
           <div class="question-result">
             <div class="grid-icon">
-              <!-- Remove survey -->
+              <!-- Triggers a popup when trying to remove a survey -->
+              <!-- event.stopPropagation(); event.preventDefault(); prevents -->
+              <!-- the click event from bubbling up to the parent element -->
+              <!-- and navigating away or submitting a form. --> 
               <img
                 src="{% static 'images/trashcan.png' %}"
                 class="icon-img"

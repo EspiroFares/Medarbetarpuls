@@ -12,6 +12,7 @@
     <div class="main-container">
       {% include "topbar.html"%}
       <div class="title-background">
+        <!-- Go back button-->
         <button
           class="title-back-button"
           onclick="window.location.href='{% if source and source == 'organization_templates' %}{% url source%}{%else%}{%url "templates_and_drafts"%}{% endif %}'"
@@ -20,6 +21,7 @@
         </button>
         <h2>{{ survey_temp.name }}</h2>
       </div>
+      <!-- If page is accessed from organization_templates one should not be able to publish survey -->
       {% if source == "organization_templates" %}
         <button
         class="title-back-button"
@@ -39,6 +41,7 @@
         >
           <div class="question-title">
             <h1>Fråga {{forloop.counter}}</h1>
+            <!-- Prevent questions from the organisations bank to be removed if not admin -->
             {% if source != "readonly"%}
               <form
                 hx-post="{% url 'delete_question' question.id survey_temp.id %}{% if source == 'organization_templates' %}?source={{ source }}{% endif %}"
@@ -59,6 +62,7 @@
           </div>
 
           <div class="question-result">
+          <!-- Prevent questions from the organisations bank to be moved if not admin -->
           {% if source != "readonly"%}
             <form
               hx-post="{% url 'move_question_left' survey_temp.id question.id %}{% if source == 'organization_templates' %}?source={{ source }}{% endif %}"
@@ -93,7 +97,7 @@
           </div>
         </a>
         {% endfor %}
-
+        <!-- Prevent new questions to be added the organisations bank to be if not admin -->
         {% if source != "readonly" %}
         <a
           href="{% url 'create_question' survey_temp.id %}{% if source == 'organization_templates' %}?source={{ source }}{% endif %}"
@@ -334,7 +338,7 @@
         errorBox.style.color = "green";
         errorBox.style.display = "block";
         // Display the message to the user for a short while before redirecting
-        setTimeout(() =>  window.location.href = `/create-survey/${surveyId}/`, 1500);
+        setTimeout(() =>  window.location.href = `/survey-status/`, 1500);
       } else {
         errorBox.innerHTML = event.detail.xhr.responseText || "Något fel har inträffat";
         errorBox.style.color = "red";

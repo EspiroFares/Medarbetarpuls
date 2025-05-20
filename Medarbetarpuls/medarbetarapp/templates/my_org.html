@@ -338,12 +338,12 @@
       const errorBox = document.getElementById("popup-error");
 
     if (event.detail.xhr.status === 200) {
-      // if success reload the page after a short delay
+      // If success reload the page after a short delay
       setTimeout(function() {
         location.reload();
       }, 200);
     }else if (!event.detail.xhr.ok) {
-      // if error, show returned message or "Fel"
+      // If error, show returned message or "Fel"
       const message = event.detail.xhr.responseText;
       popup.classList.remove("hidden");
       errorBox.textContent = message;
