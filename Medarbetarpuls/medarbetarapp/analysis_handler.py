@@ -267,7 +267,10 @@ class AnalysisHandler:
 
         # Remove free text questions since it's not possible to analyze them
         for idx, question in enumerate(bank_questions):
-            if question.question_format == QuestionFormat.TEXT:
+            if (
+                question.question_format == QuestionFormat.TEXT
+                or question.question_format == QuestionFormat.YES_NO
+            ):
                 bank_questions.pop(idx)
         return bank_questions
 

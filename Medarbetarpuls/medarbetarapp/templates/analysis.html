@@ -81,27 +81,25 @@
         </div>
 
       <!-- Filter for time period -->
-        <div class="time-period-container">
-          <strong>Time period:</strong>
-            <div
-              class="flex space-x-2 bg-gray-100 p-2 rounded-md"
-              id="time-filter"
-            >
+        <div id="filterBar">
+          <strong>Enkätintervall:</strong>
+           <form method="get" action="{% url 'analysis' %}">
             <input type="hidden" name="group_id"   value="{{ request.GET.group_id }}">
             <input type="hidden" name="user_id"    value="{{ request.GET.user_id }}">
             <input type="hidden" name="question_id" value="{{ request.GET.question_id }}">
+            <select name="surveys" onchange="this.form.submit()">
+            <option value="">— Välj intervall —</option>
             {% for label, value in survey_ranges %}
-            <a
-            href="?group_id={{ request.GET.group_id }}{% if request.GET.user_id %}&user_id={{ request.GET.user_id }}{% endif %}
-            {% if request.GET.question_id %}&question_id={{ request.GET.question_id }}{% endif %}&surveys={{ value }}"
-            class="px-3 py-1 rounded-md text-sm font-medium bg-blue-100 text-blue-900"
-          >
-          {{ label }}
-        </a>       
-        {% endfor %} 
-          </div>
+              <option value="{{ value }}" {% if value|stringformat:"s" == selected_survey_range %}selected{% endif %}>
+                    {{ label }}
+              </option>
+  
+            {% endfor %} 
+            </select>
+          </form>
         </div>
-      </div>
+        </div>
+
 
       <!-- Analysis items (answer frequency, enps, distribution)
            when no specific question is choosen -->
@@ -115,13 +113,13 @@
           </div>
         </div>
         <div class="analysis-item ratio-1-1">
-          <div class="analysis-item-title"><h2><b>Svarsfrekvens</b></h2></div>
+          <div class="analysis-item-title"><h2><b>Svarsfrekvens för senaste enkät</b></h2></div>
           <div class="graph-container">
             <canvas id="responseRateGauge" width="400" height="400"></canvas>
           </div>
         </div>
         <div class="analysis-item ratio-2-1">
-          <div class="analysis-item-title"><h2><b>Svarsuppdelning på frågor</b></h2></div>
+          <div class="analysis-item-title"><h2><b>Svarsuppdelningen på frågor från den senaste enkäten</b></h2></div>
           <div class="graph-container" style="height: 90%">
             <canvas id="answerDistributionQuestions"></canvas>
           </div>
@@ -134,7 +132,7 @@
           <div class="graph-container"><canvas id="enpsBar"></canvas></div>
         </div>
         <div class="analysis-item ratio-1-1">
-          <div class="analysis-item-title"><h2><b>Svarsfrekvens</b></h2></div>
+          <div class="analysis-item-title"><h2><b>Svarsfrekvens för senaste enkät</b></h2></div>
           <div class="graph-container">
             <canvas id="responseRateGauge" width="400" height="400"></canvas>
           </div>
@@ -184,7 +182,7 @@
         </div>
       
         <div class="analysis-item ratio-1-1">
-          <div class="analysis-item-title"><h2><b>Svarsfrekvens</b></h2></div>
+          <div class="analysis-item-title"><h2><b>Svarsfrekvens för senaste enkät</b></h2></div>
           <div class="graph-container">
             <canvas id="responseRateGauge" width="400" height="400"></canvas>
           </div>
@@ -204,41 +202,12 @@
           </div>
         </div>
           <div class="analysis-item ratio-1-1">
-            <div class="analysis-item-title"><h2><b>Svarsfrekvens</b></h2></div>
+            <div class="analysis-item-title"><h2><b>Svarsfrekvens för senaste enkät</b></h2></div>
             <div class="graph-container">
               <canvas id="responseRateGauge" width="400" height="400"></canvas>
             </div>
           </div>
 
-        <!-- Yes/no question page -->
-        {% elif selected_question_format == "yesno" %}
-          <div class="analysis-item ratio-2-1">
-            <div class="analysis-item-title"><h2><b>Ja/Nej-resultat</b></h2></div>
-            <div class="graph-container" style="height: 90%">
-              <canvas id="yesNoPieChart"></canvas>
-            </div>
-          </div>
-
-          <div class="analysis-item ratio-1-1">
-            <div class="analysis-item-title"><h2><b>Svarsfrekvens</b></h2></div>
-            <div class="graph-container">
-              <canvas id="responseRateGauge" width="400" height="400"></canvas>
-            </div>
-          </div>
-
-          <div class="analysis-item ratio-1-1">
-            <div class="analysis-item-title"><h2><b>Trend</b></h2></div>
-            <div class="graph-container">
-              <canvas id="yesNoTrend" width="400" height="400"></canvas>
-            </div>
-          </div>
-
-          <div class="analysis-item ratio-1-1">
-            <div class="analysis-item-title"><h2><b>Svarsfrekvens</b></h2></div>
-            <div class="graph-container">
-              <canvas id="yesNoFrequency" width="400" height="400"></canvas>
-            </div>
-          </div>
         {% endif %}
 
   

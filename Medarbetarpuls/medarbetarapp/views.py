@@ -2158,13 +2158,12 @@ def correct_name(name: str) -> Boolean | str:
 @allowed_roles("admin", "surveycreator")
 def analysis_view(request):
     group_id = request.GET.get("group_id")
-    survey_count = request.GET.get("surveys", "1")
+    survey_range = request.GET.get("surveys", "1")
     user_id = request.GET.get("user_id")
     question_id = request.GET.get("question_id")
     user = request.user
 
     analysisHandler = AnalysisHandler()
-
     context = {
         "survey_ranges": [
             ("Senaste", "1"),
@@ -2172,7 +2171,7 @@ def analysis_view(request):
             ("Senaste 5", "5"),
             ("Alla", "all"),
         ],
-        "selected_survey_range": survey_count,
+        "selected_survey_range": survey_range,
         "selected_user_id": user_id,
         "selected_question_id": question_id,
         "selected_group_id": group_id,
@@ -2196,13 +2195,13 @@ def analysis_view(request):
     if not surveys.exists():
         context["message"] = "Gruppen har inga enkäter ännu."
         return render(request, "analysis.html", context)
-    # Filter surveys in descending order (Newest first)
+    # Order surveys (latest first)
     surveys = surveys.order_by("-sending_date")
 
-    if survey_count != "all":
+    if survey_range != "all":
         # Get filtered surveys to the chosen amount
         try:
-            count = int(survey_count)
+            count = int(survey_range)
             filtered_surveys = surveys[:count]
         except ValueError:
             filtered_surveys = surveys
@@ -2248,11 +2247,11 @@ def analysis_view(request):
             employee_group=group,
             user=respondents_dict.get(user_id) if user_id else None,
         )
-
-        if trend_data:
+        if trend_data["sending_dates_trend"]:
             # Get the question format
             selected_question_format = trend_data["question_format_trend"][0]
             context.update(trend_data)
+
     context["selected_question_format"] = selected_question_format
     filtered_bank_questions = analysisHandler.get_bank_questions(filtered_surveys)
 

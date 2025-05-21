@@ -25,9 +25,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-!q2_ak4#xg9w)0mz67&y3+bc0$g@l0ljbzyq)z76a)_^%66w()"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False 
+DEBUG = False
 
-ALLOWED_HOSTS = ['127.0.0.1']
+ALLOWED_HOSTS = ["127.0.0.1"]
 
 # Add ngrok host if the proxy is used...
 ngrok_host = os.getenv("NGROK_HOST")
@@ -92,7 +92,7 @@ MIDDLEWARE = [
 ]
 
 # Compressed static files...
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 ROOT_URLCONF = "Medarbetarpuls.urls"
 
