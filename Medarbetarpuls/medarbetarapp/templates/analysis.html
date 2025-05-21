@@ -31,12 +31,11 @@
 
         <div id="filterBar">
           <strong>Välj grupp:</strong>
-          <!--<span id="pillContainer"></span>-->
           <form method="get" action="{% url 'analysis' %}">
             <input type="hidden" name="group_id"    value="{{ request.GET.group_id |default:selected_group_id}}">
             <input type="hidden" name="surveys" value="{{ request.GET.surveys |default:selected_survey_range}}">
             <select id="groupDropdown" name="group_id" onchange="this.form.submit()">
-              <option value="">— Välj användare —</option>
+              <option value="">— Välj grupp —</option>
               {% for group in available_groups %}
                 <option value="{{ group.id }}" {% if group.id|stringformat:"s" == request.GET.group_id %}selected{% endif %}>
                   {{ group.name }}
@@ -46,7 +45,7 @@
           </form>
         </div>
 
-
+      <!-- Filter for anonymous users -->
         <div id="filterBar">
           <strong>Välj användare:</strong>
           <form method="get" action="{% url 'analysis' %}">
@@ -63,7 +62,7 @@
             </select>
           </form>
         </div>
-
+      <!-- Filter for bank questions -->
         <div id="filterBar">
           <strong>Välj bankfråga:</strong>
           <form method="get" action="{% url 'analysis' %}">
@@ -84,20 +83,21 @@
       
       
       <!-- Filter for time period -->
-      <div class="time-period-container">
-        <strong>Time period:</strong>
-          <div
-            class="flex space-x-2 bg-gray-100 p-2 rounded-md"
-            id="time-filter"
+        <div class="time-period-container">
+          <strong>Time period:</strong>
+            <div
+              class="flex space-x-2 bg-gray-100 p-2 rounded-md"
+              id="time-filter"
+            >
+            <input type="hidden" name="group_id"   value="{{ request.GET.group_id }}">
+            <input type="hidden" name="user_id"    value="{{ request.GET.user_id }}">
+            <input type="hidden" name="question_id" value="{{ request.GET.question_id }}">
+            {% for label, value in survey_ranges %}
+            <a
+            href="?group_id={{ request.GET.group_id }}{% if request.GET.user_id %}&user_id={{ request.GET.user_id }}{% endif %}
+            {% if request.GET.question_id %}&question_id={{ request.GET.question_id }}{% endif %}&surveys={{ value }}"
+            class="px-3 py-1 rounded-md text-sm font-medium bg-blue-100 text-blue-900"
           >
-          <input type="hidden" name="group_id"   value="{{ request.GET.group_id }}">
-          <input type="hidden" name="user_id"    value="{{ request.GET.user_id }}">
-          <input type="hidden" name="question_id" value="{{ request.GET.question_id }}">
-          {% for label, value in survey_ranges %}
-          <a
-          href="?group_id={{ request.GET.group_id }}{% if request.GET.user_id %}&user_id={{ request.GET.user_id }}{% endif %}{% if request.GET.question_id %}&question_id={{ request.GET.question_id }}{% endif %}&surveys={{ value }}"
-          class="px-3 py-1 rounded-md text-sm font-medium {% if value == selected_survey_range %}bg-blue-500 text-white{% else %}bg-blue-100 text-blue-900{% endif %}"
-        >
           {{ label }}
         </a>
         
@@ -109,6 +109,7 @@
 
 
       <div class="analysis-container">
+        <!-- General survey page -->
         {% if selected_question_format == None %}
         <div class="analysis-item ratio-2-1">
           <div class="analysis-item-title"><h2><b>Svarsfrekvens över tid</b></h2></div>
@@ -128,7 +129,7 @@
             <canvas id="answerDistributionQuestions"></canvas>
           </div>
         </div>
-
+        <!-- eNPS question page -->
         {% elif selected_question_format == "enps" %}
         <div class="analysis-item ratio-5-1">
           <div class="analysis-item-title"><h2><b>eNPS</b></h2></div>
@@ -147,7 +148,7 @@
             <canvas id="enpsPieChart"></canvas>
           </div>
         </div>
-
+        <!-- slider question page -->
         {% elif selected_question_format == "slider" %}
         <div class="analysis-item ratio-2-1">
           <div class="analysis-item-title"><h2><b>Svarsfördelning slider</b></h2></div>
@@ -159,28 +160,28 @@
           <div class="analysis-item ratio-1-4">
             <div class="analysis-item-title"><h2><b>Medel</b></h2></div>
             <div class="graph-container flex flex-col items-center justify-center text-sm">
-              <p>{{ slider_mean_trend.0 }}</p>
+              <p>{{ slider_mean_trend.0 }}</p> <!-- edit here to change the box containing the mean -->
             </div>
           </div>
         
           <div class="analysis-item ratio-1-4">
             <div class="analysis-item-title"><h2><b>Std.avv</b></h2></div>
             <div class="graph-container flex flex-col items-center justify-center text-sm">
-              <p>{{ slider_std_trend.0}}</p>
+              <p>{{ slider_std_trend.0}}</p> <!-- edit here to change the box containing the standard deviation -->
             </div>
           </div>
         
           <div class="analysis-item ratio-1-4">
             <div class="analysis-item-title"><h2><b>V.Koeff</b></h2></div>
             <div class="graph-container flex flex-col items-center justify-center text-sm">
-              <p>{{ slider_cv_trend.0}}</p>
+              <p>{{ slider_cv_trend.0}}</p> <!-- edit here to change the box containing the variation coefficient -->
             </div>
           </div>
         
           <div class="analysis-item ratio-1-4">
             <div class="analysis-item-title"><h2><b>Median</b></h2></div>
             <div class="graph-container flex flex-col items-center justify-center text-sm">
-              <p>{{ slider_median_trend.0}}</p>
+              <p>{{ slider_median_trend.0}}</p> <!-- edit here to change the box containing the median -->
             </div>
           </div>
         </div>
@@ -197,7 +198,7 @@
             <canvas id="lineTrendChartSlider"></canvas>
           </div>
         </div>
-        
+        <!-- Multiple choice question page -->
         {% elif selected_question_format == "multiplechoice" %}
 
         <div class="analysis-item ratio-2-1">
@@ -206,14 +207,14 @@
             <canvas id="barChartMultipleChoice"></canvas>
           </div>
         </div>
-
-        
           <div class="analysis-item ratio-1-1">
             <div class="analysis-item-title"><h2><b>Svarsfrekvens</b></h2></div>
             <div class="graph-container">
               <canvas id="responseRateGauge" width="400" height="400"></canvas>
             </div>
           </div>
+
+        <!-- Yes/no question page -->
         {% elif selected_question_format == "yesno" %}
           <div class="analysis-item ratio-2-1">
             <div class="analysis-item-title"><h2><b>Ja/Nej-resultat</b></h2></div>
@@ -229,7 +230,6 @@
             </div>
           </div>
 
-
           <div class="analysis-item ratio-1-1">
             <div class="analysis-item-title"><h2><b>Trend</b></h2></div>
             <div class="graph-container">
@@ -243,68 +243,9 @@
               <canvas id="yesNoFrequency" width="400" height="400"></canvas>
             </div>
           </div>
-          <div class="statistics-container">
-            <div class="analysis-item ratio-1-4">
-              <div class="analysis-item-title"><h2><b>Medel</b></h2></div>
-              <div class="graph-container flex flex-col items-center justify-center text-sm">
-                <p>{{ slider_mean }}</p>
-              </div>
-            </div>
-          
-            <div class="analysis-item ratio-1-4">
-              <div class="analysis-item-title"><h2><b>Std.avv</b></h2></div>
-              <div class="graph-container flex flex-col items-center justify-center text-sm">
-                <p>{{ slider_std}}</p>
-              </div>
-            </div>
-          
-            <div class="analysis-item ratio-1-4">
-              <div class="analysis-item-title"><h2><b>V.Koeff</b></h2></div>
-              <div class="graph-container flex flex-col items-center justify-center text-sm">
-                <p>{{ slider_cv}}</p>
-              </div>
-            </div>
-          
-            <div class="analysis-item ratio-1-4">
-              <div class="analysis-item-title"><h2><b>Median</b></h2></div>
-              <div class="graph-container flex flex-col items-center justify-center text-sm">
-                <p>{{ slider_cv}}</p>
-              </div>
-            </div>
-          </div>
         {% endif %}
 
-    
-
-    <script>
-      document
-        .getElementById("groupDropdown")
-        .addEventListener("change", function () {
-          const select = this;
-          const val = select.value;
-          const text = select.options[select.selectedIndex].text;
-          if (!val) return; // första “Välj grupp”
-          // Skippa om redan valt
-          if (document.getElementById("pill-" + val)) {
-            select.value = "";
-            return;
-          }
-          // Bygg piller‐span
-          const pill = document.createElement("span");
-          pill.id = "pill-" + val;
-          pill.textContent = text + " ";
-          // kryss‐knapp
-          const btn = document.createElement("button");
-          btn.type = "button";
-          btn.textContent = "×";
-          btn.onclick = () => pill.remove();
-          pill.appendChild(btn);
-          // lägg in i containern
-          document.getElementById("pillContainer").appendChild(pill);
-          // nollställ dropdown
-          select.value = "";
-        });
-    </script>
+  
 
 
   <script>
@@ -347,7 +288,8 @@ const responseTrendPercentages  = {{ answer_pct_list |default:"[0,0,0]" |safe }}
 const responseVolumeDates       = {{ answerDistributionLabels |default:"['####-##-##','####-##-##','####-##-##']" |safe }};
 const responseVolumeCounts      = {{ answered_counts |default:"[0,0,0]" |safe }};
 const lineColors                = ["rgb(140,214,16)","rgb(16,23,214)"];
-
+const textQuestionResponseRate  = {{ answer_pct |default:"0" |safe }};
+const textQuestionRateChange    = {{ answer_change |default:"0" |safe }};
 
 
 // === Slider Page ===
@@ -384,9 +326,7 @@ const mcStackedChartData = (mcStackedSurveyLabels || []).map((label, index) => (
 const yesNoOptionLabels         = {{ yes_no_labels |default:"['Ja','Nej']" |safe }};
 const yesNoOptionCounts         = {{ yes_no_distribution |default:"[0,0]" |safe }};
 
-// === Text Response Rate Page ===
-const textQuestionResponseRate  = {{ answer_pct |default:"0" |safe }};
-const textQuestionRateChange    = {{ answerChange |default:"0" |safe }};
+
 
 // === Chart Initialization Helper ===
 function safeInit(fn, id, ...args) {

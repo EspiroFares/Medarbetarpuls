@@ -2153,7 +2153,6 @@ def analysis_view(request):
 
     # Get anonymous respondents for the most recent survey, used for the user filter
     latest_survey = filtered_surveys[0]
-
     context["answerDistributionLabels"] = [
         q.question for q in latest_survey.questions.all().order_by("id")
     ]
@@ -2184,8 +2183,6 @@ def analysis_view(request):
         )
 
         if trend_data:
-            for key, item in trend_data.items():
-                print(key, item)
             # Get the question format
             selected_question_format = trend_data["question_format_trend"][0]
             context.update(trend_data)
