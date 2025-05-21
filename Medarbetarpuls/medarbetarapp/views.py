@@ -221,7 +221,7 @@ def add_employee_view(request):
         editGroup = request.POST.get("edit_employee")
         editName = request.POST.get("new_employee_group")
         editUserMail = request.POST.get("employee")
-        
+
         # Check if sent to add new group to user
         if editGroup == "true":
             if models.EmailList.objects.filter(email=editUserMail).exists():
@@ -402,12 +402,8 @@ def answer_survey_view(
                         }
                     )
                 elif action == "exit":
-                     # Redirect back to all unanswered surveys
-                     return HttpResponse(
-                        headers={
-                            "HX-Redirect": "/unanswered-surveys/"
-                        }
-                    )
+                    # Redirect back to all unanswered surveys
+                    return HttpResponse(headers={"HX-Redirect": "/unanswered-surveys/"})
 
             return HttpResponse(status=400)
 
@@ -640,10 +636,10 @@ def authentication_org_view(request):
                 options = (
                     question_data[4] if len(question_data) > 4 else None
                 )  # Check if options are provided
-                
+
                 # Init question bank for org
                 question: models.Question = models.Question()
-                
+
                 question.question_title = question_data[0]
                 question.question = question_data[1]
                 question.bank_question = org
@@ -932,6 +928,7 @@ def move_question_right(request, survey_temp_id: int, question_id: int) -> HttpR
 
     return render(request, "partials/question-list.html", context)
 
+
 @login_required
 def create_survey_view(request, survey_id: int | None = None) -> HttpResponse:
     """
@@ -1004,7 +1001,6 @@ def create_survey_view(request, survey_id: int | None = None) -> HttpResponse:
         "create_survey.html",
         {"survey_temp": survey_temp, "source": source},
     )
-
 
 
 @login_required
@@ -1101,8 +1097,7 @@ def edit_question_view(
                     else:
                         # Handle the case where the question does not exist
                         return HttpResponse("Question not found", status=404)
-                    
-                
+
             else:
                 question = organization.question_bank.filter(id=question_id).exists
                 if question:
@@ -1837,7 +1832,7 @@ def settings_user_view(request):
             user = authenticate(request, username=email, password=password)
             if user is not None:
                 models.EmailList.objects.filter(email=user.email).delete()
-                user.delete()  
+                user.delete()
                 logout(request)
                 request.session.flush()  # Clear session
                 return HttpResponse(headers={"HX-Redirect": "/"})
@@ -2166,20 +2161,31 @@ def analysis_view(request):
     survey_count = request.GET.get("surveys", "1")
     user_id = request.GET.get("user_id")
     question_id = request.GET.get("question_id")
+    user = request.user
 
     analysisHandler = AnalysisHandler()
 
     context = {
         "survey_ranges": [
             ("Senaste", "1"),
-            ("Senaste 3", "3"),
+            ("Senaste 2", "2"),
             ("Senaste 5", "5"),
             ("Alla", "all"),
         ],
         "selected_survey_range": survey_count,
         "selected_user_id": user_id,
         "selected_question_id": question_id,
+        "selected_group_id": group_id,
     }
+
+    employee_groups_creator = user.survey_groups.all()
+    available_groups = []
+    for e_g in employee_groups_creator:
+        for survey in user.published_surveys.all():
+            if e_g in survey.employee_groups.all():
+                if e_g not in available_groups:
+                    available_groups.append(e_g)
+    context["available_groups"] = available_groups
 
     if not group_id:
         return render(request, "analysis.html", context)
@@ -2190,9 +2196,11 @@ def analysis_view(request):
     if not surveys.exists():
         context["message"] = "Gruppen har inga enkäter ännu."
         return render(request, "analysis.html", context)
-
+    # Filter surveys in descending order (Newest first)
     surveys = surveys.order_by("-sending_date")
+
     if survey_count != "all":
+        # Get filtered surveys to the chosen amount
         try:
             count = int(survey_count)
             filtered_surveys = surveys[:count]
@@ -2204,83 +2212,52 @@ def analysis_view(request):
     if not filtered_surveys:
         context["message"] = "Inga filtrerade enkäter hittades."
         return render(request, "analysis.html", context)
-    latest_survey = filtered_surveys[0]
-    respondents_dict = analysisHandler.get_respondents(latest_survey, group)
-    context["respondents"] = respondents_dict
 
     participation_metrics = analysisHandler.get_participation_metrics(
         list(filtered_surveys), group
     )
-    context["answerFrequencyData"] = [
-        entry["answer_pct"] for entry in participation_metrics
+    context.update(participation_metrics)
+
+    # Get anonymous respondents for the most recent survey, used for the user filter
+    latest_survey = filtered_surveys[0]
+    context["answerDistributionLabels"] = [
+        q.question for q in latest_survey.questions.all().order_by("id")
     ]
-    context["answer_pct"] = context["answerFrequencyData"][0]
-    context["answerFrequencyLabels"] = [
-        str(entry["survey"].sending_date) for entry in participation_metrics
-    ]
+
+    respondents_dict = analysisHandler.get_respondents(
+        survey=latest_survey, employee_group=group
+    )
+    context["respondents"] = respondents_dict
 
     survey_answer_dist = analysisHandler.get_survey_answer_distribution(
         latest_survey,
         user=respondents_dict.get(user_id) if user_id else None,
         employee_group=group,
     )
-    context["answerDistributionLabels"] = [
-        entry["question"].question for entry in survey_answer_dist
-    ]
-    context["answerDistributionData"] = [
-        entry["answered_count"] for entry in survey_answer_dist
-    ]
+    context.update(survey_answer_dist)
 
     selected_question_format = None
     if question_id:
         selected_question = get_object_or_404(models.Question, id=question_id)
         context["selected_question_text"] = selected_question.question
 
-        if selected_question.question_type == QuestionType.ENPS:
-            selected_question_format = QuestionType.ENPS
-        else:
-            selected_question_format = selected_question.question_format
-
         # Trenddata för alla format
         trend_data = analysisHandler.get_question_trend(
-            selected_question,
-            list(filtered_surveys),
-            group,
-            respondents_dict.get(user_id) if user_id else None,
+            question=selected_question,
+            surveys=list(filtered_surveys),
+            employee_group=group,
+            user=respondents_dict.get(user_id) if user_id else None,
         )
 
         if trend_data:
-            last_summary = trend_data[-1]["summary"]
-
-            context["slider_mean"] = last_summary.get("mean", 0)
-            context["slider_std"] = last_summary.get("standard_deviation", 0)
-            context["slider_cv"] = last_summary.get("variation_coefficient", 0)
-            context["slider_median"] = last_summary.get("median", 0)  # om tillgänglig
-
-            context["slider_values"] = last_summary.get(
-                "labels", [str(i) for i in range(11)]
-            )
-            context["sliderDistribution"] = last_summary.get("distribution", [0] * 11)
-            context["sliderTrendData"] = [
-                entry["summary"].get("mean", 0) for entry in trend_data
-            ]
-            context["sliderTrendLabels"] = [
-                entry["sending_date"] for entry in trend_data
-            ]
-
-            context["enpsScore"] = last_summary.get("enpsScore")
-            context["enpsPieLabels"] = last_summary.get("enpsPieLabels")
-            context["enpsPieData"] = last_summary.get("enpsPieData")
-            context["enpsDistribution"] = last_summary.get("enpsDistribution")
-
-            context["multipleChoiceLabels"] = last_summary.get("answer_options")
-            context["multipleChoiceData"] = last_summary.get("distribution")
-
-            context["yesNoLabels"] = last_summary.get("answer_options")
-            context["yesNoData"] = last_summary.get("distribution")
-
+            # Get the question format
+            selected_question_format = trend_data["question_format_trend"][0]
+            context.update(trend_data)
     context["selected_question_format"] = selected_question_format
-    context["bank_questions"] = analysisHandler.get_bank_questions()
+    filtered_bank_questions = analysisHandler.get_bank_questions(filtered_surveys)
+
+    context["bank_questions"] = filtered_bank_questions
+    # pass these to frontend for typing
     context["QuestionFormat"] = QuestionFormat
     context["QuestionType"] = QuestionType
 
