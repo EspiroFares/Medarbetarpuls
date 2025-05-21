@@ -19,10 +19,11 @@ ManyToManyManager = BaseManager  # Alias for ManyToManyField relations
 
 class Organization(models.Model):
     """
-    This class saves the organization as the root of database tree. 
-    It contains relations to all other saved information, tho 
-    multiple organization models can exist in the database. 
+    This class saves the organization as the root of database tree.
+    It contains relations to all other saved information, tho
+    multiple organization models can exist in the database.
     """
+
     name = models.CharField(max_length=255)
     # Add an explicit type hint for employeeGroups (this is just for readability)
     employee_groups: OneToManyManager["EmployeeGroup"]
@@ -37,10 +38,11 @@ class Organization(models.Model):
 
 class EmployeeGroup(models.Model):
     """
-    This class saves all created groups of employees so 
-    users can easily be sorted into departments such as IT, or HR. 
-    Contains managers and employees and has a relation to its org. 
+    This class saves all created groups of employees so
+    users can easily be sorted into departments such as IT, or HR.
+    Contains managers and employees and has a relation to its org.
     """
+
     name = models.CharField(max_length=255)
     employees: ManyToManyManager["CustomUser"]
     managers: ManyToManyManager["CustomUser"]
@@ -63,6 +65,7 @@ class UserRole(models.TextChoices):
     The left-most string is what is saved in db.
     The right-most string is what we humans will read.
     """
+
     ADMIN = "admin", "Admin"
     SURVEY_CREATOR = "surveycreator", "SurveyCreator"
     SURVEY_RESPONDER = "surveyresponder", "SurveyResponder"
@@ -70,10 +73,11 @@ class UserRole(models.TextChoices):
 
 class CustomUserManager(BaseUserManager):
     """
-    Custom User Manager. This Mananger is required for Django to 
-    be able to handle the CustomUser class. When objects is used 
-    on a user this manager is used. 
+    Custom User Manager. This Mananger is required for Django to
+    be able to handle the CustomUser class. When objects is used
+    on a user this manager is used.
     """
+
     def create_user(
         self, email: str, name: str, password: str, **extra_fields
     ) -> "CustomUser":
@@ -105,11 +109,12 @@ class CustomUserManager(BaseUserManager):
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):  # pyright: ignore
     """
-    This class overrides djangos built in user class so 
-    that roles and surveys etc can be added to user/employees. 
+    This class overrides djangos built in user class so
+    that roles and surveys etc can be added to user/employees.
     Every user is part of an organization and all but admin
-    are part of an employeegroups. 
+    are part of an employeegroups.
     """
+
     email = models.EmailField(unique=True)
     name = models.CharField(max_length=255)
     user_role = models.CharField(
@@ -148,7 +153,9 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):  # pyright: ignore
 
     # To see how many surveys this user has unanswered
     def count_unanswered_surveys(self):
-        return self.survey_results.filter(is_answered=False, published_survey__deadline__gt=timezone.now()).count()
+        return self.survey_results.filter(
+            is_answered=False, published_survey__deadline__gt=timezone.now()
+        ).count()
 
     # To see how many surveys this user has answered
     def count_answered_surveys(self):
@@ -156,7 +163,9 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):  # pyright: ignore
 
     # To get all unanswered surveys for this user
     def get_unanswered_surveys(self):
-        return self.survey_results.filter(is_answered=False, published_survey__deadline__gt=timezone.now())
+        return self.survey_results.filter(
+            is_answered=False, published_survey__deadline__gt=timezone.now()
+        )
 
     # To get all answered surveys for this user
     def get_answered_surveys(self):
@@ -172,6 +181,7 @@ class QuestionType(models.TextChoices):
     The left-most string is what is saved in db
     The right-most string is what we humans will read
     """
+
     ONETIME = "onetime", "Onetime"
     REOCCURRING = "reoccurring", "Reoccurring"
     BUILTIN = "builtin", "Built in"
@@ -184,6 +194,7 @@ class QuestionFormat(models.TextChoices):
     The left-most string is what is saved in db
     The right-most string is what we humans will read
     """
+
     MULTIPLE_CHOICE = "multiplechoice", "Multiple choice"
     YES_NO = "yesno", "Yes No"
     TEXT = "text", "Text"
@@ -192,11 +203,12 @@ class QuestionFormat(models.TextChoices):
 
 class Survey(models.Model):
     """
-    This class saves the survey that has been published 
-    to an employee group. This class should not be confused 
+    This class saves the survey that has been published
+    to an employee group. This class should not be confused
     with SurveyTemplate or SurveyUserResult! Only has a direct
-    relation to its creator and not individual employees. 
+    relation to its creator and not individual employees.
     """
+
     name = models.CharField(max_length=255)  # Do we want names for surveys???
     questions = ManyToManyManager["Question"]
     creator = models.ForeignKey(
@@ -213,7 +225,7 @@ class Survey(models.Model):
     sending_date = (
         models.DateTimeField()
     )  # stores both date and time (e.g., YYYY-MM-DD HH:MM:SS)
-    last_notification = models.DateTimeField() 
+    last_notification = models.DateTimeField()
     collected_answer_count = models.IntegerField(default=0)  # pyright: ignore
     published_count = models.IntegerField(default=0)  # pyright: ignore
     is_viewable = models.BooleanField(default=True)  # pyright: ignore
@@ -221,7 +233,7 @@ class Survey(models.Model):
 
     def __str__(self) -> str:
         return f"{self.name} ({self.creator})"
-    
+
     def publish_survey(self):
         """
         Publishes the survey to all employees in all
@@ -241,7 +253,7 @@ class Survey(models.Model):
 
         # Saves the amount of users this survey has been sent to
         self.published_count = count
-        self.last_notification = timezone.now() 
+        self.last_notification = timezone.now()
         self.save()
 
         # Send email to notify
@@ -256,12 +268,13 @@ class Survey(models.Model):
 
 class SurveyTemplate(models.Model):
     """
-    This class saves the survey templates that has NOT been 
-    published to an employee group. This class should not be 
+    This class saves the survey templates that has NOT been
+    published to an employee group. This class should not be
     confused with Survey or SurveyUserResult! Only has a direct
-    relation to its creator and not individual employees. 
+    relation to its creator and not individual employees.
     """
-    name = models.CharField(max_length=255) 
+
+    name = models.CharField(max_length=255)
     questions = ManyToManyManager["Question"]
     creator = models.ForeignKey(
         CustomUser, on_delete=models.CASCADE, related_name="survey_templates", null=True
@@ -280,7 +293,7 @@ class SurveyTemplate(models.Model):
     )
 
     def get_ordered_questions(self):
-        return self.questions.all().order_by('questionorder__order')
+        return self.questions.all().order_by("questionorder__order")
 
     def __str__(self) -> str:
         return f"{self.name} ({self.creator})"
@@ -288,11 +301,12 @@ class SurveyTemplate(models.Model):
 
 class SurveyUserResult(models.Model):
     """
-    This class saves the survey results that has been 
-    published to an employee. This class should not be 
+    This class saves the survey results that has been
+    published to an employee. This class should not be
     confused with SurveyTemplate or Survey! Only has a direct
-    relation to its individual employees and not creator. 
+    relation to its individual employees and not creator.
     """
+
     published_survey = models.ForeignKey(
         Survey, on_delete=models.CASCADE, related_name="survey_results", null=True
     )
@@ -310,8 +324,9 @@ class SurveyUserResult(models.Model):
 
 class BaseQuestionDetails(models.Model):
     """
-    Abstract class for specific questions. 
+    Abstract class for specific questions.
     """
+
     parent_question = BaseManager["Question"]
 
     class Meta:
@@ -320,9 +335,10 @@ class BaseQuestionDetails(models.Model):
 
 class SliderQuestion(BaseQuestionDetails):
     """
-    Specific question for when a slider is choosen. 
-    Inherits from BaseQuestionDetails. 
+    Specific question for when a slider is choosen.
+    Inherits from BaseQuestionDetails.
     """
+
     question_format = models.CharField(
         max_length=15, choices=QuestionFormat.choices, default=QuestionFormat.SLIDER
     )
@@ -334,9 +350,10 @@ class SliderQuestion(BaseQuestionDetails):
 
 class MultipleChoiceQuestion(BaseQuestionDetails):
     """
-    Specific question for when a multiplechoice is choosen. 
-    Inherits from BaseQuestionDetails. 
+    Specific question for when a multiplechoice is choosen.
+    Inherits from BaseQuestionDetails.
     """
+
     question_format = models.CharField(
         max_length=15,
         choices=QuestionFormat.choices,
@@ -347,9 +364,10 @@ class MultipleChoiceQuestion(BaseQuestionDetails):
 
 class YesNoQuestion(BaseQuestionDetails):
     """
-    Specific question for when a yes or no is choosen. 
-    Inherits from BaseQuestionDetails. 
+    Specific question for when a yes or no is choosen.
+    Inherits from BaseQuestionDetails.
     """
+
     question_format = models.CharField(
         max_length=15, choices=QuestionFormat.choices, default=QuestionFormat.YES_NO
     )
@@ -357,9 +375,10 @@ class YesNoQuestion(BaseQuestionDetails):
 
 class TextQuestion(BaseQuestionDetails):
     """
-    Specific question for when a text is choosen. 
-    Inherits from BaseQuestionDetails. 
+    Specific question for when a text is choosen.
+    Inherits from BaseQuestionDetails.
     """
+
     question_format = models.CharField(
         max_length=15, choices=QuestionFormat.choices, default=QuestionFormat.TEXT
     )
@@ -367,10 +386,11 @@ class TextQuestion(BaseQuestionDetails):
 
 class Question(models.Model):
     """
-    This class saves all information for a question. Questions  
-    can be found in either a SurveyTemplate or Survey object.  
-    Also has a relations to its answers (from all users). 
+    This class saves all information for a question. Questions
+    can be found in either a SurveyTemplate or Survey object.
+    Also has a relations to its answers (from all users).
     """
+
     question_title = models.CharField(max_length=32, null=True, blank=True)
     question = models.CharField(max_length=255)
     question_format = models.CharField(
@@ -383,7 +403,9 @@ class Question(models.Model):
     answers = OneToManyManager["Answer"]
 
     # Relationships to parent classes
-    survey_template = models.ManyToManyField(SurveyTemplate, related_name="questions", through="QuestionOrder")
+    survey_template = models.ManyToManyField(
+        SurveyTemplate, related_name="questions", through="QuestionOrder"
+    )
     bank_question = models.ForeignKey(
         Organization, on_delete=models.CASCADE, related_name="question_bank", null=True
     )
@@ -414,21 +436,21 @@ class Question(models.Model):
             data = {
                 f.name: getattr(self, f.name)
                 for f in self._meta.fields
-                if f.name not in ('id', 'pk', 'bank_question')
+                if f.name not in ("id", "pk", "bank_question")
             }
             # Remove any fields referring to child OneToOne we will handle those separately
             for rel_name in (
-                'slider_question',
-                'multiple_choice_question',
-                'yes_no_question',
-                'text_question',
+                "slider_question",
+                "multiple_choice_question",
+                "yes_no_question",
+                "text_question",
             ):
                 data.pop(rel_name, None)
 
             # Add link to question bank
-            data['bank_question'] = data.get('bank_question') 
+            data["bank_question"] = data.get("bank_question")
 
-            # Create the new Question, pointing at the new survey 
+            # Create the new Question, pointing at the new survey
             new_q = Question.objects.create(**data)
             # Add link to survey:
             new_q.connected_surveys.set([survey])
@@ -483,10 +505,11 @@ class Question(models.Model):
 
 class Answer(models.Model):
     """
-    This class saves all information for an answer. Answers 
-    can be found in SurveyUserResult objects. Also has a 
-    relations to its question.  
+    This class saves all information for an answer. Answers
+    can be found in SurveyUserResult objects. Also has a
+    relations to its question.
     """
+
     is_answered = models.BooleanField(default=False)  # pyright: ignore
     survey = models.ForeignKey(
         SurveyUserResult, on_delete=models.CASCADE, related_name="answers", null=True
@@ -548,9 +571,10 @@ class Answer(models.Model):
 class EmailList(models.Model):
     """
     This class saves all information necessary when adding
-    an employee to an organization. For every employee added 
-    another object od the class is added to the org. 
+    an employee to an organization. For every employee added
+    another object od the class is added to the org.
     """
+
     email = models.EmailField(unique=True)
     org = models.ForeignKey(
         Organization,
@@ -568,16 +592,17 @@ class EmailList(models.Model):
 
 class QuestionOrder(models.Model):
     """
-    This class is a through model that is used to 
-    change the order of question in a SurveyTemplate.  
+    This class is a through model that is used to
+    change the order of question in a SurveyTemplate.
     """
-    survey_temp   = models.ForeignKey(SurveyTemplate, on_delete=models.CASCADE)
+
+    survey_temp = models.ForeignKey(SurveyTemplate, on_delete=models.CASCADE)
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
-    order    = models.PositiveIntegerField(default=0)
+    order = models.PositiveIntegerField(default=0)
 
     class Meta:
         unique_together = (("survey_temp", "question"),)
         ordering = ("order",)
-    
+
     def __str__(self) -> str:
         return f"{self.order}. {self.question}"
