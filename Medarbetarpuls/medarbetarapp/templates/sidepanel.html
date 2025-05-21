@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<!--
 {%comment%} 
+
 This template is designed to be used by including it and was specifically designed to be used in the template for the topnav.
 
-{%endcomment%} -->
+{%endcomment%}
 {% load static %}
 {% comment %} Sidepanel code {% endcomment %}
 <div class="sidepanel" id="panel">
   {% if user.admin %}
   <a href={% url 'start_admin' %}>Startsida</a>
   <a href={% url 'my_org' %}>Min organisation</a>
-  <a href={% url 'analysis' %}>Analys</a>
+  <a href={% url 'organization_templates' %}>Mallar</a>
   <a href={% url 'settings_admin' %}>Inställningar</a>
   {% elif user.user_role == "surveyresponder" %}
   <a href={% url 'start_user' %}>Startsida</a>

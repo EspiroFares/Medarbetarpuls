@@ -84,7 +84,8 @@ class AnalysisHandler:
         Returns:
             QuerySet[Answer]: A queryset of Answer objects matching the provided filters, or an empty queryset if none found.
         """
-        filters = {"question": question, "is_answered": True}
+        filters = {"question": question, "survey__is_answered": True}
+
         if survey:
             results = SurveyUserResult.objects.filter(published_survey=survey)
             filters["survey__in"] = results
@@ -125,7 +126,11 @@ class AnalysisHandler:
         Returns:
             QuerySet[Answer]: A queryset of Answer objects with non-empty comments matching the provided filters.
         """
-        filters = {"question": question, "is_answered": True, "comment__isnull": False}
+        filters = {
+            "question": question,
+            "survey__is_answered": True,
+            "comment__isnull": False,
+        }
 
         if survey:
             results = self.get_survey_result(survey)
@@ -367,6 +372,7 @@ class AnalysisHandler:
         comments = self.get_comments(
             question, survey, user=user, employee_group=employee_group
         )
+        mean = round(self.calculate_mean(answers), 2)
         return {
             "question": question,
             "question_format": question.question_type,
@@ -380,6 +386,7 @@ class AnalysisHandler:
             "enpsDistribution": distribution,
             "standard_deviation": standard_deviation,
             "variation_coefficient": variation_coefficient,
+            "mean": mean,
         }
 
     def calculate_mean(self, answers) -> float:

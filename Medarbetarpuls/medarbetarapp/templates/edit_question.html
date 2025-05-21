@@ -11,6 +11,7 @@
   <body>
     <div class="popup-overlay">
       <div class="popup-content">
+        <!-- Makes it possible to name a question to be added to the survey-bank -->
         {% if source == "organization_templates" and not survey_id%}
           <input
             type="text"
@@ -32,6 +33,7 @@
             class="question-icon"
         />
 
+        <!-- New question -->
         {% if question_id is None %} 
           <form
             class="question-form"
@@ -44,6 +46,7 @@
             hx-target=".question-form"
             hx-trigger="submit"
           >
+        <!-- Edit existing question -->
         {% else %} 
           <form
             class="question-form"
@@ -58,6 +61,7 @@
           >
         {% endif %}
         {% csrf_token %}
+        <!-- Handle question with multiple options -->
         {% if question_format == "multiplechoice" %}
           {% if question_text is None %}
             <input
@@ -75,6 +79,7 @@
                 <input type="text" name="options" placeholder="Alternativ 2" required />
               </div>
             </div>
+          <!-- Prevents user from editing question in organisations bank if not admin -->
           {% elif bank_question and survey_id or source == "readonly"%}
             <input
               type="text"
@@ -120,9 +125,7 @@
             {% endif %}
             <button type="submit">Spara</button>
           {% endif %}
-
         {% else %}
-        
           {% csrf_token %}
           {% if question_text is None %}
           <input
@@ -131,30 +134,29 @@
             name="question"
             placeholder="Fråga"
             required
-          />
+          /> 
+          <!-- Prevents user from editing question in organisations bank if not admin -->
           {% elif bank_question and survey_id or source == "readonly"%}
-          <input
-            type="text"
-            id="question"
-            name="question"
-            value="{{ question_text }}"
-            required
-            readonly
-          />
+            <input
+              type="text"
+              id="question"
+              name="question"
+              value="{{ question_text }}"
+              required
+              readonly
+            />
           {% else %}
-          <input
-            type="text"
-            id="question"
-            name="question"
-            value="{{ question_text }}"
-            required
-          />
+            <input
+              type="text"
+              id="question"
+              name="question"
+              value="{{ question_text }}"
+              required
+            />    
           {% endif %}
-
           {% if source != "readonly" %}
-          <button type="submit">Spara</button>
+            <button type="submit">Spara</button>
           {% endif %}
-
         </form>
         {% endif %}
         {% if survey_id %}
@@ -184,27 +186,29 @@
       </div>
     </div>
   <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const addOptionBtn = document.getElementById("add-option-btn");
-    const optionsContainer = document.getElementById("options-container");
+    // Function to handle the addition of new options
+    // This function is called when the "Lägg till alternativ" button is clicked
+    document.addEventListener("DOMContentLoaded", function () {
+      const addOptionBtn = document.getElementById("add-option-btn");
+      const optionsContainer = document.getElementById("options-container");
 
-    let optionCount = 3;
+      let optionCount = 3;
 
-    addOptionBtn.addEventListener("click", () => {
-      const newOption = document.createElement("div");
-      newOption.classList.add("option-input");
+      addOptionBtn.addEventListener("click", () => {
+        const newOption = document.createElement("div");
+        newOption.classList.add("option-input");
 
-      const input = document.createElement("input");
-      input.type = "text";
-      input.name = "options";
-      input.placeholder = `Alternativ ${optionCount}`;
+        const input = document.createElement("input");
+        input.type = "text";
+        input.name = "options";
+        input.placeholder = `Alternativ ${optionCount}`;
 
-      newOption.appendChild(input);
-      optionsContainer.appendChild(newOption);
-      optionCount++;
-      optionsContainer.scrollTop = optionsContainer.scrollHeight;
+        newOption.appendChild(input);
+        optionsContainer.appendChild(newOption);
+        optionCount++;
+        optionsContainer.scrollTop = optionsContainer.scrollHeight;
+      });
     });
-  });
     // Timer that calls logout form after specified time
     let logoutTimer;
     function resetTimer() {

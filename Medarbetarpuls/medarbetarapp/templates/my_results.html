@@ -27,7 +27,8 @@
         </div>
         <div class="grid-container">
             {% for survey in answered_surveys %}
-                {% if survey.published_survey.deadline >= current_time %} <!-- Check if sending_date exists -->
+                <!-- If everyone has answered or deadline has passed -->
+                {% if survey.collected_answer_count >= survey.published_count or survey.published_survey.deadline <= current_time %} 
                     <div class="grid-item green">
                     <p>Genomfördes: {{ survey.published_survey.sending_date }} 
                     - {{ survey.published_survey.deadline }}</p>
@@ -37,6 +38,7 @@
                     Se resultat</button>
                     </div>
                 {% else %}
+                <!-- The survey is ongoing -->
                 <div class="grid-item yellow">
                     <p> Pågående enkät</p>
                     <p><strong>*{{ survey.published_survey.name }}*</strong></p>

@@ -12,14 +12,16 @@
     <div class="main-container">
       {% include "topbar.html"%}
       <div class="title-background">
+        <!-- Go back button-->
         <button
           class="title-back-button"
           onclick="window.location.href='{% if source and source == 'organization_templates' %}{% url source%}{%else%}{%url "templates_and_drafts"%}{% endif %}'"
         >
           Tillbaka
         </button>
-        <h2>Skapa enkät</h2>
+        <h2>{{ survey_temp.name }}</h2>
       </div>
+      <!-- If page is accessed from organization_templates one should not be able to publish survey -->
       {% if source == "organization_templates" %}
         <button
         class="title-back-button"
@@ -39,6 +41,7 @@
         >
           <div class="question-title">
             <h1>Fråga {{forloop.counter}}</h1>
+            <!-- Prevent questions from the organisations bank to be removed if not admin -->
             {% if source != "readonly"%}
               <form
                 hx-post="{% url 'delete_question' question.id survey_temp.id %}{% if source == 'organization_templates' %}?source={{ source }}{% endif %}"
@@ -59,6 +62,7 @@
           </div>
 
           <div class="question-result">
+          <!-- Prevent questions from the organisations bank to be moved if not admin -->
           {% if source != "readonly"%}
             <form
               hx-post="{% url 'move_question_left' survey_temp.id question.id %}{% if source == 'organization_templates' %}?source={{ source }}{% endif %}"
@@ -66,6 +70,7 @@
               hx-target="#question-list"
               hx-swap="outerHTML"
               class="px-2"
+              title="Flytta fråga åt vänster"
             >
               {% csrf_token %}
               <button type="submit">&larr;</button>
@@ -83,6 +88,7 @@
               hx-target="#question-list"
               hx-swap="outerHTML"
               class="px-2"
+              title="Flytta fråga åt höger"
             >
               {% csrf_token %}
               <button type="submit">&rarr;</button>
@@ -91,10 +97,11 @@
           </div>
         </a>
         {% endfor %}
-
+        <!-- Prevent new questions to be added the organisations bank to be if not admin -->
         {% if source != "readonly" %}
         <a
           href="{% url 'create_question' survey_temp.id %}{% if source == 'organization_templates' %}?source={{ source }}{% endif %}"
+          title="Skapa ny fråga"
           class="add-button-link"
         >
           <div class="add-button">
@@ -212,9 +219,9 @@
           <!-- Buttons -->
           <div class="popup-buttons">
             <button
+              type="button"
               class="image-button"
-              onclick="window.location.href='{% url 'create_survey_with_id' survey_temp.id %}
-              {% if source and source != 'None' %}?source={{ source }}{% endif %}'"
+              onclick="navigateBack()"
             >
               <img
                 src="{% static 'images/go-back-btn.png' %}"
@@ -229,8 +236,12 @@
     </div>
     <script>
       function openPopup() {
-        document.getElementById("publish-popup").style.display = "flex";
-      }
+        // Set a flag in local storage to indicate that the popup should be opened
+        localStorage.setItem("showPopup", "true");
+
+        // Refresh the page
+        location.reload();
+    }
 
       function closePopup() {
         document.getElementById("publish-popup").style.display = "none";
@@ -317,8 +328,12 @@
         // Generate initial reminder options
         generateReminderOptions();
         const params = new URLSearchParams(window.location.search);
-        if (params.get("trigger_popup") === "true") {
-          openPopup();
+        if (localStorage.getItem("showPopup") === "true")  {
+          // Clear the flag
+          localStorage.removeItem("showPopup");
+
+          // Open the popup
+          document.getElementById("publish-popup").style.display = "flex";
         }
       });
 
@@ -327,11 +342,11 @@
       // To get survey id from the popup
       const surveyId = document.getElementById("publish-popup").dataset.surveyId;
       const errorBox = document.getElementById("error-box");
-      if (event.detail.xhr.status === 200) {
+      if (event.detail.xhr.status === 201) {
         errorBox.style.color = "green";
         errorBox.style.display = "block";
         // Display the message to the user for a short while before redirecting
-        setTimeout(() =>  window.location.href = `/create-survey/${surveyId}/`, 1500);
+        setTimeout(() =>  window.location.href = `/survey-status/`, 1500);
       } else {
         errorBox.innerHTML = event.detail.xhr.responseText || "Något fel har inträffat";
         errorBox.style.color = "red";
@@ -354,7 +369,25 @@
       document.onkeypress = resetTimer;
       document.onscroll = resetTimer;
       document.onclick = resetTimer;
-  
+      
+      function navigateBack() {
+        // The previous URL that linked to this page
+        const popup = document.getElementById("error-box");
+        let previousUrl = document.referrer;
+        if (previousUrl) {
+          if (document.getElementById("publish-popup").style.display == "flex"){
+            // Pressed back button while popup was open
+            closePopup();
+          }
+          else{
+            window.location.href = previousUrl;
+          }       
+        } else {
+          // Fallback if referrer is empty
+          // This simulates the user pressing the back button
+          window.history.back();
+        }
+      }
     </script>
     <form id="logout-form" method="post" hx-post="/logout/" hx-target="body" hx-swap="outerHTML" style="display:none;">
       {% csrf_token %}

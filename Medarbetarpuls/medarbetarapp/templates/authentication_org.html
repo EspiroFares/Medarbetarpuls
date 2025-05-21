@@ -13,6 +13,7 @@
     <!-- To test this, switch to authentication_org.html in views.py -->
     <div class="main-container">
       <div class="create-container">
+
         <!-- Go back button-->
         <button
           class="image-button"
@@ -45,6 +46,7 @@
           hx-swap="innerHTML"
         >
           {% csrf_token %}
+          <!-- Input for the code -->
           <label for="auth_code">Ange koden:</label>
           <input
             type="text"
@@ -58,8 +60,9 @@
 
         <button type="submit">Fortsätt</button>
       </form>
+
+      <!-- Link to send code again -->
       <div class="account-help-links">
-        <!-- Replace # later with actual path -->
         <a href="#"
         hx-post="/resend-authentication-code-acc/"
         hx-swap="none"
@@ -98,24 +101,6 @@
       });
     });
 
-    // Timer that calls logout form after specified time
-    let logoutTimer;
-    function resetTimer() {
-      clearTimeout(logoutTimer);
-      logoutTimer = setTimeout(() => {
-        document.getElementById('logout-form').requestSubmit();
-        }, 10 * 60 * 1000); // 10 minutes
-    }
-
-    window.onload = resetTimer;
-    document.onmousemove = resetTimer;
-    document.onkeypress = resetTimer;
-    document.onscroll = resetTimer;
-    document.onclick = resetTimer;
-
   </script>
-  <form id="logout-form" method="post" hx-post="/logout/" hx-target="body" hx-swap="outerHTML" style="display:none;">
-    {% csrf_token %}
-  </form>
   </body>
 </html>

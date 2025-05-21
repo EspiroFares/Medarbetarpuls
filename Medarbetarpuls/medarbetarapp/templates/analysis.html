@@ -80,8 +80,6 @@
           </form>
         </div>
 
-      
-      
       <!-- Filter for time period -->
         <div class="time-period-container">
           <strong>Time period:</strong>
@@ -99,15 +97,14 @@
             class="px-3 py-1 rounded-md text-sm font-medium bg-blue-100 text-blue-900"
           >
           {{ label }}
-        </a>
-        
-        {% endfor %}
-        
+        </a>       
+        {% endfor %} 
           </div>
         </div>
       </div>
 
-
+      <!-- Analysis items (answer frequency, enps, distribution)
+           when no specific question is choosen -->
       <div class="analysis-container">
         <!-- General survey page -->
         {% if selected_question_format == None %}
@@ -200,7 +197,6 @@
         </div>
         <!-- Multiple choice question page -->
         {% elif selected_question_format == "multiplechoice" %}
-
         <div class="analysis-item ratio-2-1">
           <div class="analysis-item-title"><h2><b>Svarsfördelning Multiple Choice</b></h2></div>
           <div class="graph-container" style="height: 90%">
@@ -389,7 +385,5 @@ document.addEventListener("DOMContentLoaded", function () {
   <form id="logout-form" method="post" hx-post="/logout/" hx-target="body" hx-swap="outerHTML" style="display:none;">
     {% csrf_token %}
   </form>
-
-  
   </body>
 </html>
