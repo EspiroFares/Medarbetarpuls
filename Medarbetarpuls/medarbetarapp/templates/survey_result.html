@@ -21,64 +21,61 @@
       {% include "topbar.html" with pagetitle="Resultat på enkät"%}
       <!-- Static test version -->
       {% if request.path == '/survey-result/420/' %}
-      <div class="title-background">
-        <button class="title-back-button" onclick="navigateBack()">
-          Tillbaka
-        </button>
-        <h2>Resultat</h2>
-      </div>
-
+        <div class="title-background">
+          <button class="title-back-button" onclick="navigateBack()">
+            Tillbaka
+          </button>
+          <h2>Resultat</h2>
+        </div>
       {% elif survey %}
-      <!-- Dynamic survey result view -->
-      <div class="title-background">
-        <button class="title-back-button" onclick="navigateBack()">
-          Tillbaka
-        </button>
-        <h2>{{ survey.name }}</h2>
-      </div>
-
-      <div class="grid-container">
+        <!-- Dynamic survey result view -->
+        <div class="title-background">
+          <button class="title-back-button" onclick="navigateBack()">
+            Tillbaka
+          </button>
+          <h2>{{ survey.name }}</h2>
+        </div>
+        <div class="grid-container">
         {% for summary in summaries %}
-
-        <!-- Code for creating boxes for question-results. 
-         Alpine is used for switching between showing result, comments and personal answers. -->
-        <div
-          class="grid-item result green"
-          x-data="{
-                STATES: {
-                    ANSWER: 'answer',
-                    COMMENT: 'comment',
-                    PERSONAL_ANSWER: 'personal_answer'
-                },
-                show_state : 'answer',
-                
-                toggle_answer(state) { 
-                    if (this.show_state === state) {
-                        this.show_state = this.STATES.ANSWER;
-                    } else {
-                        this.show_state = state;
-                    }
-                }
-            }"
-        >
+          <!-- Code for creating boxes for question-results. 
+          Alpine is used for switching between showing result, comments and personal answers. -->
+          <div
+            class="grid-item result green"
+            x-data="{
+                  STATES: {
+                      ANSWER: 'answer',
+                      COMMENT: 'comment',
+                      PERSONAL_ANSWER: 'personal_answer'
+                  },
+                  show_state : 'answer',
+                  
+                  toggle_answer(state) { 
+                      if (this.show_state === state) {
+                          this.show_state = this.STATES.ANSWER;
+                      } else {
+                          this.show_state = state;
+                      }
+                  }
+              }"
+          >
           <!-- Question number and title -->
           <div class="question-title result">
             <!-- Button for toggle between personal answer and result -->
             <!-- Must override the width for this specific case -->
             {% if has_result %}
-            <button
-              class="default-button"
-              @click="toggle_answer(STATES.PERSONAL_ANSWER)"
-              x-text="show_state === STATES.PERSONAL_ANSWER ? 'Resultat' : 'Ditt svar'"
-              style="width: 35%"
-            ></button>
+              <button
+                class="default-button"
+                @click="toggle_answer(STATES.PERSONAL_ANSWER)"
+                x-text="show_state === STATES.PERSONAL_ANSWER ? 'Resultat' : 'Ditt svar'"
+                style="width: 35%"
+              ></button>
             {% else %}
-            <button
-              class="default-button"
-              @click="toggle_answer(STATES.PERSONAL_ANSWER)"
-              x-text="show_state === STATES.PERSONAL_ANSWER ? 'Resultat' : 'Ditt svar'"
-              style="width: 35%; visibility: hidden"
-            ></button>
+              <button
+                class="default-button"
+                @click="toggle_answer(STATES.PERSONAL_ANSWER)"
+                x-text="show_state === STATES.PERSONAL_ANSWER ? 'Resultat' : 'Ditt svar'"
+                style="width: 35%; visibility: hidden"
+              ></button>
             {% endif %}
 
             <h1>Fråga {{ forloop.counter }}</h1>
@@ -97,25 +94,22 @@
                   class="question-icon result"
                 />
               </template>
-
               {% if is_creator %}
-              <!-- Show 'open comment' icon if not in comment view  -->
-              <template x-if="show_state !== STATES.COMMENT">
-                <img
-                  src="{% static 'images/comment2.png' %}"
-                  alt="Visa kommentarer"
-                  class="question-icon result"
-                />
-              </template>
+                <!-- Show 'open comment' icon if not in comment view  -->
+                <template x-if="show_state !== STATES.COMMENT">
+                  <img
+                    src="{% static 'images/comment2.png' %}"
+                    alt="Visa kommentarer"
+                    class="question-icon result"
+                  />
+                </template>
               {% endif %}
             </div>
           </div>
-
           <!-- Shows the question -->
           <div class="question-background result">
             <p>{{ summary.question.question }}</p>
           </div>
-
           <!-- Shows comments for the question. Is only showned when toggled 
                by one of the earlier buttons -->
           <div
@@ -125,9 +119,7 @@
           >
             <strong>Kommentarer:</strong>
             {% with list_=summary.text_comments %}
-            <!---->
-            {% include "step_thru_text.html" with list_=list_ is_answer=False %}
-            <!---->
+              {% include "step_thru_text.html" with list_=list_ is_answer=False %}
             {% endwith %}
           </div>
 
@@ -135,8 +127,7 @@
                by one of the earlier buttons -->
             <div
   class="question-result"
-  x-show="show_state === STATES.PERSONAL_ANSWER"
->
+  x-show="show_state === STATES.PERSONAL_ANSWER">
   {% if summary.my_result %}
     <div>
       <strong>Ditt svar:</strong><br />
@@ -171,7 +162,6 @@
   {% else %}
     <p><em>Du har inte besvarat denna fråga.</em></p>
   {% endif %}
-
   {% if summary.my_result and summary.my_result.comment %}
     <p>
       <strong>Din kommentar:</strong><br />
@@ -181,14 +171,11 @@
     <p><strong>Du angav ingen kommentar</strong></p>
   {% endif %}
 </div>
-
-
           <!-- Shows question-result. It is shown by default but is toggled 
                by the earlier buttons.-->
           <div class="question-result" x-show="show_state === STATES.ANSWER">
             {% if summary.question.question_format == "yesno" %}
             <!-- Code for yes/no-question result -->
-
             <div class="question-result yesno">
               <p>{{ summary.yes_percentage }}%</p>
               <img
@@ -198,20 +185,13 @@
               />
               <p>{{ summary.no_percentage }}%</p>
             </div>
-
             {% elif summary.question.question_format == "text" %}
             <!-- Code for text-question result -->
-
-            {% with list_=summary.text_answers %}
-            <!---->
-            {% include "step_thru_text.html" with list_=list_ is_answer=True %}
-            <!---->
-            {% endwith %}
-            <!---->
-
+              {% with list_=summary.free_text_answers %}
+                {% include "step_thru_text.html" with list_=list_ is_answer=True %}
+              {% endwith %}
             {% elif summary.question.question_format == "multiplechoice" %}
             <!-- Code for multiplechoice-question result -->
-
             <div class="graph-container">
               <canvas id="{{ forloop.counter }}"></canvas>
             </div>
@@ -225,10 +205,9 @@
 
               document.addEventListener("DOMContentLoaded", function() {
 
-              initBarChart("{{ forloop.counter }}", {{ summary.answer_options|safe}}, {{ summary.distribution|safe  }}, pieColors);
+              initBarChart("{{ forloop.counter }}", {{ summary.question.multiple_choice_question.options|safe}}, {{ summary.multiple_choice_distribution|safe }}, pieColors);
               });
             </script>
-
             {% elif summary.question.question_format == "slider" %}
             <!-- Code for slider-question result -->
              <div>
@@ -237,42 +216,37 @@
             <div>
             <p>Medelvärde:</p>
             <p>{{ summary.mean|safe }}</p>
-            {% if summary.mean < 2 %}
-            <img
-              src=" {% static 'images/smiley-sad.png' %} "
-              alt="Sad Smiley"
-              class="question-icon"
-            />
-
-            {% elif summary.mean < 4.5 %}
-            <img
-              src=" {% static 'images/smiley-meh.png' %} "
-              alt="meh Smiley"
-              class="question-icon"
-            />
-
-            {% elif summary.mean < 5.5 %}
-            <img
-              src=" {% static 'images/smiley-neutral.png' %} "
-              alt="neutral smily"
-              class="question-icon"
-            />
-
-            {% elif summary.mean < 8 %}
-            <img
-              src=" {% static 'images/smiley-happy.png' %} "
-              alt="happy smily"
-              class="question-icon"
-            />
-
-            {% else %}
-            <img
-              src=" {% static 'images/smiley-superhappy.png' %} "
-              alt="happy smily"
-              class="question-icon"
-            />
-            {% endif %}
-            <!---->
+              {% if summary.mean < 2 %}
+                <img
+                  src=" {% static 'images/smiley-sad.png' %} "
+                  alt="Sad Smiley"
+                  class="question-icon"
+                />
+              {% elif summary.mean < 4.5 %}
+                <img
+                  src=" {% static 'images/smiley-meh.png' %} "
+                  alt="meh Smiley"
+                  class="question-icon"
+                />
+              {% elif summary.mean < 5.5 %}
+                <img
+                  src=" {% static 'images/smiley-neutral.png' %} "
+                  alt="neutral smily"
+                  class="question-icon"
+                />
+              {% elif summary.mean < 8 %}
+                <img
+                  src=" {% static 'images/smiley-happy.png' %} "
+                  alt="happy smily"
+                  class="question-icon"
+                />
+              {% else %}
+                <img
+                  src=" {% static 'images/smiley-superhappy.png' %} "
+                  alt="happy smily"
+                  class="question-icon"
+                />
+              {% endif %}
             </div>
             {% endif %}
           </div>
@@ -280,18 +254,17 @@
         {% endfor %}
       </div>
       {% else %}
-
-      <!-- No access or no survey -->
-      <div class="start-container">
-        <div class="title-background">
-          <button class="title-back-button" onclick="navigateBack()">
-            Tillbaka
-          </button>
-          <h2>Resultat</h2>
+        <!-- No access or no survey -->
+        <div class="start-container">
+          <div class="title-background">
+            <button class="title-back-button" onclick="navigateBack()">
+              Tillbaka
+            </button>
+            <h2>Resultat</h2>
+          </div>
+          <h1>No results available for this survey.</h1>
+          <p>Du kanske inte har tillgång till denna enkät.</p>
         </div>
-        <h1>No results available for this survey.</h1>
-        <p>Du kanske inte har tillgång till denna enkät.</p>
-      </div>
       {% endif %}
     </div>
     <script>
