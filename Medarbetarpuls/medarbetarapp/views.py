@@ -2067,6 +2067,7 @@ def survey_result_view(request, survey_id):
         return HttpResponse(400)
 
     # Proceed to render the survey results
+    print (summary_context)
     return render(request, "survey_result.html", summary_context)
 
 

@@ -3,7 +3,7 @@ function initBarChart(
   chartLabels,
   chartData,
   chartColors,
-  hideXAxis = False
+  hideXAxis = false
 ) {
   /**
    * Renders a bar chart on a specified canvas element using Chart.js.
@@ -52,11 +52,11 @@ function initBarChart(
             beginAtZero: true,
           },
         },
-        //plugins: { // Add this section to control the legend
-        //    legend: {
-        //        display: false, // This will hide the legend
-        //    }
-        //}
+        plugins: { // Add this section to control the legend
+            legend: {
+                display: false, // This will hide the legend
+            }
+        }
       },
     });
   } else {
