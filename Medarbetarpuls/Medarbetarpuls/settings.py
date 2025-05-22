@@ -215,8 +215,8 @@ EMAIL_HOST = "smtp.gmail.com"  # Gmail's SMTP server
 EMAIL_PORT = 587  # TLS port
 EMAIL_USE_TLS = True  # Use TLS encryption
 
-EMAIL_HOST_USER = "medarbetarpuls@gmail.com"  # Your actual gmail
-EMAIL_HOST_PASSWORD = "oejv vxry kwrn ezoe"  # Use app password if 2FA is on
+EMAIL_HOST_USER = 'medarbetarpuls@gmail.com'  # Medarbetarpuls gmail
+EMAIL_HOST_PASSWORD = 'oejv vxry kwrn ezoe'   # App password for gmail
 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
@@ -225,8 +225,5 @@ CELERY_BROKER_URL = "redis://localhost:6379/0"
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True  # Flush session when window is closed
 
-# Timeout after 10 minutes of inactivity
-# SESSION_COOKIE_AGE = 10
-# SESSION_SAVE_EVERY_REQUEST = True  # reset the timer on each request
-SESSION_EXPIRE_AT_BROWSER_CLOSE = True  # flush the session when window is closed

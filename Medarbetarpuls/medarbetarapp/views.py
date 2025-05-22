@@ -70,8 +70,9 @@ def create_acc(request):
             return HttpResponse(
                 "Denna mejladress tillhör ej någon organisation", status=400
             )
+        # Create random 6 figure code
+        code = random.randint(100000, 999999)
 
-        code = 123456  # make random later, just test now
         cache.set(f"verify_code_{email}", code, timeout=300)
 
         send_mail(
@@ -471,13 +472,17 @@ def resend_authentication_code_acc(request):
     if request.method == "POST":
         source = request.POST.get("source")
         email = "not_defined"
+        # Check if request sent from authentication_acc or authentication_org
+        # to get the correct email
         if source == "from_account":
             email = request.session.get("email_two_factor_code")
         elif source == "from_org":
             email = request.session.get("email_two_factor_code_org")
         if email == "not_defined":
             return HttpResponse("No email defined", status=404)
-        code = 654321  # make random later, just test now
+        # Make random 6 figure number
+        code = random.randint(100000, 999999)
+
         cache.set(f"verify_code_{email}", code, timeout=300)
         # Send email with the code to the user
         send_mail(
@@ -550,10 +555,10 @@ def authentication_acc_view(request):
                     )
                 # Create user
                 new_user = models.CustomUser.objects.create_user(email, name, password)
-                # get the email and get the correct employeegroups
+                # Get the email and get the correct employeegroups
                 email_from_list = models.EmailList.objects.get(email=email)
                 group = email_from_list.employee_groups.all()
-                # add group to employee
+                # Add group to employee
                 new_user.employee_groups.add(*group)
                 new_user.save()
                 # Add new user to base (everyone) employee group of org
@@ -603,7 +608,7 @@ def authentication_org_view(request):
             name = str(data["name"])
             password = str(data["password"])
 
-            # Delete everything in session and cache
+            # Delete everything in cache and session
             del request.session["user_org_data"]
             del request.session["email_two_factor_code_org"]
             cache.delete(f"verify_code_{email}")
@@ -626,7 +631,7 @@ def authentication_org_view(request):
             base_group = models.EmployeeGroup(name="Alla", organization=org)
             base_group.save()
 
-            # Add admin as manager for base group
+            # Add admin account to base group
             base_group.managers.add(admin_account)
             base_group.save()
 
@@ -683,7 +688,7 @@ def create_question(request, survey_id: int | None = None) -> HttpResponse:
     Makes it possible to create a question with predefined formats.
     This function is reachable from create_survey.
 
-    Agrs:
+    Args:
         request: The input text from the question text field
         survey_id (int): The id of the opened survey
     Returns:
@@ -761,8 +766,8 @@ def create_org(request) -> HttpResponse:
             return HttpResponse(
                 "Vänligen ange ditt namn på formen: Förnamn Efternamn", status=400
             )
-
-        code = 123456  # make random later, just test now
+        # Random 6 figure code
+        code = random.randint(100000, 999999)
         cache.set(f"verify_code_{email}", code, timeout=300)
 
         user = models.CustomUser.objects.filter(email=email).exists()
@@ -1473,9 +1478,11 @@ def my_org_view(request):
     if request.method == "POST":
         user_email = request.POST.get("delete_user_email")
         if request.user.user_role == models.UserRole.ADMIN:
+            # Making employee an inactive user so possible to reactivate account
             employee_to_remove = models.CustomUser.objects.get(email=user_email)
             employee_to_remove.is_active = False
             employee_to_remove.save()
+            # Clear all survey groups
             employee_to_remove.survey_groups.clear()
             employee_to_remove.save()
 
