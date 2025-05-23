@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="sv">
+  <head>
+    {% load static %}
+    <script src="https://unpkg.com/htmx.org@1.8.4"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Medarbetarpuls - Organisationens enkätmallar</title>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}" />
+  </head>
+  <body>
+    <div class="main-container">
+      <!-- Go back button -->
+      <button class="image-button" onclick="navigateBack()">
+        <img
+          src="{% static 'images/go-back-btn.png' %}"
+          alt="Gå Tillbaka"
+          class="back-icon"
+        />
+      </button>
+
+      {% include "topbar.html" with pagetitle="Organisationens enkätmallar" %}
+
+      <!-- Survey bank -->
+      <div class="title-background">
+        <h2>Enkätmallar</h2>
+      </div>
+      <div class="grid-container">
+        {% for survey_temp in survey_templates %}
+        <a
+          href="{% url 'create_survey_with_id' survey_temp.id %}?source={{ source }}"
+          class="grid-item blue"
+        >
+          <div class="question-title">
+            <h1>{{ survey_temp.name }}</h1>
+          </div>
+          <div class="question-background">
+            <p>Senast redigerad:</p>
+            <p>{{ survey_temp.last_edited }}</p>
+          </div>
+          <div class="question-result">
+            <div class="grid-icon">
+              <!-- Triggers a popup when trying to remove a survey from the organisation -->
+              <img
+                src="{% static 'images/trashcan.png' %}"
+                class="icon-img"
+                onclick="event.stopPropagation(); event.preventDefault();"
+                hx-post="{% url 'delete_survey_template' survey_temp.id %}?source={{ source }}"
+                hx-confirm="Är du säker att du vill ta bort den här enkäten?"
+                hx-target=".grid-item"
+              />
+              <meta name="csrf-token" content="{{ csrf_token }}" />
+            </div>
+          </div>
+        </a>
+        {% endfor %}
+
+        <!-- Button to open create-survey popup -->
+        <a href="#" id="open-create-survey"  title="Skapa ny enkätmall" class="add-button-link">
+          <div class="add-button">
+            <span>+</span>
+          </div>
+        </a>
+      </div>
+
+      <!-- Question bank -->
+      <div class="title-background">
+        <h2>Frågemallar</h2>
+      </div>
+      <div class="grid-container">
+        {% for question in question_templates %}
+        <a
+          href="{% url 'edit_question' question.question_format question.id %}?source={{ source }}"
+          class="grid-item blue"
+        >
+          <div class="question-title">
+            <h3>{{question.question_title}}</h3>
+            <!-- Triggers a popup when trying to remove a survey from the organisation -->
+            <form
+              hx-post="{% url 'delete_question' question.id %}?source={{ source }}"
+              hx-trigger="submit"
+              hx-confirm="Är du säker att du vill ta bort den här frågan? Du kommer inte längre kunna analysera den här frågan."
+            >
+              {% csrf_token %}
+              <button class="question-remove-button" type="submit">
+                Ta bort
+              </button>
+            </form>
+          </div>
+          <div class="question-background">
+            <p>{{ question.question }}</p>
+          </div>
+          <div class="question-result">
+            <img
+              src="{% static 'images/' %}{{ question.question_format }}.png"
+              alt="{{ question.question_format.label }}"
+              class="question-icon"
+            />
+          </div>
+        </a>
+        {% endfor %}
+
+        <!-- Add question button -->
+        <a
+          href="{% url 'create_question' %}?source={{ source }}"
+          title="Skapa ny mallfråga"
+          class="add-button-link"
+        >
+          <div class="add-button"><span>+</span></div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Skapa ny enkät-popup -->
+    <div
+      id="createSurveyOverlay"
+      class="popup-overlay"
+      style="display: none; align-items: center; justify-content: center"
+    >
+      <div class="popup-content">
+        <h2>Skapa ny enkät</h2>
+        <form
+          method="post"
+          action="{% url 'create_survey' %}?source={{ source }}"
+        >
+          {% csrf_token %}
+          <div class="form-group">
+            <label for="survey-name">Enkätnamn:</label>
+            <input
+              type="text"
+              id="survey-name"
+              name="name"
+              required
+              placeholder="Ange namn"
+            />
+          </div>
+          <div class="popup-buttons">
+            <button type="button" id="cancelCreate" class="image-button">
+              <img
+                src="{% static 'images/go-back-btn.png' %}"
+                alt="Avbryt"
+                class="back-icon"
+              />
+            </button>
+            <button type="submit">Skapa</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      // This event is triggered before an HTMX request is sent to the server.
+      // This code adds the CSRF token to the request headers.
+      // The CSRF token is retrieved from a meta tag in the HTML document.
+      document.body.addEventListener("htmx:configRequest", (event) => {
+        const csrfToken = document.querySelector(
+          'meta[name="csrf-token"]',
+        ).content;
+      });
+
+      function navigateBack() {
+        // The previous URL that linked to this page
+        let previousUrl = document.referrer;
+        if (previousUrl) {
+          if (previousUrl.includes("my-org") || previousUrl.includes("settings-admin")){
+            // Only redirect to these pages if they are 
+            // the absolutely latest otherwise start page
+            previousUrl = previousUrl;
+          }else{
+            previousUrl = "/";
+          }
+          window.location.href = previousUrl;
+          
+        } else {
+          // Fallback if referrer is empty
+          // This simulates the user pressing the back button
+          window.history.back();
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const openBtn = document.getElementById("open-create-survey");
+        const overlay = document.getElementById("createSurveyOverlay");
+        const cancel = document.getElementById("cancelCreate");
+
+        openBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          overlay.style.display = "flex";
+        });
+        cancel.addEventListener(
+          "click",
+          () => (overlay.style.display = "none")
+        );
+        overlay.addEventListener("click", (e) => {
+          if (e.target === overlay) overlay.style.display = "none";
+        });
+      });
+    </script>
+  </body>
+</html>

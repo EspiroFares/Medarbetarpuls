@@ -8,9 +8,13 @@ local_settings.pyc
 
 db.sqlite3
 
+staticfiles/
+
 *.log
 *.json
 
 *~~
 
 *.DS_Store
+
+celerybeat-schedule

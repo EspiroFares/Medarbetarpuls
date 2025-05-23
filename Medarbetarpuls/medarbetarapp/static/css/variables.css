@@ -1,0 +1,22 @@
+/*
+ * variables.css
+ * 
+ * This file contains the definition of CSS custom properties
+ * for the project's color palette. 
+ * 
+ * Each variable is defined under the :root selector, allowing for global 
+ * access across all CSS files. 
+ */
+
+
+:root {
+    --dark_blue: #102b46;
+    --blue: #4e8ce1;
+    --soft_blue: #a3cbff;
+    --blue_white: #dbebff; 
+    --white: white;
+    --almost_white: #eef5fe;
+    --black: black;
+
+    --max_width_container: 1000px;
+  }

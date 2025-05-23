@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="sv">
   <head>
     {% load static %}
@@ -6,15 +6,25 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Medarbetarpuls - Home</title>
-    <link rel="stylesheet" href="{% static 'styles.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/main.css' %}" />
   </head>
   <body>
-    {% include "topbar.html" %}
+    <div class="main-container">
+      <!-- Go back button-->
+      <button class="image-button" onclick="navigateBack()">
+        <img
+          src="{% static 'images/go-back-btn.png' %}"
+          alt="Gå Tillbaka"
+          class="back-icon"
+        />
+      </button>
 
-    <div class="start-container">
+      {% include "topbar.html" with pagetitle="Mallar & utkast" %}
       <div class="title-background">
-        <h2>Mallar & Utkast</h2>
+        <h2>Dina utkast</h2>
       </div>
+
+      <!-- Search bar -->
       <div class="search-container">
         <form hx-post="{% url 'templates_and_drafts' %}" hx-trigger="submit">
           {% csrf_token %}
@@ -22,14 +32,13 @@
             type="text"
             id="search-bar"
             name="search-bar"
-            class="search-bar"
             placeholder="Sök bland enkätmallar..."
           />
-          <button type="submit" class="search-button">Sök</button>
+          <button type="submit">Sök</button>
         </form>
       </div>
-      <!-- Change name to variable -->
-      <!-- Dose not check if user logged in and have access-->
+
+      <!-- The available templates-->
       <div class="grid-container">
         {% for survey_temp in survey_templates %}
         <a
@@ -45,6 +54,10 @@
           </div>
           <div class="question-result">
             <div class="grid-icon">
+              <!-- Triggers a popup when trying to remove a survey -->
+              <!-- event.stopPropagation(); event.preventDefault(); prevents -->
+              <!-- the click event from bubbling up to the parent element -->
+              <!-- and navigating away or submitting a form. --> 
               <img
                 src="{% static 'images/trashcan.png' %}"
                 class="icon-img"
@@ -52,56 +65,191 @@
                 hx-post="{% url 'delete_survey_template' survey_temp.id %}"
                 hx-confirm="Är du säker att du vill ta bort den här enkäten?"
                 hx-target=".grid-item"
+                title="Radera enkät"
               />
               <meta name="csrf-token" content="{{ csrf_token }}" />
             </div>
             <div class="grid-icon">
+              <!-- Open publish popup via URL param -->
               <img
                 src="{% static 'images/share-icon.png' %}"
                 class="icon-img"
-                onclick="event.stopPropagation(); event.preventDefault();"
-                hx-get="{% url 'create_survey_with_id' survey_temp.id %}"
-                hx-target="body"
-                hx-swap="outerHTML"
+                title="Publicera enkät"
+                onclick="event.stopPropagation(); event.preventDefault(); window.location.href='{% url 'create_survey_with_id' survey_temp.id %}?trigger_popup=true';"
               />
             </div>
           </div>
         </a>
         {% endfor %}
 
-        <a href="{% url 'create_survey' %}" class="add-button-link">
+        <!-- Button to open create-survey popup -->
+        <a href="#" id="open-create-survey" title="Skapa ny enkät" class="add-button-link">
           <div class="add-button">
             <span>+</span>
           </div>
         </a>
       </div>
+
+      <!-- Show organization templates -->
+      {% if organization_survey_templates %}
+      <div class="title-background">
+        <h2>Organisationens standardformulär</h2>
+      </div>
+      <div class="grid-container">
+        {% for survey in organization_survey_templates %}
+        <a
+          href="{% url 'create_survey_with_id' survey.id %}?source=readonly"
+          class="grid-item blue"
+        >
+          <div class="question-title">
+            <h1>{{ survey.name }}</h1>
+          </div>
+          <div class="question-background">
+            <p>{{ survey.last_edited }}</p>
+          </div>
+          <!-- No action icons for organization templates -->
+        </a>
+        {% endfor %}
+      </div>
+      {% endif %}
     </div>
+
+    <!-- Create new survey popup -->
+    <div
+      id="createSurveyOverlay"
+      class="popup-overlay"
+      style="display: none; align-items: center; justify-content: center"
+    >
+      <div class="popup-content">
+        <h2>Skapa ny enkät</h2>
+        <form method="post" action="{% url 'create_survey' %}">
+          {% csrf_token %}
+          <div class="form-group">
+            <label for="survey-name">Enkätnamn:</label>
+            <input
+              type="text"
+              id="survey-name"
+              name="name"
+              required
+              placeholder="Ange namn"
+            />
+          </div>
+          <div class="popup-buttons">
+            <button type="button" id="cancelCreate" class="image-button">
+              <img
+                src="{% static 'images/go-back-btn.png' %}"
+                alt="Avbryt"
+                class="back-icon"
+              />
+            </button>
+            <button type="submit">Skapa</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Share survey popup -->
+    <div
+      id="shareSurveyOverlay"
+      class="popup-overlay"
+      style="display: none; align-items: center; justify-content: center"
+    >
+      <div class="popup-content">
+        <h2>Dela enkät</h2>
+        <p>Kopiera länken nedan för att dela formuläret:</p>
+        <input type="text" id="share-link" readonly onclick="this.select()" />
+        <div class="popup-buttons">
+          <button type="button" class="image-button" onclick="closeShare()">
+            <img
+              src="{% static 'images/go-back-btn.png' %}"
+              alt="Stäng"
+              class="back-icon"
+            />
+          </button>
+        </div>
+      </div>
+    </div>
+
     <script>
+      // HTMX CSRF setup and back-button
       document.body.addEventListener("htmx:configRequest", (event) => {
         const csrfToken = document.querySelector(
-          'meta[name="csrf-token"]',
+          'meta[name="csrf-token"]'
         ).content;
         event.detail.headers["X-CSRFToken"] = csrfToken;
       });
+      function navigateBack() {
+        let previousUrl = document.referrer;
+        if (previousUrl) {
+          if (
+            previousUrl.includes("create-survey") ||
+            previousUrl.includes("templates_and_drafts")
+          ) {
+            previousUrl = "/start-creator/";
+          }
+          window.location.href = previousUrl;
+        } else {
+          window.history.back();
+        }
+      }
+
+      // Popup open/close logic
+      document.addEventListener("DOMContentLoaded", () => {
+        document
+          .getElementById("open-create-survey")
+          .addEventListener("click", (e) => {
+            e.preventDefault();
+            document.getElementById("createSurveyOverlay").style.display =
+              "flex";
+          });
+        document
+          .getElementById("cancelCreate")
+          .addEventListener("click", () => {
+            document.getElementById("createSurveyOverlay").style.display =
+              "none";
+          });
+        document
+          .getElementById("createSurveyOverlay")
+          .addEventListener("click", (e) => {
+            if (e.target.id === "createSurveyOverlay") {
+              document.getElementById("createSurveyOverlay").style.display =
+                "none";
+            }
+          });
+
+        // Share popup
+        window.openShare = function (id) {
+          const overlay = document.getElementById("shareSurveyOverlay");
+          const linkInput = document.getElementById("share-link");
+          linkInput.value =
+            window.location.origin +
+            "/create-survey/" +
+            id +
+            "/?trigger_popup=true";
+          overlay.style.display = "flex";
+        };
+        window.closeShare = function () {
+          document.getElementById("shareSurveyOverlay").style.display = "none";
+        };
+        document
+          .getElementById("shareSurveyOverlay")
+          .addEventListener("click", (e) => {
+            if (e.target.id === "shareSurveyOverlay") {
+              closeShare();
+            }
+          });
+      });
     </script>
+
+    <form
+      id="logout-form"
+      method="post"
+      hx-post="/logout/"
+      hx-target="body"
+      hx-swap="outerHTML"
+      style="display: none"
+    >
+      {% csrf_token %}
+    </form>
   </body>
 </html>
-
-{% comment %}
-<img
-  src="{% static 'images/trashcan.png' %}"
-  class="action-icon"
-  onclick="event.stopPropagation(); event.preventDefault();"
-  hx-post="{% url 'delete_survey_template' survey_temp.id %}"
-  hx-confirm="Är du säker att du vill ta bort den här enkäten?"
-  hx-target=".survey-item"
-/>
-<meta name="csrf-token" content="{{ csrf_token }}" />
-<img src="{% static 'images/edit-icon.png' %}" class="action-icon" />
-<a
-  href="{% url 'create_survey_with_id' survey_temp.id %}?trigger_popup=true"
-  onclick="event.stopPropagation();"
->
-  <img src="{% static 'images/share-icon.png' %}" class="action-icon" />
-</a>
-{% endcomment %}

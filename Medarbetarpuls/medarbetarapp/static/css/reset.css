@@ -1,0 +1,62 @@
+/*
+ * reset.css
+ * 
+ * This file contains CSS resets to remove default browser styling.
+ * It aims to create a consistent baseline across different browsers
+ * by resetting margins, paddings, and other default styles. 
+ * Use this file to ensure that all elements start with the same 
+ * styling, allowing for a clean slate for further design.
+ *
+ * Think of all CSS that dont start with a dot or a hash as a reset.
+ */
+
+ @import url('variables.css');
+
+body {
+    font-family: Arial, sans-serif;
+    /* change later to PK font */
+    display: flex;
+    justify-content: center;
+    align-items: start;
+    height: 100vh;
+    /* Ensure the body takes full height */
+    overflow: auto;
+    /* Allow scrolling */
+    background-color: var(--white);
+    /* white; */
+    margin: 0;
+}
+
+button {
+    background-color: var(--blue);
+    /* #4e8ce1; */
+    color: var(--white);
+    /*white;*/
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 16px auto;
+    cursor: pointer;
+}
+  
+button:hover {
+    background-color: var(--soft_blue);
+    /* #a3cbff; */
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 10px;
+  text-align: left;
+  color: #102b46;
+  border-bottom: 1px solid #ddd;
+}
+
+th {
+  background-color: #e0e0e0;
+}

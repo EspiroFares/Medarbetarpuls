@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="sv">
+  <head>
+    {% load static %}
+    <script src="https://unpkg.com/htmx.org@1.8.4"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Medarbetarpuls - Home</title>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}" />
+  </head>
+  <body>
+    <div class="main-container">
+      {% include "topbar.html" with pagetitle=pagetitle %}
+      <!-- The analysis bar at the top of the screen -->
+      <div class="analysis-bar">
+        <div class="analysis-bar-container">
+          <div class="analysis-bar-item">
+            <img
+              src="{% static 'images/chat_box.png' %}"
+              class="analysis-bar-icon"
+            />
+            Svarsfrekvens: PLACEHOLDER PLACEHOLDER_CHANGE
+          </div>
+          <div class="analysis-bar-item">
+            <img
+              src="{% static 'images/graph_icon.png' %}"
+              class="analysis-bar-icon"
+            />
+            eNPS: PLACEHOLDER PLACEHOLDER_CHANGE
+          </div>
+          <div class="analysis-bar-item">
+            <img
+              src="{% static 'images/people_icon.png' %}"
+              class="analysis-bar-icon"
+            />
+            EEI: PLACEHOLDER PLACEHOLDER_CHANGE
+          </div>
+        </div>
+      </div>
+
+      <!-- The different pages available for creators -->
+      <div class="grid-container">
+        {% if unanswered_count > 0 %}
+        <div class="notification-container">
+          Du har en ny enkät som väntar på att besvaras!
+          <p>Gå till "Obesvarade enkäter" för att se den.</p>
+          <button
+            class="notification-button"
+            onclick="window.location.href='{% url 'unanswered_surveys' %}'"
+          >
+            Obesvarade enkäter
+          </button>
+        </div>
+        {% endif %}
+
+        <a href="{% url 'unanswered_surveys' %}" class="grid-item yellow">
+          {% if unanswered_count > 0 %}
+          <div class="notification-icon">
+            <img
+              src="{% static 'images/notification.png' %}"
+              style="width: 100%; height: 100%"
+            />
+          </div>
+          {% endif %}
+          <img src="{% static 'images/unanswered.png' %}" class="start-icon" />
+          <h2>Obesvarade enkäter</h2>
+          <p>Se dina obesvarade enkäter</p>
+        </a>
+
+        <a href="{% url 'my_results' %}" class="grid-item orange">
+          <img src="{% static 'images/my-results.png' %}" class="start-icon" />
+          <h2>Se resultat</h2>
+          <p>Se resultaten av dina tidigare svarade enkäter</p>
+        </a>
+
+        <a href="{% url 'survey_status' %}" class="grid-item pink">
+          <img
+            src="{% static 'images/published-surveys.png' %}"
+            class="start-icon"
+          />
+          <h2>Mina publicerade enkäter</h2>
+          <p>Se status och svar på dina publicerade enkäter</p>
+        </a>
+
+        <a href="{% url 'templates_and_drafts' %}" class="grid-item lightblue">
+          <img
+            src="{% static 'images/templates-surveys.png' %}"
+            class="start-icon"
+          />
+          <h2>Mallar & Utkast</h2>
+          <p>Se dina tidigare skapade och utkast av enkäter</p>
+        </a>
+
+        <a href="{% url 'analysis' %}" class="grid-item green">
+          <img
+            src="{% static 'images/analysis-surveys.png' %}"
+            class="start-icon"
+          />
+          <h2>Analys</h2>
+          <p>Analysera svar på dina utskickade enkäter</p>
+        </a>
+
+        <a href="{% url 'settings_user' %}" class="grid-item blue">
+          <img src="{% static 'images/settings.png' %}" class="start-icon" />
+          <h2>Inställningar</h2>
+          <p>Dina personliga inställningar</p>
+        </a>
+      </div>
+    </div>
+
+    <script>
+      // Timer that calls logout form after specified time
+      let logoutTimer;
+      function resetTimer() {
+        clearTimeout(logoutTimer);
+        logoutTimer = setTimeout(() => {
+          document.getElementById("logout-form").requestSubmit();
+        }, 10 * 60 * 1000); // 10 minutes
+      }
+
+      window.onload = resetTimer;
+      document.onmousemove = resetTimer;
+      document.onkeypress = resetTimer;
+      document.onscroll = resetTimer;
+      document.onclick = resetTimer;
+    </script>
+    <form
+      id="logout-form"
+      method="post"
+      hx-post="/logout/"
+      hx-target="body"
+      hx-swap="outerHTML"
+      style="display: none"
+    >
+      {% csrf_token %}
+    </form>
+  </body>
+</html>

@@ -5,58 +5,87 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Medarbetarpuls - Surveys</title>
-    <link rel="stylesheet" href="{% static 'styles.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/main.css' %}" />
   </head>
   <body>
-    {% include "topbar.html" with pagetitle=pagetitle %}
-    <div class="start-container">
+    <div class="main-container">
+      {% include "topbar.html" with pagetitle=pagetitle %}
+      <!-- Go back button -->
+      <button
+        class="image-button"
+        onclick="navigateBack('{{user_role}}')"
+      >
+        <img
+          src="{% static 'images/go-back-btn.png' %}"
+          alt="Gå Tillbaka"
+          class="back-icon"
+        />
+      </button>
+
         <div class="pagetitle">
             <h2>Du har besvarat {{ answered_count }} enkäter</h2>
         </div>
         <div class="grid-container">
             {% for survey in answered_surveys %}
-
-            {% if survey.published_survey.deadline > current_time %} <!-- Check if sending_date exists -->
+                <!-- If everyone has answered or deadline has passed -->
+                {% if survey.collected_answer_count >= survey.published_count or survey.published_survey.deadline <= current_time %} 
+                    <div class="grid-item green">
+                    <p>Genomfördes: {{ survey.published_survey.sending_date }} 
+                    - {{ survey.published_survey.deadline }}</p>
+                    <p><strong>*{{ survey.published_survey.name }}*</strong></p>
+                    <p> {{survey.published_survey.collected_answer_count}} svarade på enkäten</p>
+                    <button class="view-survey-button" onclick="window.location.href='{% url 'survey_result' survey.published_survey.id %}'"> 
+                    Se resultat</button>
+                    </div>
+                {% else %}
+                <!-- The survey is ongoing -->
                 <div class="grid-item yellow">
                     <p> Pågående enkät</p>
                     <p><strong>*{{ survey.published_survey.name }}*</strong></p>
-                    <p> {{survey.published_survey.collected_answer_count}} har svarat hittils</p>
-                </div>
-            {% else %}
-                <div class="grid-item green">
-                    <p>Genomfördes: {{ survey.published_survey.sending_date }} 
-                        - {{ survey.published_survey.deadline }}</p>
-                    <p><strong>*{{ survey.published_survey.name }}*</strong></p>
-                    <p> {{survey.published_survey.collected_answer_count}} svarade på enkäten</p>
-                    <button class="view-survey-button" onclick="window.location.href='{% url 'survey_result' 
-                    survey.id %}'"> 
-                        Se resultat</button>
-                </div>
-            {% endif %}
+                    <p> {{survey.published_survey.collected_answer_count}} har svarat hittills</p>
+                </div>   
+                {% endif %}
             {% endfor %}
-
-            <!-- Example survey cards for testing -->
-            <div class="grid-item yellow">
-                <p> Pågående enkät</p>
-                <p><strong>*Namn på enkät*</strong></p>
-                <p> 34 har svarat hittils</p>
-            </div>
-            <div class="grid-item green">
-                <p>Genomfördes: 2025-02-20 - 2025-03-20</p>
-                <p><strong>*Namn på enkät*</strong></p>
-                <p> 32 svarade på enkäten</p>
-                <button class="grid-item-button" onclick="window.location.href='{% url 'survey_result' 420%}'"> 
-                    Se resultat (Fungerande)</button>
-            </div>
-            <div class="grid-item green">
-                <p>Genomfördes: 2025-02-20 - 2025-03-20</p>
-                <p><strong>*Namn på enkät*</strong></p>
-                <p> 32 svarade på enkäten</p>
-                <button class="grid-item-button" onclick="window.location.href='{% url 'survey_result' 1%}'"> 
-                    Se resultat (Ej tillåtelse)</button>
-            </div>
-            <!-- Add more survey cards as needed -->
         </div>
     </div>
+  <script>
+    function navigateBack(user_role) {
+        // The previous URL that linked to this page
+        let previousUrl = document.referrer;
+        if (previousUrl) {
+          if (previousUrl.includes("my-results") || previousUrl.includes("survey-result")) {
+            // Avoid redirecting back to these pages to prevent an infinite loop
+            if (user_role == "surveycreator") {
+              previousUrl = "/start-creator/";
+            } else {
+              previousUrl = "/start-user/";
+            }
+          }
+          window.location.href = previousUrl;
+        } else {
+          // Fallback if referrer is empty
+          // This simulates the user pressing the back button
+          window.history.back();
+        }
+      }
+    // Timer that calls logout form after specified time
+    let logoutTimer;
+    function resetTimer() {
+      clearTimeout(logoutTimer);
+      logoutTimer = setTimeout(() => {
+        document.getElementById('logout-form').requestSubmit();
+        }, 10 * 60 * 1000); // 10 minutes
+    }
+
+    window.onload = resetTimer;
+    document.onmousemove = resetTimer;
+    document.onkeypress = resetTimer;
+    document.onscroll = resetTimer;
+    document.onclick = resetTimer;
+  
+    </script>
+    <form id="logout-form" method="post" hx-post="/logout/" hx-target="body" hx-swap="outerHTML" style="display:none;">
+      {% csrf_token %}
+    </form>
   </body>
 </html>

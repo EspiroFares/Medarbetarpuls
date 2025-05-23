@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser, SurveyTemplate, Organization, SurveyResult, Answer  # Import your CustomUser model
+from .models import CustomUser, SurveyTemplate, Organization, SurveyUserResult, Answer  # Import your CustomUser model
 
 class SurveyResultAdmin(admin.ModelAdmin):
     list_display = ("user", "published_survey", "is_answered", "get_answers")
@@ -17,7 +17,7 @@ class AnswerAdmin(admin.ModelAdmin):
 
 admin.site.register(Answer, AnswerAdmin)
 
-admin.site.register(SurveyResult, SurveyResultAdmin)
+admin.site.register(SurveyUserResult, SurveyResultAdmin)
 
 class CustomUserAdmin(UserAdmin):
     model = CustomUser
@@ -27,14 +27,15 @@ class CustomUserAdmin(UserAdmin):
         "user_role",
         "is_staff",
         "is_superuser",
+        "display_employee_groups",
     )  # Customize displayed fields
     search_fields = ("email", "name")  # Add search functionality
-    list_filter = ("user_role", "is_staff", "is_superuser")  # Add filters
+    list_filter = ("user_role", "is_staff", "is_superuser", "employee_groups")  # Add filters
     ordering = ("email",)  # Default sorting order
     fieldsets = (
         (None, {"fields": ("email", "password")}),
         ("Personal Info", {"fields": ("name", "user_role")}),
-        ("Permissions", {"fields": ("is_active", "is_staff", "is_superuser")}),
+        ("Permissions", {"fields": ("is_active", "is_staff", "is_superuser","employee_groups")}),
     )
     add_fieldsets = (
         (
@@ -49,10 +50,15 @@ class CustomUserAdmin(UserAdmin):
                     "password2",
                     "is_staff",
                     "is_superuser",
+                    "employee_groups",
                 ),
             },
         ),
     )
+
+    def display_employee_groups(self, obj):
+        return ", ".join([group.name for group in obj.employee_groups.all()])
+    display_employee_groups.short_description = "Employee Groups"  # Set column header name
 
 
 # Register the CustomUser model

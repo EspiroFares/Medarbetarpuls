@@ -1,101 +1,304 @@
+{% load static %}
+{% load dict_utils %}
+<!DOCTYPE html>
 <html lang="sv">
   <head>
-    {% load static %}
-    <script src="https://unpkg.com/htmx.org@1.8.4"></script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://unpkg.com/htmx.org@1.8.4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
+    <script src="{% static 'js/charts.js' %}" defer></script>
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+    ></script>
     <title>Medarbetarpuls - Surveys</title>
-    <link rel="stylesheet" href="{% static 'styles.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/main.css' %}" />
   </head>
   <body>
-    {% include "topbar.html"%}
-    {% if request.path == '/survey-result/420/' %}
-    <div class="start-container">
-
-        <h1><center><i>This is a testing page</i></center></h1>
-        <p></p>
-
-        <h1>*Titel på enkät*</h1>
+    <div class="main-container">
+      {% include "topbar.html" with pagetitle="Resultat på enkät"%}
+      <!-- Static test version -->
+      {% if request.path == '/survey-result/420/' %}
         <div class="title-background">
-            <button class="title-back-button" onclick="window.location.href='{% url 'my_results'%}'"> 
-                Tillbaka </button>
-            <h2>Resultat</h2>
+          <button class="title-back-button" onclick="navigateBack()">
+            Tillbaka
+          </button>
+          <h2>Resultat</h2>
+        </div>
+      {% elif survey %}
+        <!-- Dynamic survey result view -->
+        <div class="title-background">
+          <button class="title-back-button" onclick="navigateBack()">
+            Tillbaka
+          </button>
+          <h2>{{ survey.name }}</h2>
         </div>
         <div class="grid-container">
-            <div class="grid-item result green">
-                <div class="question-title">
-                    <h1> Fråga 1</h1>
-                </div>
-                <div class="question-background">
-                    <p> Här skriver vi en väldigt lång fråga som går över flera flera rader</p>
-                </div>
-                <div class="question-result">
-                    RESULTAT
-                </div>
+        {% for summary in summaries %}
+          <!-- Code for creating boxes for question-results. 
+          Alpine is used for switching between showing result, comments and personal answers. -->
+          <div
+            class="grid-item result green"
+            x-data="{
+                  STATES: {
+                      ANSWER: 'answer',
+                      COMMENT: 'comment',
+                      PERSONAL_ANSWER: 'personal_answer'
+                  },
+                  show_state : 'answer',
+                  
+                  toggle_answer(state) { 
+                      if (this.show_state === state) {
+                          this.show_state = this.STATES.ANSWER;
+                      } else {
+                          this.show_state = state;
+                      }
+                  }
+              }"
+          >
+          <!-- Question number and title -->
+          <div class="question-title result">
+            <!-- Button for toggle between personal answer and result -->
+            <!-- Must override the width for this specific case -->
+            {% if has_result %}
+              <button
+                class="default-button"
+                @click="toggle_answer(STATES.PERSONAL_ANSWER)"
+                x-text="show_state === STATES.PERSONAL_ANSWER ? 'Resultat' : 'Ditt svar'"
+                style="width: 35%"
+              ></button>
+            {% else %}
+              <button
+                class="default-button"
+                @click="toggle_answer(STATES.PERSONAL_ANSWER)"
+                x-text="show_state === STATES.PERSONAL_ANSWER ? 'Resultat' : 'Ditt svar'"
+                style="width: 35%; visibility: hidden"
+              ></button>
+            {% endif %}
+
+            <h1>Fråga {{ forloop.counter }}</h1>
+
+            <!-- Button for toggle between comment and result -->
+            <!-- Must add styling because Alpine removes the styling for question-icon -->
+            <div
+              @click="toggle_answer(STATES.COMMENT)"
+              style="cursor: pointer; width: 30%"
+            >
+              <!-- Show 'close' icon if comment view is active -->
+              <template x-if="show_state === STATES.COMMENT">
+                <img
+                  src="{% static 'images/go-back-btn.png' %}"
+                  alt="Stäng kommentarer"
+                  class="question-icon result"
+                />
+              </template>
+              {% if is_creator %}
+                <!-- Show 'open comment' icon if not in comment view  -->
+                <template x-if="show_state !== STATES.COMMENT">
+                  <img
+                    src="{% static 'images/comment2.png' %}"
+                    alt="Visa kommentarer"
+                    class="question-icon result"
+                  />
+                </template>
+              {% endif %}
             </div>
-            <div class="grid-item result green">
-                <div class="question-title">
-                    <h1> Fråga 2</h1>
-                </div>
-                <div class="question-background">
-                    <p> Kort fråga</p>
-                </div>
-                <div class="question-result">
-                    RESULTAT
-                </div>
-            </div>
-            <div class="grid-item result green">
-                <div class="question-title">
-                    <h1> Fråga 3</h1>
-                </div>
-                <div class="question-background">
-                    <p> Här skriver vi en väldigt lång fråga som går över flera flera rader</p>
-                </div>
-                <div class="question-result">
-                    RESULTAT
-                </div>
-            </div>
-        </div>
-    </div>
+          </div>
+          <!-- Shows the question -->
+          <div class="question-background result">
+            <p>{{ summary.question.question }}</p>
+          </div>
+          <!-- Shows comments for the question. Is only showned when toggled 
+               by one of the earlier buttons -->
+          <div
+            class="question-result"
+            x-show="show_state === STATES.COMMENT"
+            style="flex-direction: column"
+          >
+            <strong>Kommentarer:</strong>
+            {% with list_=summary.text_comments %}
+              {% include "step_thru_text.html" with list_=list_ is_answer=False %}
+            {% endwith %}
+          </div>
 
-    {% else %}
+          <!-- Shows personal answer for the question. Is only showned when toggled 
+               by one of the earlier buttons -->
+            <div
+  class="question-result"
+  x-show="show_state === STATES.PERSONAL_ANSWER">
+  {% if summary.my_result %}
+    <div>
+      <strong>Ditt svar:</strong><br />
 
-        {% if survey_result %}
-            <div class="start-container">
+      {% if summary.question.question_format == "multiplechoice" %}
+        {% for selected in summary.my_result.answer %}
+          {% if selected %}
+            {{ summary.question.multiple_choice_question.options|index:forloop.counter0 }}
+          {% endif %}
+        {% endfor %}
 
-                <h1><center><i>This is a testing page</i></center></h1>
-                <p></p>
-        
-                <h1>{{ survey_result.published_survey.name }}</h1>
-                <div class="title-background">
-                    <button class="title-back-button" onclick="window.location.href='{% url 'my_results'%}'"> 
-                        Tillbaka </button>
-                    <h2>Resultat</h2>
-                </div>
-                <div class="grid-container">
-
-                    <!-- How do we get the final answers for questins? -->
-    
-                    <div class="grid-item result green">
-                        <div class="question-title">
-                            <h1> QUESTION NUMBER</h1>
-                        </div>
-                        <div class="question-background">
-                            <p> QUESTION</p>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-
+      {% elif summary.question.question_format == "yesno" %}
+        {% if summary.my_result.answer == True %}
+          <em>Du svarade med tumme upp.</em>
         {% else %}
-            <div class="start-container">
-            <h1>No results available for this survey.</h1>
-            <h1>You may not have access to this survey result.</h1>
-            <button onclick="window.location.href='{% url 'my_results'%}'"> 
-                Tillbaka </button>
-            </div>
+          <em>Du svarade med tumme ner.</em>
         {% endif %}
-    {% endif %}
+
+      {% elif summary.question.question_format == "slider" %}
+       
+           <div>
+          <p>{{ summary.my_result.answer }}</p>
+          <p> Svarsskalan går från 0 (lägst) till 10 (högst).</p>
+           </div>
+        
+
+      {% elif summary.question.question_format == "text" %}
+        <p>{{ summary.my_result.answer }}</p>
+
+      {% endif %}
+    </div>
+  {% else %}
+    <p><em>Du har inte besvarat denna fråga.</em></p>
+  {% endif %}
+  {% if summary.my_result and summary.my_result.comment %}
+    <p>
+      <strong>Din kommentar:</strong><br />
+      {{ summary.my_result.comment }}
+    </p>
+  {% else %}
+    <p><strong>Du angav ingen kommentar</strong></p>
+  {% endif %}
+</div>
+          <!-- Shows question-result. It is shown by default but is toggled 
+               by the earlier buttons.-->
+          <div class="question-result" x-show="show_state === STATES.ANSWER">
+            {% if summary.question.question_format == "yesno" %}
+            <!-- Code for yes/no-question result -->
+            <div class="question-result yesno">
+              <p>{{ summary.yes_percentage }}%</p>
+              <img
+                src="{% static 'images/' %}{{ summary.question.question_format }}.png"
+                alt="{{ summary.question.question_format }}"
+                class="question-icon"
+              />
+              <p>{{ summary.no_percentage }}%</p>
+            </div>
+            {% elif summary.question.question_format == "text" %}
+            <!-- Code for text-question result -->
+              {% with list_=summary.free_text_answers %}
+                {% include "step_thru_text.html" with list_=list_ is_answer=True %}
+              {% endwith %}
+            {% elif summary.question.question_format == "multiplechoice" %}
+            <!-- Code for multiplechoice-question result -->
+            <div class="graph-container">
+              <canvas id="{{ forloop.counter }}"></canvas>
+            </div>
+            <script>
+              const pieColors = [
+              'rgb(140, 214, 16)',
+              'rgb(16, 23, 214)',
+              'rgb(16, 191, 214)',
+              'rgb(255, 20, 50)',
+              ];
+
+              document.addEventListener("DOMContentLoaded", function() {
+
+              initBarChart("{{ forloop.counter }}", {{ summary.question.multiple_choice_question.options|safe}}, {{ summary.multiple_choice_distribution|safe }}, pieColors);
+              });
+            </script>
+            {% elif summary.question.question_format == "slider" %}
+            <!-- Code for slider-question result -->
+             <div>
+               <p>Värdet visas utifrån en skala från 0 till 10.</p> 
+             </div>
+            <div>
+            <p>Medelvärde:</p>
+            <p>{{ summary.mean|safe }}</p>
+              {% if summary.mean < 2 %}
+                <img
+                  src=" {% static 'images/smiley-sad.png' %} "
+                  alt="Sad Smiley"
+                  class="question-icon"
+                />
+              {% elif summary.mean < 4.5 %}
+                <img
+                  src=" {% static 'images/smiley-meh.png' %} "
+                  alt="meh Smiley"
+                  class="question-icon"
+                />
+              {% elif summary.mean < 5.5 %}
+                <img
+                  src=" {% static 'images/smiley-neutral.png' %} "
+                  alt="neutral smily"
+                  class="question-icon"
+                />
+              {% elif summary.mean < 8 %}
+                <img
+                  src=" {% static 'images/smiley-happy.png' %} "
+                  alt="happy smily"
+                  class="question-icon"
+                />
+              {% else %}
+                <img
+                  src=" {% static 'images/smiley-superhappy.png' %} "
+                  alt="happy smily"
+                  class="question-icon"
+                />
+              {% endif %}
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+        <!-- No access or no survey -->
+        <div class="start-container">
+          <div class="title-background">
+            <button class="title-back-button" onclick="navigateBack()">
+              Tillbaka
+            </button>
+            <h2>Resultat</h2>
+          </div>
+          <h1>No results available for this survey.</h1>
+          <p>Du kanske inte har tillgång till denna enkät.</p>
+        </div>
+      {% endif %}
+    </div>
+    <script>
+      // Timer that calls logout form after specified time
+      let logoutTimer;
+      function resetTimer() {
+        clearTimeout(logoutTimer);
+        logoutTimer = setTimeout(() => {
+          document.getElementById("logout-form").requestSubmit();
+        }, 10 * 60 * 1000); // 10 minutes
+      }
+
+      window.onload = resetTimer;
+      document.onmousemove = resetTimer;
+      document.onkeypress = resetTimer;
+      document.onscroll = resetTimer;
+      document.onclick = resetTimer;
+    </script>
+    <form
+      id="logout-form"
+      method="post"
+      hx-post="/logout/"
+      hx-target="body"
+      hx-swap="outerHTML"
+      style="display: none"
+    >
+      {% csrf_token %}
+    </form>
   </body>
+  <script>
+    function navigateBack() {
+      // The previous URL that linked to this page
+      let previousUrl = document.referrer;
+      window.location.href = previousUrl;
+    }
+  </script>
 </html>

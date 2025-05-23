@@ -6,12 +6,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Lägg till medarbetare</title>
-    <link rel="stylesheet" href="{% static 'styles.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/main.css' %}" />
     
   </head>
   <body>
-    {% include "topbar.html" with pagetitle=pagetitle %}
     <div class="create-container">
+      {% include "topbar.html" with pagetitle=pagetitle %}
+      <!-- Go back button-->
       <button
         class="image-button"
         onclick="window.location.href='{% url 'my_org' %}'"
@@ -31,6 +32,7 @@
         method="POST"
       >
         {% csrf_token %}
+        <!-- Input fields for the mail and team of the employee -->
         <label for="email">Medarbetarens mejladress:</label>
           <input
             type="email"
@@ -42,9 +44,11 @@
 
           <label for="team">Medarbetarens team:</label>
           <input type="text" id="team" name="team" placeholder="Team" required />
+          <!-- Open confirmation popup when the employee is added-->
           <button type="submit" onclick="openPopup()">Lägg till</button>
-
         </form>
+
+        <!-- Confirmation popup -->
         <div id="added-popup" class="popup-overlay" style="display: none">
           <div class="popup-content">
             <h2>Din medarbetare är nu tillagd i systemet.</h2>
@@ -63,8 +67,28 @@
       }
 
       function closePopup() {
-        document.getElementById("added-popup").style.display = "none";
+        document.getElementById("added-popup").style.display = "none"; 
+        window.location.href='{% url 'add_employee' %}'
       }
-    </script>
+      // Timer that calls logout form after specified time
+      let logoutTimer;
+      function resetTimer() {
+        clearTimeout(logoutTimer);
+        logoutTimer = setTimeout(() => {
+          document.getElementById('logout-form').requestSubmit();
+          }, 10 * 60 * 1000); // 10 minutes
+      }
+
+      window.onload = resetTimer;
+      document.onmousemove = resetTimer;
+      document.onkeypress = resetTimer;
+      document.onscroll = resetTimer;
+      document.onclick = resetTimer;
+
+  </script>
+  <form id="logout-form" method="post" hx-post="/logout/" hx-target="body" hx-swap="outerHTML" style="display:none;">
+    {% csrf_token %}
+  </form>
+
   </body>
 </html>
