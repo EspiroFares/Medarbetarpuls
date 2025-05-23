@@ -136,6 +136,11 @@ function initLineChart(chartID, chartLabels, chartData, chartColors) {
       },
       options: {
         responsive: true,
+        plugins: { // Add this section to control the legend
+            legend: {
+                display: false, // This will hide the legend
+            }
+        },
       },
     });
   } else {
@@ -171,6 +176,8 @@ function initStackedBarChart(chartID, chartLabels, chartData, chartColors) {
         })),
       },
       options: {
+        borderRadius: 10,
+        barThickness: 30,
         responsive: true,
         scales: {
           x: {
@@ -333,7 +340,7 @@ function initEnpsBar(chartID, chartLabels, chartData) {
             backgroundColor: chartLabels.map((_, index) => {
               if (index < 7) {
                 return "#EF4444"; // Red
-              } else if (index < 9) {
+              } else if (index < 8) {
                 return "#FFB95A"; // Orange
               } else {
                 return "#84CC16"; // Green
