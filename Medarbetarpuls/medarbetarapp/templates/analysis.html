@@ -108,19 +108,19 @@
         {% if selected_question_format == None %}
         <div class="analysis-item ratio-2-1">
           <div class="analysis-item-title"><h2><b>Svarsfrekvens över tid</b></h2></div>
-          <div class="graph-container" style="height: 90%">
+          <div class="graph-container" style="height: 82%">
             <canvas id="answerFrequencyTrend"></canvas>
           </div>
         </div>
         <div class="analysis-item ratio-1-1">
           <div class="analysis-item-title"><h2><b>Svarsfrekvens för senaste enkät</b></h2></div>
           <div class="graph-container">
-            <canvas id="responseRateGauge" width="400" height="400"></canvas>
+            <canvas id="responseRateGauge" width="230px" height="230px"></canvas>
           </div>
         </div>
         <div class="analysis-item ratio-2-1">
           <div class="analysis-item-title"><h2><b>Svarsuppdelningen på frågor från den senaste enkäten</b></h2></div>
-          <div class="graph-container" style="height: 90%">
+          <div class="graph-container" style="height: 82%">
             <canvas id="answerDistributionQuestions"></canvas>
           </div>
         </div>
@@ -134,12 +134,12 @@
         <div class="analysis-item ratio-1-1">
           <div class="analysis-item-title"><h2><b>Svarsfrekvens för senaste enkät</b></h2></div>
           <div class="graph-container">
-            <canvas id="responseRateGauge" width="400" height="400"></canvas>
+            <canvas id="responseRateGauge" width="230px" height="230px"></canvas>
           </div>
         </div>
         <div class="analysis-item ratio-2-1">
           <div class="analysis-item-title"><h2><b>Analysera fråga</b></h2></div>
-          <div class="graph-container" style="height: 90%">
+          <div class="graph-container" style="height: 82%">
             <canvas id="enpsPieChart"></canvas>
           </div>
         </div>
@@ -147,7 +147,7 @@
         {% elif selected_question_format == "slider" %}
         <div class="analysis-item ratio-2-1">
           <div class="analysis-item-title"><h2><b>Svarsfördelning slider</b></h2></div>
-          <div class="graph-container" style="height: 90%">
+          <div class="graph-container" style="height: 82%">
             <canvas id="sliderStackedBarChart"></canvas>
           </div>
         </div>
@@ -184,12 +184,12 @@
         <div class="analysis-item ratio-1-1">
           <div class="analysis-item-title"><h2><b>Svarsfrekvens för senaste enkät</b></h2></div>
           <div class="graph-container">
-            <canvas id="responseRateGauge" width="400" height="400"></canvas>
+            <canvas id="responseRateGauge" width="230px" height="230px"></canvas>
           </div>
         </div>
         <div class="analysis-item ratio-2-1">
           <div class="analysis-item-title"><h2><b>Historik för medelvärde</b></h2></div>
-          <div class="graph-container" style="height: 90%">
+          <div class="graph-container" style="height: 82%">
             <canvas id="lineTrendChartSlider"></canvas>
           </div>
         </div>
@@ -197,14 +197,14 @@
         {% elif selected_question_format == "multiplechoice" %}
         <div class="analysis-item ratio-2-1">
           <div class="analysis-item-title"><h2><b>Svarsfördelning Multiple Choice</b></h2></div>
-          <div class="graph-container" style="height: 90%">
+          <div class="graph-container" style="height: 82%">
             <canvas id="barChartMultipleChoice"></canvas>
           </div>
         </div>
           <div class="analysis-item ratio-1-1">
             <div class="analysis-item-title"><h2><b>Svarsfrekvens för senaste enkät</b></h2></div>
             <div class="graph-container">
-              <canvas id="responseRateGauge" width="400" height="400"></canvas>
+              <canvas id="responseRateGauge" width="230px" height="230px"></canvas>
             </div>
           </div>
 
@@ -244,7 +244,7 @@ const enpsSurveyDate            = "{{ sending_dates_trend.0|default:'####-##-##'
 const enpsParticipationRate     = {{ answer_pct_list.0 |default:"0" |safe }};
 const enpsScoreDelta            = 0;
 const enpsParticipationDelta    = 0;
-const enpsPieColors             = ["rgb(140,214,16)","rgb(16,23,214)","rgb(16,191,214)"];
+const enpsPieColors             = ["rgb(214, 16, 16)","rgb(248, 149, 28)","rgb(140, 214, 16)"];
 
 
 // === General Survey Page ===
@@ -278,7 +278,8 @@ const sliderStackedChartData = (sliderStackedSurveyLabels || []).map((label, ind
 const mcOptionLabels         = {{ multiple_choice_labels_trend.0 |default:"[]" |safe }};
 const mcStackedSurveyLabels  = {{ sending_dates_trend |default:"[]" |safe }};
 const mcStackedDistributions = {{ multiple_choice_distribution_trend |default:"[]" |safe }};
-const mcStackedColors        = ["#ff9999", "#66b3ff", "#99ff99", "#ffcc99", "#c2c2f0"]; // different palette if desired
+const mcStackedColors        = ["rgb(85, 214, 16)", "rgb(16, 207, 214)", "rgb(171, 214, 16)",
+                                "rgb(178, 16, 214)", "rgb(214, 102, 16)", "rgb(214, 16, 145)"]; // different palette if desired
 
 const mcStackedChartData = (mcStackedSurveyLabels || []).map((label, index) => ({
   label: label,
@@ -312,7 +313,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // eNPS
   safeInit(initEnpsGauge, "enpsGauge", enpsGaugeScore, enpsScoreDelta, enpsSurveyDate);
   safeInit(initEnpsBar, "enpsBar", enpsSliderScaleLabels, enpsScoreDistribution);
-  safeInit(initPieChart, "enpsPieChart", enpsCategoryLabels, enpsCategoryCounts);
+  safeInit(initPieChart, "enpsPieChart", enpsCategoryLabels, enpsCategoryCounts, enpsPieColors);
 
   // Response Rate Gauge
   safeInit(initAnswerFrequency, "responseRateGauge", enpsParticipationRate, enpsParticipationDelta);
