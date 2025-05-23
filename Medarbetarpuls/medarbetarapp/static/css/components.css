@@ -1,0 +1,264 @@
+/*
+ * components.css
+ * 
+ * This file contains styles for reusable UI components within the project,
+ * such as buttons, cards, modals, and navigation elements.
+ */
+
+.create-form button {
+  background-color: var(--blue);
+  /* #4e8ce1; */
+  color: var(--white);
+  /* white; */
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 16px;
+  cursor: pointer;
+  margin-top: 5%;
+}
+
+.create-form button:hover {
+  background-color: var(--soft_blue);
+  /* #a3cbff; */
+}
+
+.title-background .title-back-button {
+  position: absolute;
+  /* Position button absolutely */
+  left: 10px;
+  /* Adjust as needed for spacing from the left */
+  margin-top: 0;
+}
+
+.question-title .question-remove-button {
+  position: absolute;
+  /* Position button absolutely */
+  right: 5px;
+  /* Adjust as needed for spacing from the left */
+  background-color: #f95e5e;
+  padding: 5px 10px;
+  border-radius: 10px;
+  font-size: 10px auto;
+  margin-top: 0;
+}
+
+.question-title .question-remove-button:hover {
+  scale: 1.07;
+  background-color: #ff2828;
+}
+
+.default-button {
+  margin: 10px;
+}
+
+.delete-button {
+  margin-top: 5%;
+  background-color: #f95e5e;
+}
+
+.delete-button:hover {
+  background-color: #f98b8b;
+}
+
+.popup-buttons {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.close-button {
+  /* Can be used as X-button to close popups */
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  font-size: 20px;
+  cursor: pointer;
+  color: #102b46;
+}
+
+.close-button:hover {
+  color: #ff4b4b;
+}
+
+.trashcan-button {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+}
+
+.trashcan-button:hover {
+  background-color: transparent;
+  /* Prevent blue background */
+  outline: none;
+  /* Remove focus outline */
+}
+
+.trashcan-button:focus {
+  outline: none;
+  /* Prevent focus outline */
+}
+
+.search-container button {
+  padding: 8px 12px;
+  border-radius: 20px;
+  margin-left: 5px;
+}
+
+.add-button {
+  /* big + button when creating a survey */
+  width: 60px;
+  height: 120px;
+  background-color: #f0f0f0;
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: -20%;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  /* Subtle shadow */
+}
+
+.add-button-link {
+    padding-top: 5%;
+    padding-bottom: 5%;
+    text-decoration: none;
+    /* Remove underline */
+    display: inline-block;
+    /* Make it behave like a block element */
+}
+
+.add-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.add-button span {
+  font-size: 32px;
+  color: #7a7a7a;
+  /* Grey color for the plus symbol */
+}
+
+.logout-button {
+  top: 85%;
+  right: 2%;
+  position: fixed;
+  width: 5%;
+}
+
+.vertical-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 400px; /* This is actually the height when rotated */
+  height: 40px;
+  transform: rotate(-90deg);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.3);
+  outline: none;
+  background: linear-gradient(
+    to right,
+    #ff6b6b 0%,
+    #eee 0%
+  ); /* gets updated via JS */
+  margin: 2rem 0;
+  position: relative;
+  z-index: 1;
+}
+
+.vertical-slider::-webkit-slider-thumb,
+.vertical-slider::-moz-range-thumb {
+  /* style the draggable circle (thumb) here */
+  -webkit-appearance: none;
+  appearance: none;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  background: transparent;
+  background-size: cover;
+}
+
+.arrow {
+  text-decoration: none;
+  color: #ffffff;
+  transition: color 0.2s;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.arrow:hover {
+  text-decoration: underline;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.question-counter {
+  font-size: 1.8rem;
+  color: white;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.answer-survey-button {
+  background-color: var(--almost_white);
+  /* #4e8ce1; */
+  color: var(--dark_blue);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  /*white;*/
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 16px auto;
+  cursor: pointer;
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 100px;
+}
+
+.answer-survey-button:hover {
+  background-color: white;
+}
+
+.multiple-input {
+  display: flex;
+  padding: 1rem 2rem;
+  border-radius: 20px;
+  margin: 0 auto;
+  width: 60%;
+  text-align: left;
+  background-color: var(--almost_white);
+  color: var(--dark_blue);
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+.multiple-input:hover {
+  transform: scale(1.05);
+}
+
+.multiple-input input[type="checkbox"] {
+  display: none; /* Hide default checkbox */
+}
+
+.choice-label {
+  flex-grow: 1;
+  color: var(--dark_blue);
+  font-size: large;
+}
+
+.action-icon-button {
+  /* For buttons instead of images in image-button.action-icon */
+  bottom: -52px;
+  position: absolute;
+  box-shadow: 0px 3px 3px rgba(0, 0, 0, 0.3);
+  text-decoration: none;
+}
+
+.question-label {
+  display: flex;
+  align-items: center;
+  gap: 12px; /* space between icon and text */
+}

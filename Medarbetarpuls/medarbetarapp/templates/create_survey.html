@@ -6,75 +6,124 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Inställningar</title>
-    <link rel="stylesheet" href="{% static 'styles.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/main.css' %}" />
   </head>
   <body>
-    {% include "topbar.html"%}
-    <div class="start-container">
+    <div class="main-container">
+      {% include "topbar.html"%}
       <div class="title-background">
+        <!-- Go back button-->
         <button
           class="title-back-button"
-          onclick="window.location.href='{% url 'templates_and_drafts'%}'"
+          onclick="window.location.href='{% if source and source == 'organization_templates' %}{% url source%}{%else%}{%url "templates_and_drafts"%}{% endif %}'"
         >
           Tillbaka
         </button>
-        <h2>Skapa enkät</h2>
+        <h2>{{ survey_temp.name }}</h2>
       </div>
-
-      <div class="grid-container">
-        <!-- Make all of this dynamic -->
-        {% for question in survey_temp.questions.all %}
+      <!-- If page is accessed from organization_templates one should not be able to publish survey -->
+      {% if source == "organization_templates" %}
+        <button
+        class="title-back-button"
+        onclick="window.location.href='{% if source == 'organization_templates' %}{% url source%}{%else%}{%url "templates_and_drafts"%}{% endif %}'"
+        > 
+        Spara enkät
+        </button>
+      {% else %}
+        <button class="button" onclick="openPopup()">Publicera</button>
+      {% endif %}
+      <div class="grid-container" id="question-list">
+        
+        {% for question in survey_temp.get_ordered_questions %}
         <a
-          href="{% url 'edit_question' survey_temp.id question.question_format question.id %}"
+          href="{% url 'edit_question' survey_temp.id question.question_format question.id %}{% if source%}?source={{ source }}{% endif %}"
           class="grid-item blue"
         >
           <div class="question-title">
             <h1>Fråga {{forloop.counter}}</h1>
-            <form
-              hx-post="{% url 'delete_question' question.id survey_temp.id %}"
-              hx-trigger="submit"
-              hx-confirm="Är du säker att du vill ta bort den här frågan?"
-              hx-swap="none"
-            >
-              {% csrf_token %}
-              <button class="question-remove-button" type="submit">
-                Ta bort
-              </button>
-            </form>
+            <!-- Prevent questions from the organisations bank to be removed if not admin -->
+            {% if source != "readonly"%}
+              <form
+                hx-post="{% url 'delete_question' question.id survey_temp.id %}{% if source == 'organization_templates' %}?source={{ source }}{% endif %}"
+                hx-trigger="submit"
+                hx-confirm="Är du säker att du vill ta bort den här frågan?"
+                hx-swap="none"
+              >
+                {% csrf_token %}
+                <button class="question-remove-button" type="submit">
+                  Ta bort
+                </button>
+              </form>
+            {%endif%}
           </div>
 
           <div class="question-background">
             <p>{{question.question}}</p>
           </div>
+
           <div class="question-result">
+          <!-- Prevent questions from the organisations bank to be moved if not admin -->
+          {% if source != "readonly"%}
+            <form
+              hx-post="{% url 'move_question_left' survey_temp.id question.id %}{% if source == 'organization_templates' %}?source={{ source }}{% endif %}"
+              hx-trigger="submit"
+              hx-target="#question-list"
+              hx-swap="outerHTML"
+              class="px-2"
+              title="Flytta fråga åt vänster"
+            >
+              {% csrf_token %}
+              <button type="submit">&larr;</button>
+            </form>
+          {% endif %}
             <img
               src="{% static 'images/' %}{{ question.question_format }}.png"
               alt="{{ question.question_format.label }} image"
               class="question-icon"
             />
+          {% if source != "readonly"%}
+            <form
+              hx-post="{% url 'move_question_right' survey_temp.id question.id %}{% if source == 'organization_templates' %}?source={{ source }}{% endif %}"
+              hx-trigger="submit"
+              hx-target="#question-list"
+              hx-swap="outerHTML"
+              class="px-2"
+              title="Flytta fråga åt höger"
+            >
+              {% csrf_token %}
+              <button type="submit">&rarr;</button>
+            </form>
+          {% endif %}
           </div>
         </a>
         {% endfor %}
-
+        <!-- Prevent new questions to be added the organisations bank to be if not admin -->
+        {% if source != "readonly" %}
         <a
-          href="{% url 'create_question' survey_temp.id %}"
+          href="{% url 'create_question' survey_temp.id %}{% if source == 'organization_templates' %}?source={{ source }}{% endif %}"
+          title="Skapa ny fråga"
           class="add-button-link"
         >
           <div class="add-button">
             <span>+</span>
           </div>
         </a>
+        {% endif %}
       </div>
-      <button class="button" onclick="openPopup()">Publicera enkät</button>
     </div>
-    <div id="publish-popup" class="popup-overlay" style="display: none">
+    <div
+      id="publish-popup"
+      class="popup-overlay"
+      style="display: none"
+      data-survey-id="{{ survey_temp.id }}"
+    >
       <div class="popup-content">
         <h2>Publicera enkät</h2>
 
         <form
           hx-post="{% url 'publish_survey' survey_temp.id %}"
           hx-trigger="submit"
-          hx-confirm="Are you sure you want to publish this survey?"
+          hx-confirm="Är du säker på att du vill publicera denna enkät?"
           hx-target="#error-box"
           hx-swap="innerHTML"
         >
@@ -91,11 +140,17 @@
           <!-- Checkbox Options -->
           <div class="checkbox-group">
             <label>
-              <input type="checkbox" name="privacy" value="anonymous" />
+              <input
+                type="checkbox"
+                name="privacy"
+                value="anonymous"
+                checked
+                disabled
+              />
               Anonyma svar
             </label>
             <label>
-              <input type="checkbox" name="privacy" value="public" />
+              <input type="checkbox" name="privacy" value="public" checked />
               Publicera resultat för svarande
             </label>
           </div>
@@ -137,39 +192,36 @@
                 type="date"
                 class="date-input"
                 name="publish-date"
+                id="publish-date"
                 required
               />
             </div>
             <div>
               <label>Sista svarsdatum:</label>
-              <input type="date" class="date-input" name="end-date" required />
+              <input
+                type="date"
+                class="date-input"
+                id="end-date"
+                name="end-date"
+                required
+              />
             </div>
           </div>
 
           <!-- Reminder Options -->
           <div class="reminder-group">
             <label>Påminn efter:</label>
-            <div class="reminder-tags">
-              <div class="reminder-tag">
-                1 v
-                <span class="close">&times;</span>
-              </div>
-              <div class="reminder-tag">
-                2 v
-                <span class="close">&times;</span>
-              </div>
-              <div class="reminder-tag">
-                3 v
-                <span class="close">&times;</span>
-              </div>
+            <div id="reminder-tags" class="reminder-tags">
+              <!-- Tags will dynamically be inserted here -->
             </div>
           </div>
 
           <!-- Buttons -->
           <div class="popup-buttons">
             <button
+              type="button"
               class="image-button"
-              onclick="window.location.href='{% url 'create_survey_with_id' survey_temp.id %}'"
+              onclick="navigateBack()"
             >
               <img
                 src="{% static 'images/go-back-btn.png' %}"
@@ -184,25 +236,161 @@
     </div>
     <script>
       function openPopup() {
-        document.getElementById("publish-popup").style.display = "flex";
-      }
+        // Set a flag in local storage to indicate that the popup should be opened
+        localStorage.setItem("showPopup", "true");
+
+        // Refresh the page
+        location.reload();
+    }
 
       function closePopup() {
         document.getElementById("publish-popup").style.display = "none";
       }
 
+      function getDateDiffInDays(start, end) {
+        // Returns the difference in days between two date objects
+        const msPerDay = 1000 * 60 * 60 * 24;
+        return Math.round((end - start) / msPerDay);
+      }
+
+      function generateReminderOptions() {
+        const publishInput = document.getElementById("publish-date");
+        const endInput = document.getElementById("end-date");
+        const reminderTagsDiv = document.getElementById("reminder-tags");
+
+        // Parse dates from input fields
+        const publishDate = new Date(publishInput.value);
+        const endDate = new Date(endInput.value);
+
+        const totalDays = getDateDiffInDays(publishDate, endDate);
+
+        let reminderOptions = [];
+
+        // Always include 3d (3 days after publish)
+        if (totalDays >= 3) reminderOptions.push({ label: "3d", value: 3 });
+
+        // Add "weeks" reminders up to (but not after) the end-date
+        let week = 1;
+        while (week * 7 < totalDays) {
+          reminderOptions.push({ label: week + "v", value: week * 7 });
+          week++;
+        }
+
+        // Render reminder tags
+        reminderTagsDiv.innerHTML = "";
+        for (let option of reminderOptions) {
+          const tag = document.createElement("div");
+          tag.className = "reminder-tag";
+          tag.dataset.days = option.value; // For form submission
+
+          tag.innerHTML = `
+            ${option.label}
+            <span class="close" onclick="removeReminderTag(this)">&times;</span>
+            <input type="hidden" name="reminders[]" value="${option.value}">
+          `;
+          reminderTagsDiv.appendChild(tag);
+        }
+      }
+
+      // Remove tag when X is clicked
+      function removeReminderTag(button) {
+        button.parentElement.remove();
+      }
+
       function handleRemove(event) {
         event.preventDefault(); // Prevent the link from being followed
-        // Add your logic to handle the removal of the question here
         console.log("Remove button clicked for question:", event.target);
       }
 
+      // Update reminders whenever date changes
+      document
+        .getElementById("publish-date")
+        .addEventListener("change", generateReminderOptions);
+      document
+        .getElementById("end-date")
+        .addEventListener("change", generateReminderOptions);
+
       document.addEventListener("DOMContentLoaded", function () {
+        // Get today's date
+        const today = new Date();
+
+        // Set default date to publish to today
+        const today_date = today.toISOString().split("T")[0];
+        document.getElementById("publish-date").value = today_date;
+
+        // Add 14 days
+        const twoWeeksFromNow = new Date();
+        twoWeeksFromNow.setDate(today.getDate() + 14);
+
+        // Set default end date to 2 weeks from today
+        const formatted = twoWeeksFromNow.toISOString().split("T")[0];
+        document.getElementById("end-date").value = formatted;
+        // Generate initial reminder options
+        generateReminderOptions();
         const params = new URLSearchParams(window.location.search);
-        if (params.get("trigger_popup") === "true") {
-          openPopup();
+        if (localStorage.getItem("showPopup") === "true")  {
+          // Clear the flag
+          localStorage.removeItem("showPopup");
+
+          // Open the popup
+          document.getElementById("publish-popup").style.display = "flex";
         }
       });
+
+      // Error handling
+    document.body.addEventListener("htmx:afterRequest", function (event) {
+      // To get survey id from the popup
+      const surveyId = document.getElementById("publish-popup").dataset.surveyId;
+      const errorBox = document.getElementById("error-box");
+      if (event.detail.xhr.status === 201) {
+        errorBox.style.color = "green";
+        errorBox.style.display = "block";
+        // Display the message to the user for a short while before redirecting
+        setTimeout(() =>  window.location.href = `/survey-status/`, 1500);
+      } else {
+        errorBox.innerHTML = event.detail.xhr.responseText || "Något fel har inträffat";
+        errorBox.style.color = "red";
+        errorBox.style.display = "block";
+      }
+
+    });
+
+      // Timer that calls logout form after specified time
+      let logoutTimer;
+      function resetTimer() {
+        clearTimeout(logoutTimer);
+        logoutTimer = setTimeout(() => {
+          document.getElementById('logout-form').requestSubmit();
+          }, 10 * 60 * 1000); // 10 minutes
+      }
+  
+      window.onload = resetTimer;
+      document.onmousemove = resetTimer;
+      document.onkeypress = resetTimer;
+      document.onscroll = resetTimer;
+      document.onclick = resetTimer;
+      
+      function navigateBack() {
+        // The previous URL that linked to this page
+        const popup = document.getElementById("error-box");
+        let previousUrl = document.referrer;
+        if (previousUrl) {
+          if (document.getElementById("publish-popup").style.display == "flex"){
+            // Pressed back button while popup was open
+            closePopup();
+          }
+          else{
+            window.location.href = previousUrl;
+          }       
+        } else {
+          // Fallback if referrer is empty
+          // This simulates the user pressing the back button
+          window.history.back();
+        }
+      }
     </script>
+    <form id="logout-form" method="post" hx-post="/logout/" hx-target="body" hx-swap="outerHTML" style="display:none;">
+      {% csrf_token %}
+    </form>
   </body>
 </html>

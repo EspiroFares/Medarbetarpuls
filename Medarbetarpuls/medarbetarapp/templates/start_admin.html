@@ -6,45 +6,60 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Medarbetarpuls - Home</title>
-    <link rel="stylesheet" href="{% static 'styles.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/main.css' %}" />
   </head>
   <body>
-    <!-- To test this, switch to start.html in views.py -->
-    <!-- Does not check if user logged in and have access-->
-    {% include "topbar.html" with pagetitle=pagetitle %}
-    <div class="start-container">
+    <div class="main-container">
+      {% include "topbar.html" with pagetitle=pagetitle %}
+      <!-- The different pages available for admin -->
       <div class="grid-container">
-        <a href="{% url 'unanswered_surveys' %}" class="grid-item yellow">
-          <div class="icon">📄</div>
-          <h2>Obesvarade enkäter</h2>
-          <p>Se dina obesvarade enkäter</p>
-        </a>
-        <a href="{% url 'my_results' %}" class="grid-item orange">
-          <div class="icon">🔍</div>
-          <h2>Se resultat</h2>
-          <p>Se resultaten av dina tidigare svarade enkäter</p>
-        </a>
-        <a href="{% url 'create_survey' %}" class="grid-item green">
-          <div class="icon">📝</div>
-          <h2>Skapa enkäter</h2>
-          <p>Skapa nya enkäter</p>
-        </a>
-        <a href="{% url 'templates_and_drafts' %}" class="grid-item lightblue">
-          <div class="icon">📁</div>
-          <h2>Mallar & Utkast</h2>
-          <p>Se dina tidigare skapade och utkast av enkäter</p>
-        </a>
         <a href="{% url 'my_org' %}" class="grid-item pink">
-          <div class="icon">👥</div>
+            <img
+            src="{% static 'images/my-org.png' %}"
+            class="start-icon"
+              />
           <h2>Min organisation</h2>
           <p>Se och administrera din organisation</p>
         </a>
+
+        <a href="{% url 'organization_templates' %}" class="grid-item lightblue">
+          <img
+          src="{% static 'images/templates-surveys.png' %}"
+          class="start-icon"
+            />
+          <h2>Mallar</h2>
+          <p>Skapa standardformulär och standardfrågor till hela organisationen</p>
+        </a>
+        
         <a href="{% url 'settings_admin' %}" class="grid-item blue">
-          <div class="icon">⚙️</div>
+            <img
+            src="{% static 'images/settings.png' %}"
+            class="start-icon"
+              />
           <h2>Inställningar</h2>
           <p>Dina personliga inställningar</p>
         </a>
       </div>
     </div>
+    <script>
+    // Timer that calls logout form after specified time
+    let logoutTimer;
+    function resetTimer() {
+      clearTimeout(logoutTimer);
+      logoutTimer = setTimeout(() => {
+        document.getElementById('logout-form').requestSubmit();
+        }, 10 * 60 * 1000); // 10 minutes
+    }
+
+    window.onload = resetTimer;
+    document.onmousemove = resetTimer;
+    document.onkeypress = resetTimer;
+    document.onscroll = resetTimer;
+    document.onclick = resetTimer;
+  
+    </script>
+    <form id="logout-form" method="post" hx-post="/logout/" hx-target="body" hx-swap="outerHTML" style="display:none;">
+      {% csrf_token %}
+    </form>
   </body>
 </html>

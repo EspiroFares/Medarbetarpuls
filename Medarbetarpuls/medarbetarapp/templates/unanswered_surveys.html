@@ -5,16 +5,29 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Medarbetarpuls - Surveys</title>
-    <link rel="stylesheet" href="{% static 'styles.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/main.css' %}" />
   </head>
   <body>
-    {% include "topbar.html" with pagetitle=pagetitle %}
-    <div class="start-container">
+    <div class="main-container">
+      {% include "topbar.html" with pagetitle=pagetitle %}
+      <!-- Go back button-->
+      <button
+        class="image-button"
+        onclick="navigateBack('{{user_role}}')"
+      >
+        <img
+          src="{% static 'images/go-back-btn.png' %}"
+          alt="Gå Tillbaka"
+          class="back-icon"
+        />
+      </button>
+
       <div class="pagetitle">
         <h2>Du har {{ unanswered_count }} obesvarade enkäter</h2>
       </div>
       <div class="grid-container">
         {% for survey in unanswered_surveys %}
+        <!-- prettier-ignore -->
         <!-- Click on the survey and this will take it to answer_survey with correct parameters  -->
         <a
           href="{% url 'answer_survey' survey.id 0 %}"
@@ -23,6 +36,19 @@
           <p>Publicerades: {{ survey.published_survey.sending_date }}</p>
           <p><strong>*{{ survey.published_survey.name }}*</strong></p>
           <p>Deadline: {{ survey.published_survey.deadline }}</p>
+          {% if survey.published_survey.is_anonymous %}
+            <span class="tooltip" data-tooltip="Samtliga svar är anonymiserade">
+                <div class="icon-wrapper">
+                <img src="{% static 'images/is-anonymous.png' %}" />
+                </div>
+            </span>
+          {% else %}
+            <span class="tooltip" data-tooltip="Svar är inte anonymiserade">
+                <div class="icon-wrapper">
+                <img src="{% static 'images/is-not-anonymous.png' %}" />
+                </div>
+            </span>
+          {% endif %}
         </a>
         {% endfor %}
       </div>
@@ -34,4 +60,45 @@
       </button>
     </div>
   </body>
+  <script>
+     function navigateBack(user_role) {
+        // The previous URL that linked to this page
+        let previousUrl = document.referrer;
+        if (previousUrl) {
+          if (previousUrl.includes("survey") && previousUrl.includes("question")){
+            // Avoid redirecting back to this page to prevent an infinite loop
+            // Only creator and reponder can see results from one survey
+            if (user_role == "surveycreator"){
+                previousUrl = '/start-creator/';
+            }               
+            else{
+                previousUrl = '/start-user/';
+            }
+          }
+          window.location.href = previousUrl;
+        } else {
+          // Fallback if referrer is empty
+          // This simulates the user pressing the back button
+          window.history.back();
+        }
+      }
+          // Timer that calls logout form after specified time
+      let logoutTimer;
+      function resetTimer() {
+        clearTimeout(logoutTimer);
+        logoutTimer = setTimeout(() => {
+          document.getElementById('logout-form').requestSubmit();
+          }, 10 * 60 * 1000); // 10 minutes
+      }
+
+      window.onload = resetTimer;
+      document.onmousemove = resetTimer;
+      document.onkeypress = resetTimer;
+      document.onscroll = resetTimer;
+      document.onclick = resetTimer;
+    
+    </script>
+    <form id="logout-form" method="post" hx-post="/logout/" hx-target="body" hx-swap="outerHTML" style="display:none;">
+      {% csrf_token %}
+    </form>
 </html>
