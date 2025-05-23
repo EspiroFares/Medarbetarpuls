@@ -507,7 +507,7 @@ def authentication_acc_view(request):
         request: The input text from the name, email and password fields
 
     Returns:
-        HttpResponse: Redirects to login page if all is good, otherwise error message 400
+        HttpResponse: Redirects to authentication page, otherwise error message 400
     """
     if request.method == "POST":
         auth_code = request.POST.get("auth_code")
@@ -844,6 +844,88 @@ def delete_question(
 
             return HttpResponse(headers={"HX-Redirect": hx_redirect_url})
 
+    return render(request, "authentication_org.html")
+
+
+def create_org_view(request):
+    return render(request, "create_org.html")
+
+
+def create_question(request, survey_id: int) -> HttpResponse: 
+    """
+    Makes it possible to create a question with predefined formats. 
+    This function is reachable from create_survey.
+
+    Agrs:
+        request: The input text from the question text field
+        survey_id (int): The id of the opened survey
+    Returns:
+        HttpResponse: Returns status 404 if the survey template does not exist
+    """
+    user: models.CustomUser = request.user
+    # Retrieve the survey template from the database if it belongs to the user
+    survey_temp: models.SurveyTemplate = user.survey_templates.filter(id=survey_id).first()
+    if survey_temp is None:
+        # Handle the case where the survey template does not exist
+        return HttpResponse("Survey template not found", status=404)
+    
+    return render(request, "create_question.html", 
+                  {"survey_temp": survey_temp, 
+                   "QuestionFormat": models.QuestionFormat,
+                   })
+
+
+def create_org_redirect(request):
+    if request.headers.get("HX-Request"):
+        return HttpResponse(
+            headers={"HX-Redirect": "/create_org_view/"}
+        )  # Redirects in HTMX
+
+    return redirect("/create_org_view/")  # Normal Django redirect for non-HTMX requests
+
+
+@csrf_protect
+def create_org(request) -> HttpResponse:
+    """
+    Saves potential account information in django 
+    session from fetched input, it sends an email 
+    to the mail that has been fetched. 
+    Then redirect to authentication-org to 
+    authenticate and potentially create admin account.
+
+    Args:
+        request: The input text from the org_name, name, email and password fields
+
+    Returns:
+        HttpResponse: Redirects to authentication page, otherwise error message 400
+    """
+    if request.method == "POST":
+        if request.headers.get("HX-Request"):
+            org_name = request.POST.get("org_name")
+            name = request.POST.get("name")
+            email = request.POST.get("email")
+            password = request.POST.get("password")
+            code = 123456 # make random later, just test now
+            cache.set(f'verify_code_{email}', code, timeout=300)
+            send_mail(
+                subject='Your Verification Code',
+                message=f'Your verification code is: {code}',
+                from_email='medarbetarpuls@gmail.com',
+                recipient_list=[email],
+                fail_silently=False,
+            )
+            # Save potential user account data in session
+            request.session['user_org_data'] = {
+                'org_name': org_name,
+                'name': name,
+                'password': password,
+            }
+
+            # Save the mail where the two factor code is sent
+            request.session['email_two_factor_code_org'] = email
+
+            return HttpResponse(headers={"HX-Redirect": "/authentication-org/"})  # Redirect to authentication account page
+        
     return HttpResponse(status=400)  # Bad request if no expression
 
 
@@ -1694,7 +1776,69 @@ def organization_templates(request, search_str: str | None = None) -> HttpRespon
     )
 
 
-@login_required
+@csrf_protect
+def delete_survey_template(request, survey_id: int) -> HttpResponse:
+    if request.method == "POST":  
+        if request.headers.get("HX-Request"):
+            survey_temp = get_object_or_404(models.SurveyTemplate, id=survey_id, creator=request.user)
+            survey_temp.delete()
+            return HttpResponse(headers={"HX-Redirect": "/templates_and_drafts/"})  
+
+    return HttpResponse(status=400)
+
+
+@csrf_protect
+@login_required 
+def templates_and_drafts(request, search_str: str | None = None) -> HttpResponse: 
+    """
+    Displays the survey templates and drafts page with all created survey templates. 
+    Also gives functionality for searching for specific surveys via 
+    their name. 
+
+    Args:
+        request: The input text from the search field 
+        search_str (str | None): The search pattern to be filtered for
+
+    Returns:
+        HttpResponse: Renders my_surveys page with survey templates list 
+        or redirects recursively with specific search pattern. 
+    """
+    # Annotate and filter templates with 0 questions
+    empty_templates: models.SurveyTemplate = request.user.survey_templates.annotate(num_questions=Count("questions")).filter(num_questions=0)
+
+    # Delete them
+    empty_templates.delete()
+
+    if search_str is None: 
+        # Order templates by last time edited
+        survey_templates = request.user.survey_templates.all().order_by('-last_edited')
+    else: 
+        # Order templates by search bar input relevance 
+        survey_templates = request.user.survey_templates.annotate(
+            relevance=Case(
+            When(name__iexact=search_str, then=Value(3)),  # exact match
+            When(name__istartswith=search_str, then=Value(2)),  # startswith
+            When(name__icontains=search_str, then=Value(1)),  # somewhere inside
+            default=Value(0),
+            output_field=IntegerField()
+            )
+        ).order_by('-relevance', '-last_edited')
+
+    # Post request for when search button is pressed
+    if request.method == "POST":  
+        if request.headers.get("HX-Request"):
+            search_str_input: str = request.POST.get("search-bar")
+
+            if search_str_input is None: 
+                return HttpResponse(headers={"HX-Redirect": "/templates_and_drafts/"})  
+            else: 
+                return HttpResponse(headers={"HX-Redirect": "/templates_and_drafts/" + search_str_input})  
+    
+    return render(request, "templates_and_drafts.html", {"survey_templates": survey_templates})
+
+
+
+@login_required 
 def my_surveys_view(request):
     return render(request, "my_surveys.html")
 
@@ -1830,6 +1974,8 @@ def settings_user_view(request):
         HttpResponse: Redirects to home on deletion or returns status 400 if authentication fails.
     """
 
+    
+    #Delete user function
     # if pressed delete user
     if request.method == "POST":
         if request.headers.get("HX-Request"):
