@@ -6,6 +6,9 @@
 
 Before installing packages, ensure you have the following installed:
 
+![Alt-text](bilder/logo.png)
+
+
 - **Python** (Recommended version: 3.10+)
 - **Redis**
 
