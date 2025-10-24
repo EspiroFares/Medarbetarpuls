@@ -1,12 +1,12 @@
 # Medarbetarpuls
 
+![Alt-text](Pictures/Untitled.png)
+
 ## Installation & Setup
 
 ### Prerequisites
 
 Before installing packages, ensure you have the following installed:
-
-![Alt-text](Pictures/Untitled.png)
 
 
 - **Python** (Recommended version: 3.10+)
