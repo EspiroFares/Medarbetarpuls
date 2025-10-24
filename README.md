@@ -6,7 +6,7 @@
 
 Before installing packages, ensure you have the following installed:
 
-![Alt-text](bilder/logo.png)
+![Alt-text](Pictures/Untitled.png)
 
 
 - **Python** (Recommended version: 3.10+)
